@@ -48,6 +48,7 @@ public class SetGroupMenuImpl implements IBotMenu{
     @Override
     public void execute(BotServiceImpl bot, Message message) {
         boolean admin = isAdmin(message);
+        System.out.println(admin);
         if(!admin){
             try {
                 bot.execute(SendMessage.builder().chatId(message.getChatId()).text("您不是管理员，无法设置工作群").build());

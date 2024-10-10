@@ -107,7 +107,7 @@ public class StartKeyImpl implements IKeyboard {
         String type = message.getChat().getType();
         if (type.equals("private")) {
             startKey(bot, message);
-        } else if (type.equals("group")) {
+        } else if (type.equals("group") || type.equals("supergroup")) {
             InlineKeyboardMarkup inlineKeyboardButton = createInlineKeyboardButton(message.getFrom().getId());
             String userName = message.getFrom().getLastName() + message.getFrom().getFirstName();
             SendMessage msg = SendMessage.builder().chatId(message.getChatId().toString()).text("[@" + userName + "](tg://user?id=" + message.getFrom().getId() + ")" +

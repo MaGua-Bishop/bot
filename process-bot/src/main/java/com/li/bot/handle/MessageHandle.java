@@ -42,7 +42,7 @@ public class MessageHandle {
                     menu.execute(bot, message);
                 }
             }
-        }else if(type.equals("group") && message.getText().equals("设置工作群")){
+        }else if((type.equals("group") || type.equals("supergroup")) && message.getText().equals("设置工作群")){
             botMenuFactory.getMenu("设置工作群").execute(bot, message);
         }
     }
