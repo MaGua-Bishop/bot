@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.li.bot.mapper.OrderMapper">
+
+    <resultMap type="UserAndOrderVo" id="getUserAndOrderVo">
+        <result property="orderId"    column="order_id"    />
+        <result property="tgId"    column="tg_id"    />
+        <result property="businessName"    column="business_name"    />
+        <result property="businessMoney"    column="business_money"    />
+        <result property="orderStatus"    column="order_status"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <resultMap type="OrderAndBusinessVo" id="getOrderAndBusiness">
+        <result property="orderId"    column="order_id"    />
+        <result property="businessId"    column="business_id"    />
+        <result property="businessName"    column="business_name"    />
+        <result property="orderStatus"    column="order_status"    />
+        <result property="businessMoney"    column="business_money"    />
+    </resultMap>
+
+
+
+    <select id="getUserAndOrderVoByTgId" resultMap="getUserAndOrderVo">
+        SELECT o.order_id,u.tg_id,b.name as business_name,b.money as business_money,o.status as order_status,o.create_time
+        From tg_order o LEFT JOIN  tg_user u ON u.tg_id = o.tg_id LEFT JOIN tg_business b ON o.business_id = b.business_id
+        WHERE o.tg_id = #{tgId}
+    </select>
+
+    <select id="getOrderByBusinessIdAndStatus" resultMap="getOrderAndBusiness">
+        select o.order_id as order_id ,b.name as business_name ,o.status as order_status, b.money as business_money ,b.business_id as business_id from tg_order o left join tg_business b on o.business_id = b.business_id
+        where o.business_id = #{businessId} and o.status = #{status}
+    </select>
+
+
+</mapper>
