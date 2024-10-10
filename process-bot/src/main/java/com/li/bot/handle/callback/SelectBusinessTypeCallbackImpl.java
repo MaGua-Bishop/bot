@@ -43,7 +43,7 @@ public class SelectBusinessTypeCallbackImpl implements ICallback {
             buttonList.add(InlineKeyboardButton.builder().text(business.getName()).callbackData("businessId:"+String.valueOf(business.getBusinessId())).build());
         }
 
-        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 5);
+        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
 
 
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();

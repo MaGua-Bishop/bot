@@ -1,6 +1,7 @@
 package com.li.bot.handle.callback;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.google.common.collect.Lists;
 import com.li.bot.entity.database.Business;
 import com.li.bot.mapper.BusinessMapper;
 import com.li.bot.service.impl.BotServiceImpl;
@@ -11,7 +12,12 @@ import org.telegram.telegrambots.meta.api.methods.CopyMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @Author: li
@@ -35,17 +41,17 @@ public class BusinessCallbackImpl implements ICallback {
         return businessMapper.selectOne(wrapper);
     }
 
-//    private InlineKeyboardMarkup createInlineKeyboardButton(Long businessId) {
-//        List<InlineKeyboardButton> buttonList = new ArrayList<>();
-//        buttonList.add(InlineKeyboardButton.builder().text("发单").callbackData("user:send:" + "businessId:" + businessId).build());
-//
-//        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 5);
-//
-//
-//        InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
-//
-//        return inlineKeyboardMarkup;
-//    }
+    private InlineKeyboardMarkup createInlineKeyboardButton(Long businessId) {
+        List<InlineKeyboardButton> buttonList = new ArrayList<>();
+        buttonList.add(InlineKeyboardButton.builder().text("下一步").callbackData("nextstep").build());
+
+        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 5);
+
+
+        InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
+
+        return inlineKeyboardMarkup;
+    }
 
     @Override
     public void execute(BotServiceImpl bot, CallbackQuery callbackQuery) throws TelegramApiException {
@@ -67,6 +73,7 @@ public class BusinessCallbackImpl implements ICallback {
         copyMessage.setChatId(callbackQuery.getFrom().getId());
         copyMessage.setMessageId(businessInfo.getMessageId());
         copyMessage.setFromChatId(businessInfo.getTgId());
+        copyMessage.setReplyMarkup(createInlineKeyboardButton(businessId));
 
 //        String text = "```" + businessInfo.getName() + "业务信息\n" +
 //                "业务描述：" + businessInfo.getDescription() + "\n" +

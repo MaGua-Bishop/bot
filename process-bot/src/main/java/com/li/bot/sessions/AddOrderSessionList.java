@@ -19,7 +19,7 @@ public class AddOrderSessionList {
 
     public void addUserSession(Long tgId, Business business) {
         OrderSession orderSession = new OrderSession(business);
-        orderSession.setState(OrderSessionState.WAITING_FOR_USER_MESSAGE);
+//        orderSession.setState(OrderSessionState.WAITING_FOR_USER_MESSAGE);
         userSessionMap.put(tgId, orderSession);
     }
     public OrderSession getUserSession(Long tgId) {

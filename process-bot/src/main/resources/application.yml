@@ -6,7 +6,7 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/${DATABASE_BOT_HOST}?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+    url: jdbc:postgresql://localhost:5432/process_bot?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Shanghai
     username: postgres
     password: root
 
@@ -22,5 +22,5 @@ bot:
   token: 8030696965:AAFY6eZti5yIg7J0p-mXIHSH9fLsmrvHBFE # token
   host: 127.0.0.1 #ip
   port: 7890    #端口
-  url: https://f0e2-2409-8950-d0b-1366-34e1-d1bd-dc76-415a.ngrok-free.app/webhook #ngrok地址]
+  url: https://4f84-223-104-136-38.ngrok-free.app/webhook #ngrok地址]
   groupFile: D:\ruoyi\json\workgroup.json
