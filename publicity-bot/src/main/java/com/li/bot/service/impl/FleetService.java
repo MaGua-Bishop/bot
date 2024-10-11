@@ -92,6 +92,13 @@ public class FleetService {
             future.cancel(false);
         }
 
+        int intervalMinutes = convoys.getIntervalMinutes();
+        if (intervalMinutes <= 0) {
+            // 如果间隔时间小于或等于0，不调度任务
+            System.out.println("车队 " + convoys.getName() + " 的间隔时间设置为0或负数，不进行调度。");
+            return;
+        }
+
         CronTrigger trigger = new CronTrigger("0 */" + convoys.getIntervalMinutes() + " * * * *");
         ScheduledFuture<?> future = taskScheduler.schedule(() -> runFleetTask(convoys), trigger);
         scheduledTasks.put(convoys.getConvoysId(), future);
