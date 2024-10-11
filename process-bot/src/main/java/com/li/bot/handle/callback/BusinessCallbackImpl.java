@@ -3,7 +3,9 @@ package com.li.bot.handle.callback;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
 import com.li.bot.entity.database.Business;
+import com.li.bot.entity.database.User;
 import com.li.bot.mapper.BusinessMapper;
+import com.li.bot.mapper.UserMapper;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.sessions.AddOrderSessionList;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,16 +38,25 @@ public class BusinessCallbackImpl implements ICallback {
     @Autowired
     private AddOrderSessionList addOrderSessionList ;
 
+    @Autowired
+    private UserMapper userMapper ;
+
     private Business getBusinessInfo(Long businessId) {
         LambdaQueryWrapper<Business> wrapper = new LambdaQueryWrapper<Business>().eq(Business::getBusinessId, businessId);
         return businessMapper.selectOne(wrapper);
     }
 
-    private InlineKeyboardMarkup createInlineKeyboardButton(Long businessId) {
+    private InlineKeyboardMarkup createInlineKeyboardButton(Long businessId,Long tgId) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         buttonList.add(InlineKeyboardButton.builder().text("下一步").callbackData("nextstep").build());
 
-        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 5);
+        User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, tgId));
+        if (user != null && user.getIsAdmin()) {
+            buttonList.add(InlineKeyboardButton.builder().text("删除该业务").callbackData("adminDeleteBusiness:"+businessId).build());
+        }
+
+
+        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 1);
 
 
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
@@ -73,7 +84,7 @@ public class BusinessCallbackImpl implements ICallback {
         copyMessage.setChatId(callbackQuery.getFrom().getId());
         copyMessage.setMessageId(businessInfo.getMessageId());
         copyMessage.setFromChatId(businessInfo.getTgId());
-        copyMessage.setReplyMarkup(createInlineKeyboardButton(businessId));
+        copyMessage.setReplyMarkup(createInlineKeyboardButton(businessId,callbackQuery.getFrom().getId()));
 
 //        String text = "```" + businessInfo.getName() + "业务信息\n" +
 //                "业务描述：" + businessInfo.getDescription() + "\n" +

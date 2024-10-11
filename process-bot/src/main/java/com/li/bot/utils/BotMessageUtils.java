@@ -95,9 +95,10 @@ public class BotMessageUtils {
                 getPage(page) ;
     }
 
-    public static String getUserReplyMessage(String  type, Reply reply) {
-        return type+"订单信息\n" +
-                "接单时间:"+formatDateTime(reply.getCreateTime())+"\n"+
+    public static String getUserReplyMessage(String  type, Reply reply,String text,String name) {
+        return name+"\n" +
+                "<strong>订单内容:</strong>\n"+text+"\n" +
+                "<strong>接单时间:</strong>"+formatDateTime(reply.getCreateTime())+"\n"+
                 " 订单id:\n" +
                 "<code>"+reply.getOrderId()+"</code>";
     }

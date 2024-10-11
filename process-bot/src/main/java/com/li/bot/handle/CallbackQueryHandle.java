@@ -92,6 +92,10 @@ public class CallbackQueryHandle {
             callbackFactory.getCallback("select:business:type").execute(bot,callbackQuery);
             return;
         }
+        if(data.indexOf("adminDeleteBusiness:") == 0){
+            callbackFactory.getCallback("adminDeleteBusiness").execute(bot,callbackQuery);
+            return;
+        }
 
 //        bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("未找到对应按钮回调").build());
 

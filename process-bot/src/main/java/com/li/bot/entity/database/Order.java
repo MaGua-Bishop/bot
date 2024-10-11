@@ -36,7 +36,7 @@ public class Order {
     @TableField("update_time")
     private Date updateTime;  // 更新时间
 
-    @TableField("message_id")
-    private Integer messageId;
+    @TableField("message_text")
+    private String messageText;
 
 }

@@ -95,7 +95,7 @@ public class StartKeyImpl implements IKeyboard {
             buttonList.add(InlineKeyboardButton.builder().text(business.getName()).callbackData("select:businessId:"+String.valueOf(business.getBusinessId())).build());
         }
         buttonList.add(InlineKeyboardButton.builder().text("接单记录").callbackData("select:reply:records:").build());
-        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 5);
+        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
 
         return inlineKeyboardMarkup;
