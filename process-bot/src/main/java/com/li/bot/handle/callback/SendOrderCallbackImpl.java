@@ -4,12 +4,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
 import com.li.bot.entity.database.Business;
 import com.li.bot.entity.database.Order;
+import com.li.bot.entity.database.Reply;
 import com.li.bot.entity.database.User;
 import com.li.bot.mapper.BusinessMapper;
 import com.li.bot.mapper.OrderMapper;
 import com.li.bot.mapper.UserMapper;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.sessions.AddOrderSessionList;
+import com.li.bot.utils.BotMessageUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -24,6 +26,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -66,13 +69,7 @@ public class SendOrderCallbackImpl implements ICallback {
         List<User> useList = userMapper.selectList(new LambdaQueryWrapper<User>().eq(User::getIsAdmin, true));
 
         useList.forEach(u -> {
-//            CopyMessage copyMessage = new CopyMessage();
-//            copyMessage.setChatId(u.getTgId());
-//            copyMessage.setMessageId(business.getMessageId());
-//            copyMessage.setFromChatId(order.getTgId());
-//            InlineKeyboardMarkup inlineKeyboardButton = createInlineKeyboardButton(order.getOrderId());
-//            copyMessage.setReplyMarkup(inlineKeyboardButton);
-            SendMessage sendMessage = SendMessage.builder().chatId(u.getTgId()).text(order.getMessageText()).replyMarkup(createInlineKeyboardButton(order.getOrderId())).build();
+            SendMessage sendMessage = SendMessage.builder().chatId(u.getTgId()).text(BotMessageUtils.getOrderInfoMessage(new Date(), order.getMessageText(), business.getName(), order.getOrderId())).replyMarkup(createInlineKeyboardButton(order.getOrderId())).parseMode("html").build();
             try {
                 bot.execute(sendMessage);
             } catch (TelegramApiException e) {

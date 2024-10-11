@@ -8,8 +8,10 @@ import com.li.bot.entity.database.vo.OrderAndBusinessVo;
 import com.li.bot.entity.database.vo.UserAndOrderVo;
 import com.li.bot.enums.OrderStatus;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 
 public class BotMessageUtils {
@@ -17,9 +19,16 @@ public class BotMessageUtils {
 
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    private static SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
 
     private static String formatDateTime(LocalDateTime dateTime){
         return formatter.format(dateTime);
+    }
+
+    private static String formatDate(Date dateTime){
+        String nowTime = format.format(dateTime);
+        return nowTime;
     }
 
 
@@ -95,12 +104,20 @@ public class BotMessageUtils {
                 getPage(page) ;
     }
 
-    public static String getUserReplyMessage(String  type, Reply reply,String text,String name) {
+    public static String getUserReplyMessage(Reply reply,String text,String name) {
         return name+"\n" +
                 "<strong>订单内容:</strong>\n"+text+"\n" +
                 "<strong>接单时间:</strong>"+formatDateTime(reply.getCreateTime())+"\n"+
                 " 订单id:\n" +
                 "<code>"+reply.getOrderId()+"</code>";
+    }
+
+    public static String getOrderInfoMessage(Date dateTime, String text, String name, String orderId) {
+        return name+"\n" +
+                "<strong>订单内容:</strong>\n"+text+"\n" +
+                "<strong>报单时间:</strong>"+formatDate(dateTime)+"\n"+
+                " 订单id:\n" +
+                "<code>"+orderId+"</code>";
     }
 
 }

@@ -1,13 +1,17 @@
 package com.li.bot.handle.callback;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
 import com.li.bot.entity.Workgroup;
+import com.li.bot.entity.database.Business;
 import com.li.bot.entity.database.Order;
 import com.li.bot.enums.OrderStatus;
+import com.li.bot.mapper.BusinessMapper;
 import com.li.bot.mapper.OrderMapper;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.service.impl.FileService;
+import com.li.bot.utils.BotMessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.CopyMessage;
@@ -37,6 +41,9 @@ public class OrderYesCallbackImpl implements ICallback{
 
     @Autowired
     private OrderMapper orderMapper ;
+
+    @Autowired
+    private BusinessMapper businessMapper;
 
     @Autowired
     private FileService fileService ;
@@ -93,7 +100,10 @@ public class OrderYesCallbackImpl implements ICallback{
 //                    copyMessage.setMessageId(order.getMessageId());
 //                    copyMessage.setFromChatId(order.getTgId());
 //                    copyMessage.setReplyMarkup(createInlineKeyboardButton(order.getOrderId()));
-                    SendMessage sendMessage = SendMessage.builder().chatId(groupChatId).text(order.getMessageText()).replyMarkup(createInlineKeyboardButton(order.getOrderId())).build();
+
+                    Business business = businessMapper.selectOne(new LambdaQueryWrapper<Business>().eq(Business::getBusinessId, order.getBusinessId()));
+
+                    SendMessage sendMessage = SendMessage.builder().chatId(groupChatId).text(BotMessageUtils.getOrderInfoMessage(order.getCreateTime(), order.getMessageText(),business.getName(), order.getOrderId())).replyMarkup(createInlineKeyboardButton(order.getOrderId())).parseMode("html").build();
                     try {
                         bot.execute(sendMessage);
                     } catch (TelegramApiException e) {

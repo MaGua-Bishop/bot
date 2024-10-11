@@ -89,7 +89,7 @@ public class SelectRecordsCallbackImpl implements ICallback {
 //            copyMessage.setChatId(callbackQuery.getMessage().getChatId());
 //            copyMessage.setMessageId(order.getMessageId());
 //            copyMessage.setFromChatId(order.getTgId());
-            SendMessage message = SendMessage.builder().text(BotMessageUtils.getUserReplyMessage(type,reply,order.getMessageText(),name)).parseMode("html").chatId(callbackQuery.getMessage().getChatId()).build();
+            SendMessage message = SendMessage.builder().text(BotMessageUtils.getUserReplyMessage(reply,order.getMessageText(),name)).parseMode("html").chatId(callbackQuery.getMessage().getChatId()).build();
             try {
 //                bot.execute(copyMessage);
                 bot.execute(message);
