@@ -92,13 +92,15 @@ public class ChatMemberUpdatedHandle {
                 invite.setIsPermissions(true);
                 SendMessage sendMessage = new SendMessage();
                 sendMessage.setChatId(myChatMember.getFrom().getId());
-                sendMessage.setText(title+"频道添加机器人成功\n\n权限检测正常");
+                sendMessage.setText("<b>《"+title+"》</b>"+"添加机器人成功\n\n权限检测正常");
+                sendMessage.setParseMode("html");
                 bot.execute(sendMessage);
             }else{
                 invite.setIsPermissions(false);
                 SendMessage sendMessage = new SendMessage();
                 sendMessage.setChatId(myChatMember.getFrom().getId());
-                sendMessage.setText(title+"频道添加机器人成功\n\n权限检测不正常\n\n管理权限：发布消息/编辑其他人的消息/删除其他人的消息/邀请其他人权限，缺失权限机器人不能正常工作");
+                sendMessage.setText("<b>《"+title+"》</b>"+"添加机器人成功\n\n权限检测不正常\n\n管理权限：发布消息/编辑其他人的消息/删除其他人的消息/邀请其他人权限，缺失权限机器人不能正常工作");
+                sendMessage.setParseMode("html");
                 bot.execute(sendMessage);
             }
             addInviteOrUpdate(invite);
@@ -108,7 +110,8 @@ public class ChatMemberUpdatedHandle {
 
             SendMessage sendMessage = new SendMessage();
             sendMessage.setChatId(selectOne.getTgId());
-            sendMessage.setText("机器人离开了"+title+"频道");
+            sendMessage.setText("机器人离开了"+"<b>《"+title+"》</b>");
+            sendMessage.setParseMode("html");
             bot.execute(sendMessage);
             inviteMapper.deleteById(selectOne);
         }

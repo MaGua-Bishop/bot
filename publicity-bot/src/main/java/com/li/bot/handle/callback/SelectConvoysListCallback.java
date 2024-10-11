@@ -1,7 +1,10 @@
 package com.li.bot.handle.callback;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
 import com.li.bot.entity.database.Convoys;
+import com.li.bot.entity.database.ConvoysInvite;
+import com.li.bot.mapper.ConvoysInviteMapper;
 import com.li.bot.mapper.ConvoysMapper;
 import com.li.bot.service.impl.BotServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +33,10 @@ public class SelectConvoysListCallback implements ICallback{
     @Autowired
     private ConvoysMapper convoysMapper ;
 
+    @Autowired
+    private ConvoysInviteMapper convoysInviteMapper ;
+
+
     private InlineKeyboardMarkup createInlineKeyboardButton(List<Convoys> convoys){
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
 
@@ -37,7 +44,14 @@ public class SelectConvoysListCallback implements ICallback{
             buttonList.add(InlineKeyboardButton.builder().text("暂无车队").callbackData("null").build());
         }else {
             for (Convoys convoy : convoys) {
-                buttonList.add(InlineKeyboardButton.builder().text(convoy.getCopywriter()).callbackData("selectConvoysInfo:"+convoy.getConvoysId()).build());
+                List<ConvoysInvite> convoysInviteList = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoy.getConvoysId()));
+                String code = "";
+                if(convoys.equals(convoysInviteList.size())){
+                    code = "\uD83D\uDD34";
+                }else {
+                    code = "\uD83D\uDFE2";
+                }
+                buttonList.add(InlineKeyboardButton.builder().text(convoy.getCopywriter()+"("+convoysInviteList.size()+")"+code).callbackData("selectConvoysInfo:"+convoy.getConvoysId()).build());
             }
         }
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);

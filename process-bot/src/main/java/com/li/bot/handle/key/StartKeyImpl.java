@@ -3,8 +3,11 @@ package com.li.bot.handle.key;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
 import com.li.bot.entity.database.Business;
+import com.li.bot.entity.database.Order;
 import com.li.bot.entity.database.User;
+import com.li.bot.enums.OrderStatus;
 import com.li.bot.mapper.BusinessMapper;
+import com.li.bot.mapper.OrderMapper;
 import com.li.bot.mapper.UserMapper;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.utils.UserStartKeyUtils;
@@ -42,6 +45,9 @@ public class StartKeyImpl implements IKeyboard {
 
     @Autowired
     private BusinessMapper businessMapper ;
+
+    @Autowired
+    private OrderMapper orderMapper;
 
 
     private void startKey(BotServiceImpl bot, Message message) {
@@ -92,7 +98,10 @@ public class StartKeyImpl implements IKeyboard {
 
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         for (Business business : businesses) {
-            buttonList.add(InlineKeyboardButton.builder().text(business.getName()).callbackData("select:businessId:"+String.valueOf(business.getBusinessId())).build());
+
+            List<Order> orders = orderMapper.selectList(new LambdaQueryWrapper<Order>().eq(Order::getBusinessId, business.getBusinessId()).eq(Order::getStatus, OrderStatus.PENDING.getCode()));
+
+            buttonList.add(InlineKeyboardButton.builder().text(business.getName()+"("+orders.size()+")").callbackData("select:businessId:"+String.valueOf(business.getBusinessId())).build());
         }
         buttonList.add(InlineKeyboardButton.builder().text("接单记录").callbackData("select:reply:records:").build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);

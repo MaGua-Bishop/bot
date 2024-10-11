@@ -12,8 +12,10 @@ import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.sessions.AddBusinessSessionList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChat;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.*;
@@ -41,10 +43,24 @@ public class AdminSelectListCallbackImpl implements ICallback{
     @Autowired
     private ReplyMapper replyMapper;
 
-    private String getOrderInfo(String orderId,Long name){
+    private String getChatInfo(long userId, BotServiceImpl bot) {
+        GetChat getChat = new GetChat();
+        getChat.setChatId(String.valueOf(userId));
+
+        try {
+            Chat execute = bot.execute(getChat);
+            return execute.getUserName();
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private String getOrderInfo(String orderId,Long name,BotServiceImpl bot){
         Reply reply = replyMapper.selectOne(new LambdaQueryWrapper<Reply>().eq(Reply::getOrderId,orderId));
         Business business = businessMapper.selectOne(new LambdaQueryWrapper<Business>().eq(Business::getBusinessId, name));
-        return reply.getTgId() + " "+ business.getName() ;
+        String url = "<a href=\"tg://user?id="+reply.getTgId()+"\">"+getChatInfo(reply.getTgId(),bot)+"</a>" ;
+        return url + " "+ business.getName() ;
     }
 
 
@@ -114,10 +130,10 @@ public class AdminSelectListCallbackImpl implements ICallback{
            text.append("-----------------------------------\n");
            text.append("未回复订单总数: "+ orderList.size()+"\n");
            orderList.forEach(order -> {
-               String orderInfo = getOrderInfo(order.getOrderId(), order.getBusinessId());
+               String orderInfo = getOrderInfo(order.getOrderId(), order.getBusinessId(),bot);
                text.append(orderInfo+"\n");
            });
-           SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getFrom().getId()).text(String.valueOf(text)).build();
+           SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getFrom().getId()).text(String.valueOf(text)).parseMode("html").build();
            bot.execute(sendMessage);
        }
 

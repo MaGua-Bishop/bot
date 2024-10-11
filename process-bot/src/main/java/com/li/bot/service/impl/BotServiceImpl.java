@@ -112,6 +112,8 @@ public class BotServiceImpl extends TelegramWebhookBot {
     @Override
     public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
         if (update.hasMessage()) {
+
+
             String text = "";
             if(update.getMessage().getText() !=null){
                 text = update.getMessage().getText();

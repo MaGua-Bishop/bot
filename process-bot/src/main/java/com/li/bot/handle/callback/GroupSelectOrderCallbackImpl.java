@@ -23,6 +23,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -71,7 +72,7 @@ public class GroupSelectOrderCallbackImpl implements ICallback {
             }
         }
 
-        SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text(order.getMessageText()).replyMarkup(createInlineKeyboardButton(order.getOrderId())).build();
+        SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text(BotMessageUtils.getOrderInfoMessage(order.getCreateTime(), order.getMessageText(), "", order.getOrderId())).replyMarkup(createInlineKeyboardButton(order.getOrderId())).parseMode("html").build();
         try {
             bot.execute(sendMessage);
         } catch (TelegramApiException e) {

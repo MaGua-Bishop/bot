@@ -1,12 +1,12 @@
 server:
-  port: 8080
+  port: 8000
 
 # 数据源配置
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://${DATABASE_BOT_HOST}:${DATABASE_BOT_PORT}/publicity_bot?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+    url: jdbc:postgresql://localhost:${DATABASE_BOT_PORT}/publicity_bot?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Shanghai
     username: ${DATABASE_BOT_USERNAME}
     password: ${DATABASE_BOT_PASSWORD}
 
@@ -22,6 +22,6 @@ bot:
   token: 8030696965:AAFY6eZti5yIg7J0p-mXIHSH9fLsmrvHBFE # token
   host: 127.0.0.1 #ip
   port: 7890    #端口
-  url:  ${SERVER_HOST}/webhook #ngrok地址
+  url: https://b28f-111-55-96-15.ngrok-free.app/webhook #ngrok地址
   adminChannelFile: adminChannel.json
   textFile: text.txt
