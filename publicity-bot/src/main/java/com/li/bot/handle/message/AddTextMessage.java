@@ -35,7 +35,7 @@ public class AddTextMessage implements IMessage{
         String text = message.getText();
 
         // 定义正则表达式模式
-        String regex = "#晚安文本\\s*(.*)";
+        String regex = "#顶部文案\\s*(.*)";
         Pattern pattern = Pattern.compile(regex);
 
         // 创建Matcher对象

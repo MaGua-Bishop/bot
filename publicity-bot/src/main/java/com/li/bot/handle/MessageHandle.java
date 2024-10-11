@@ -34,7 +34,7 @@ public class MessageHandle {
         if(text.startsWith("#按钮名")){
             messageFactory.getMessage("addButton").execute(bot,message);
         }
-        if(text.startsWith("#晚安文本")){
+        if(text.startsWith("#顶部文案")){
             messageFactory.getMessage("addText").execute(bot,message);
         }
 

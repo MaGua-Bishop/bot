@@ -20,7 +20,7 @@ public class AdminAddTextCallback implements ICallback{
 
     @Override
     public void execute(BotServiceImpl bot, CallbackQuery callbackQuery) throws TelegramApiException {
-        SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("请输入晚安文本\n格式:\n<code>#晚安文本 晚安文本</code>").parseMode("html").build();
+        SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("请输入顶部文案\n格式:\n<code>#顶部文案 顶部文案</code>").parseMode("html").build();
         bot.execute(sendMessage);
     }
 }

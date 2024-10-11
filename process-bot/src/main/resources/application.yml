@@ -18,9 +18,9 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 bot:
-  botname: t.me/cha_info_china_bot # 机器人名称
-  token: 7478207741:AAHhv4pJ6oYnzThPGb_ZRk3BqENxcXk3hAQ # token
+  botname: t.me/lidemobot # 机器人名称
+  token: 8030696965:AAFY6eZti5yIg7J0p-mXIHSH9fLsmrvHBFE # token
   host: 127.0.0.1 #ip
   port: 7890    #端口
-  url: ${SERVER_HOST}/webhook #ngrok地址
+  url: https://1b1e-111-55-96-15.ngrok-free.app/webhook #ngrok地址
   groupFile: workgroup.json

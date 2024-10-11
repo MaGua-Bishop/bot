@@ -57,7 +57,7 @@ public class StartMessage implements IMessage{
             buttonList.add(InlineKeyboardButton.builder().text("\uD83D\uDE97创建车队").callbackData("adminAddConvoys").build());
             buttonList.add(InlineKeyboardButton.builder().text("创建互推导航按钮").callbackData("adminAddButton").build());
             buttonList.add(InlineKeyboardButton.builder().text("\uD83D\uDDD1删除互推导航按钮").callbackData("adminDeleteButton").build());
-            buttonList.add(InlineKeyboardButton.builder().text("\uD83D\uDDB9创建晚安文本").callbackData("adminAddText").build());
+            buttonList.add(InlineKeyboardButton.builder().text("\uD83D\uDDB9创建顶部文案").callbackData("adminAddText").build());
         }
 
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
