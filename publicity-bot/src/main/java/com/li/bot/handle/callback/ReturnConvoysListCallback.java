@@ -45,7 +45,7 @@ public class ReturnConvoysListCallback implements ICallback{
             buttonList.add(InlineKeyboardButton.builder().text("暂无车队").callbackData("null").build());
         }else {
             for (Convoys convoy : convoys) {
-                List<ConvoysInvite> convoysInviteList = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoy.getConvoysId()));
+                List<ConvoysInvite> convoysInviteList = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoy.getConvoysId()).eq(ConvoysInvite::getIsReview,true));
                 String code = "";
                 if(convoy.getCapacity()==convoysInviteList.size()){
                     code = "\uD83D\uDD34";

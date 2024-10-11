@@ -81,7 +81,7 @@ public class StartMessageMessage implements IMessage{
                 SendMessage send = SendMessage.builder().chatId(message.getChatId()).text(""+convoys.getName()+"车队有"+count+"个成员,满员！！！推送").build();
                 bot.execute(send);
                 log.info("{}车队有{}个成员,满员！！！",convoys.getName(),count);
-                List<ConvoysInvite> convoysInviteList = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoys.getConvoysId()));
+                List<ConvoysInvite> convoysInviteList = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoys.getConvoysId()).eq(ConvoysInvite::getIsReview,true));
                 List<Invite> inviteList = inviteMapper.getInviteListByIds(convoysInviteList.stream().map(ConvoysInvite::getInviteId).collect(Collectors.toList()));
 
                 inviteList.forEach(invite -> {

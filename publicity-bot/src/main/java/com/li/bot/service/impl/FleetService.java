@@ -102,7 +102,7 @@ public class FleetService {
             return;
         }
         // 你的定时任务逻辑
-        List<ConvoysInvite> convoysInviteList = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoys.getConvoysId()));
+        List<ConvoysInvite> convoysInviteList = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoys.getConvoysId()).eq(ConvoysInvite::getIsReview, true));
         if (convoysInviteList.isEmpty()) {
             System.out.println("车队 " + convoys.getName() + " 的定时任务执行了！当前时间：" + new java.util.Date()+"该车队没成员 没自动推送");
             return;

@@ -121,7 +121,7 @@ public class adminYesAudiCallback implements ICallback {
 
             //车队加入后 频道互发消息
 
-            List<ConvoysInvite> convoysInviteList = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoysInvite.getConvoysId()));
+            List<ConvoysInvite> convoysInviteList = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoysInvite.getConvoysId()).eq(ConvoysInvite::getIsReview,true));
             List<Invite> inviteList = inviteMapper.getInviteListByIds(convoysInviteList.stream().map(ConvoysInvite::getInviteId).collect(Collectors.toList()));
 
             inviteList.forEach(in -> {
