@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.CopyMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -65,14 +66,15 @@ public class SendOrderCallbackImpl implements ICallback {
         List<User> useList = userMapper.selectList(new LambdaQueryWrapper<User>().eq(User::getIsAdmin, true));
 
         useList.forEach(u -> {
-            CopyMessage copyMessage = new CopyMessage();
-            copyMessage.setChatId(u.getTgId());
-            copyMessage.setMessageId(business.getMessageId());
-            copyMessage.setFromChatId(order.getTgId());
-            InlineKeyboardMarkup inlineKeyboardButton = createInlineKeyboardButton(order.getOrderId());
-            copyMessage.setReplyMarkup(inlineKeyboardButton);
+//            CopyMessage copyMessage = new CopyMessage();
+//            copyMessage.setChatId(u.getTgId());
+//            copyMessage.setMessageId(business.getMessageId());
+//            copyMessage.setFromChatId(order.getTgId());
+//            InlineKeyboardMarkup inlineKeyboardButton = createInlineKeyboardButton(order.getOrderId());
+//            copyMessage.setReplyMarkup(inlineKeyboardButton);
+            SendMessage sendMessage = SendMessage.builder().chatId(u.getTgId()).text(order.getMessageText()).replyMarkup(createInlineKeyboardButton(order.getOrderId())).build();
             try {
-                bot.execute(copyMessage);
+                bot.execute(sendMessage);
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
@@ -80,6 +82,15 @@ public class SendOrderCallbackImpl implements ICallback {
         });
 
     }
+
+    private InlineKeyboardMarkup createButton(String name){
+        List<InlineKeyboardButton> buttonList = new ArrayList<>();
+        buttonList.add(InlineKeyboardButton.builder().text(name).callbackData("无").build());
+        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 5);
+        InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
+        return inlineKeyboardMarkup;
+    }
+
 
     @Override
     public synchronized void execute(BotServiceImpl bot, CallbackQuery callbackQuery) throws TelegramApiException {
@@ -126,7 +137,7 @@ public class SendOrderCallbackImpl implements ICallback {
         }
 
         Order order = new Order();
-        order.setMessageId(business.getMessageId());
+        order.setMessageText(business.getMessageText());
         order.setTgId(tgId);
         order.setBusinessId(business.getBusinessId());
         int insert = orderMapper.insertOrder(order);
@@ -143,10 +154,10 @@ public class SendOrderCallbackImpl implements ICallback {
                 //转发给管理员
                 sendMessageAdmin(user, business, order, bot);
 
-                bot.execute(DeleteMessage.builder()
-                        .chatId(callbackQuery.getMessage().getChatId())
-                        .messageId(callbackQuery.getMessage().getMessageId())
-                        .build());
+
+                EditMessageReplyMarkup editMessageReplyMarkup = EditMessageReplyMarkup.builder().chatId(callbackQuery.getMessage().getChatId()).messageId(callbackQuery.getMessage().getMessageId()).replyMarkup(createButton("报单成功")).build();
+                bot.execute(editMessageReplyMarkup);
+
 
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);

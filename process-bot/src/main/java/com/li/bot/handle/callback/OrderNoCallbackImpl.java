@@ -86,9 +86,9 @@ public class OrderNoCallbackImpl implements ICallback{
                 }
 
                 try {
-                    bot.execute(SendMessage.builder().chatId(order.getTgId()).text("```订单审核未通过回执id\n" +
-                            order.getOrderId()+"\n" +
-                            "```").parseMode("MarkdownV2").build());
+                    bot.execute(SendMessage.builder().chatId(order.getTgId()).text("订单审核未通过\n" +
+                            "订单id：\n" +
+                            "<code>"+order.getOrderId()+"</code>").parseMode("html").build());
                 } catch (TelegramApiException e) {
                     throw new RuntimeException(e);
                 }

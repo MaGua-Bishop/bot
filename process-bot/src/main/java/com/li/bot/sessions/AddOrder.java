@@ -96,7 +96,7 @@ public class AddOrder {
     private void handleUserMessageInput(Message message) {
         OrderSession userSession = addOrderSessionList.getUserSession(message.getFrom().getId());
         userSession.setState(OrderSessionState.WAITING_FOR_PURCHASE);
-        userSession.getBusiness().setMessageId(message.getMessageId());
+        userSession.getBusiness().setMessageText(message.getText());
             List<InlineKeyboardButton> buttonList = new ArrayList<>();
             buttonList.add(InlineKeyboardButton.builder().text("提交").callbackData("send:order:yes").build());
             buttonList.add(InlineKeyboardButton.builder().text("不提交").callbackData("send:order:no").build());

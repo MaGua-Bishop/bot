@@ -71,13 +71,9 @@ public class GroupSelectOrderCallbackImpl implements ICallback {
             }
         }
 
-        CopyMessage copyMessage = new CopyMessage();
-        copyMessage.setChatId(callbackQuery.getMessage().getChatId());
-        copyMessage.setMessageId(order.getMessageId());
-        copyMessage.setFromChatId(order.getTgId());
-        copyMessage.setReplyMarkup(createInlineKeyboardButton(order.getOrderId()));
+        SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text(order.getMessageText()).replyMarkup(createInlineKeyboardButton(order.getOrderId())).build();
         try {
-            bot.execute(copyMessage);
+            bot.execute(sendMessage);
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
         }

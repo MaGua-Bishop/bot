@@ -88,13 +88,14 @@ public class OrderYesCallbackImpl implements ICallback{
 
                 List<String> groupList = getGroupList();
                 for (String groupChatId : groupList) {
-                    CopyMessage copyMessage = new CopyMessage();
-                    copyMessage.setChatId(groupChatId);
-                    copyMessage.setMessageId(order.getMessageId());
-                    copyMessage.setFromChatId(order.getTgId());
-                    copyMessage.setReplyMarkup(createInlineKeyboardButton(order.getOrderId()));
+//                    CopyMessage copyMessage = new CopyMessage();
+//                    copyMessage.setChatId(groupChatId);
+//                    copyMessage.setMessageId(order.getMessageId());
+//                    copyMessage.setFromChatId(order.getTgId());
+//                    copyMessage.setReplyMarkup(createInlineKeyboardButton(order.getOrderId()));
+                    SendMessage sendMessage = SendMessage.builder().chatId(groupChatId).text(order.getMessageText()).replyMarkup(createInlineKeyboardButton(order.getOrderId())).build();
                     try {
-                        bot.execute(copyMessage);
+                        bot.execute(sendMessage);
                     } catch (TelegramApiException e) {
                         System.out.println("忽略重复点击错误");
                     }

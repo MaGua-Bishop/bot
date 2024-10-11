@@ -34,4 +34,7 @@ public class Business {
     @TableField("status")
     private Integer status;
 
+    @TableField(exist = false)
+    private String messageText;
+
 }

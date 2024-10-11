@@ -1,8 +1,11 @@
 package com.li.bot.handle.callback;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
+import com.li.bot.entity.database.Business;
 import com.li.bot.entity.database.Order;
 import com.li.bot.entity.database.Reply;
+import com.li.bot.mapper.BusinessMapper;
 import com.li.bot.mapper.OrderMapper;
 import com.li.bot.mapper.ReplyMapper;
 import com.li.bot.service.impl.BotServiceImpl;
@@ -40,6 +43,8 @@ public class SelectRecordsCallbackImpl implements ICallback {
     @Autowired
     private OrderMapper orderMapper ;
 
+    @Autowired
+    private BusinessMapper businessMapper ;
 
 
 
@@ -75,13 +80,18 @@ public class SelectRecordsCallbackImpl implements ICallback {
             String orderId = reply.getOrderId();
             UUID uuid = UUID.fromString(orderId);
             Order order = orderMapper.getOrderByOrderId(uuid);
-            CopyMessage copyMessage = new CopyMessage();
-            copyMessage.setChatId(callbackQuery.getMessage().getChatId());
-            copyMessage.setMessageId(order.getMessageId());
-            copyMessage.setFromChatId(order.getTgId());
-            SendMessage message = SendMessage.builder().text(BotMessageUtils.getUserReplyMessage(type,reply)).parseMode("html").chatId(callbackQuery.getMessage().getChatId()).build();
+
+            Long businessId = order.getBusinessId();
+            Business business = businessMapper.selectOne(new LambdaQueryWrapper<Business>().eq(Business::getBusinessId, businessId));
+            String name = business.getName();
+
+//            CopyMessage copyMessage = new CopyMessage();
+//            copyMessage.setChatId(callbackQuery.getMessage().getChatId());
+//            copyMessage.setMessageId(order.getMessageId());
+//            copyMessage.setFromChatId(order.getTgId());
+            SendMessage message = SendMessage.builder().text(BotMessageUtils.getUserReplyMessage(type,reply,order.getMessageText(),name)).parseMode("html").chatId(callbackQuery.getMessage().getChatId()).build();
             try {
-                bot.execute(copyMessage);
+//                bot.execute(copyMessage);
                 bot.execute(message);
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
