@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -35,12 +36,31 @@ public class FileService {
         }
     }
 
-    public List<Long> getAdminChannelList() {
+    public Map<String,String> getAdminChannelList() {
         String string = readFileContent();
-        AdminChannelFile adminChannelFile = JSONObject.parseObject(string, AdminChannelFile.class);
-        List<String> adminChannelList = adminChannelFile.getAdminChannelList();
-        return adminChannelList.stream().map(Long::parseLong).collect(Collectors.toList());
+        Map<String,String> adminChannelFile = JSONObject.parseObject(string, Map.class);
+        return adminChannelFile;
     }
+
+    public void addText(String text){
+        try {
+            new ObjectMapper().writeValue(new File(botConfig.getTextFile()), text);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String getText(){
+        String string = null;
+        try {
+            string = FileUtils.readFileToString(new File(botConfig.getTextFile()));
+            string = string.replaceAll("\"", "");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return string;
+    }
+
 
 
     public void addGroupId(String newGroupId) {

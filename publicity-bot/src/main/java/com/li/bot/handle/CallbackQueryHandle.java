@@ -51,6 +51,11 @@ public class CallbackQueryHandle {
             callbackFactory.getCallback("adminNoAudi").execute(bot,callbackQuery);
             return;
         }
+        if(data.indexOf("deleteButton:") == 0){
+            callbackFactory.getCallback("deleteButton").execute(bot,callbackQuery);
+            return;
+        }
+
 
 
     }

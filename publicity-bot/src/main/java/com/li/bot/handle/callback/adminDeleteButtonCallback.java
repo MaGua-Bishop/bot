@@ -1,8 +1,9 @@
 package com.li.bot.handle.callback;
 
 import com.google.common.collect.Lists;
+import com.li.bot.entity.database.Button;
 import com.li.bot.entity.database.Convoys;
-import com.li.bot.mapper.ConvoysMapper;
+import com.li.bot.mapper.ButtonMapper;
 import com.li.bot.service.impl.BotServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -20,25 +21,26 @@ import java.util.List;
  * @CreateTime: 2024-10-09
  */
 @Component
-public class SelectConvoysListCallback implements ICallback{
+public class adminDeleteButtonCallback implements ICallback{
 
     @Override
     public String getCallbackName() {
-        return "selectConvoysList";
+        return "adminDeleteButton";
     }
 
     @Autowired
-    private ConvoysMapper convoysMapper ;
+    private ButtonMapper buttonMapper ;
 
-    private InlineKeyboardMarkup createInlineKeyboardButton(List<Convoys> convoys){
+    private InlineKeyboardMarkup createInlineKeyboardButton(){
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
 
-        if(convoys.isEmpty()){
-            buttonList.add(InlineKeyboardButton.builder().text("暂无车队").callbackData("null").build());
+        List<Button> buttons = buttonMapper.selectList(null);
+        if(buttons.isEmpty()){
+            buttonList.add(InlineKeyboardButton.builder().text("暂无互推按钮").callbackData("null").build());
         }else {
-            for (Convoys convoy : convoys) {
-                buttonList.add(InlineKeyboardButton.builder().text(convoy.getCopywriter()).callbackData("selectConvoysInfo:"+convoy.getConvoysId()).build());
-            }
+            buttons.forEach(button -> {
+                buttonList.add(InlineKeyboardButton.builder().text(button.getName()).callbackData("deleteButton:"+button.getButtonId()).build());
+            });
         }
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
@@ -48,13 +50,7 @@ public class SelectConvoysListCallback implements ICallback{
 
     @Override
     public void execute(BotServiceImpl bot, CallbackQuery callbackQuery) throws TelegramApiException {
-        List<Convoys> convoys = convoysMapper.selectList(null);
-        String text = "" ;
-        for (Convoys convoy : convoys) {
-            text += "\uD83C\uDFCE\uFE0F" ;
-        }
-        SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId())  .text("请选择需要申请的车队\n\n车队数量:"+convoys.size()+"\n"+text+"\n\n快来加入吧!!!").replyMarkup(createInlineKeyboardButton(convoys))
-                .parseMode("html").build();
+        SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("请点击要删除互推导航按钮(点击按钮直接删除)").replyMarkup(createInlineKeyboardButton()).parseMode("html").build();
         bot.execute(sendMessage);
     }
 }

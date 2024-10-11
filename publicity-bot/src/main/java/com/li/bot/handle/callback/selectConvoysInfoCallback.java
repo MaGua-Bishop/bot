@@ -93,7 +93,7 @@ public class selectConvoysInfoCallback implements ICallback{
             }
         }
 
-        buttonList.add(InlineKeyboardButton.builder().text("返回").callbackData("returnConvoysList").build());
+        buttonList.add(InlineKeyboardButton.builder().text("\uD83D\uDD19返回").callbackData("returnConvoysList").build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 1);
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
         return inlineKeyboardMarkup;

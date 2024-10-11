@@ -23,6 +23,8 @@ public class BotConfig {
 
     private String adminChannelFile ;
 
+    private String textFile;
+
 
 
     public DefaultBotOptions getDefaultBotOptions(){

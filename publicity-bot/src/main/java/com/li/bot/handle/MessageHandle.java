@@ -34,6 +34,9 @@ public class MessageHandle {
         if(text.startsWith("#按钮名")){
             messageFactory.getMessage("addButton").execute(bot,message);
         }
+        if(text.startsWith("#晚安文本")){
+            messageFactory.getMessage("addText").execute(bot,message);
+        }
 
         IMessage m = messageFactory.getMessage(text);
         if(m !=null){

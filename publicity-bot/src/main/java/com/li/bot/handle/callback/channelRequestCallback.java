@@ -23,8 +23,10 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @Author: li
@@ -64,7 +66,7 @@ public class channelRequestCallback implements ICallback{
                 buttonList.add(InlineKeyboardButton.builder().text(invite.getName()).callbackData("channelRequest:"+invite.getInviteId()).build());
             }
         }
-        buttonList.add(InlineKeyboardButton.builder().text("返回").callbackData("returnConvoysList").build());
+        buttonList.add(InlineKeyboardButton.builder().text("\uD83D\uDD19返回").callbackData("returnConvoysList").build());
 
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 1);
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
@@ -128,7 +130,10 @@ public class channelRequestCallback implements ICallback{
         bot.execute(sendMessage);
 
         //发送消息给频道管理员同意或拒绝加入
-        List<Long> adminChannelList = fileService.getAdminChannelList();
+        Map<String,String> adminChannelList = fileService.getAdminChannelList();
+
+        String string = adminChannelList.get("id");
+
 
         Convoys convoys = convoysMapper.selectOne(new LambdaQueryWrapper<Convoys>().eq(Convoys::getConvoysId, convoysId));
 
@@ -137,10 +142,8 @@ public class channelRequestCallback implements ICallback{
                 +"频道人数:"+ invite.getMemberCount() + "\n"
                 +"申请车队: "+convoys.getName();
 
-        for (Long adminChannel : adminChannelList) {
-            SendMessage send = SendMessage.builder().chatId(adminChannel).text(text).parseMode("html").replyMarkup(createInlineKeyboardButton02(convoysInvite.getId())).build();
-            bot.execute(send);
-        }
+        SendMessage send = SendMessage.builder().chatId(string).text(text).parseMode("html").replyMarkup(createInlineKeyboardButton02(convoysInvite.getId())).build();
+        bot.execute(send);
 
     }
 }

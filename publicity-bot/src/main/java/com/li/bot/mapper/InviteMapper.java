@@ -5,6 +5,7 @@ import com.li.bot.entity.database.Invite;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -27,6 +28,9 @@ public interface InviteMapper extends BaseMapper<Invite> {
             "</foreach>" +
             "</script>")
     List<Invite> getInviteListByIds(@Param("ids")List<Long> ids);
+
+    @Update("UPDATE tg_invite SET message_id = #{messageId} WHERE invite_id = #{inviteId}")
+    int updateMessageIdById(@Param("messageId") Integer messageId, @Param("inviteId") Long inviteId);
 
 
 

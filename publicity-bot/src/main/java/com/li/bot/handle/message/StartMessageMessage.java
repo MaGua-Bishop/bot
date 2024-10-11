@@ -5,12 +5,14 @@ import com.google.common.collect.Lists;
 import com.li.bot.entity.database.*;
 import com.li.bot.mapper.*;
 import com.li.bot.service.impl.BotServiceImpl;
+import com.li.bot.service.impl.FileService;
 import com.li.bot.utils.BotMessageUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
+import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -49,6 +51,9 @@ public class StartMessageMessage implements IMessage{
     @Autowired
     private ButtonMapper buttonMapper ;
 
+    @Autowired
+    private FileService fileService ;
+
     private InlineKeyboardMarkup createInlineKeyboardButton(){
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
 
@@ -65,22 +70,26 @@ public class StartMessageMessage implements IMessage{
         return inlineKeyboardMarkup;
     }
 
-    private void groupSendMessage(BotServiceImpl bot){
+    private void groupSendMessage(BotServiceImpl bot,Message message) throws TelegramApiException {
         //有哪些车队
         List<Convoys> convoysList = convoysMapper.selectList(null);
         log.info("当前有{}个车队",convoysList.size());
         for (Convoys convoys : convoysList) {
             Long count = convoysInviteMapper.getCountByConvoysId(convoys.getConvoysId());
             if(convoys.getCapacity().equals(count)){
+                SendMessage send = SendMessage.builder().chatId(message.getChatId()).text(""+convoys.getName()+"车队有"+count+"个成员,满员！！！推送").build();
+                bot.execute(send);
                 log.info("{}车队有{}个成员,满员！！！",convoys.getName(),count);
                 List<ConvoysInvite> convoysInviteList = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoys.getConvoysId()));
                 List<Invite> inviteList = inviteMapper.getInviteListByIds(convoysInviteList.stream().map(ConvoysInvite::getInviteId).collect(Collectors.toList()));
 
                 inviteList.forEach(invite -> {
-                    String text = BotMessageUtils.getConvoysMemberInfoList(inviteList);
+                    String text = fileService.getText()+"\n\n";
+                    text += BotMessageUtils.getConvoysMemberInfoList(inviteList);
                     SendMessage sendMessage = SendMessage.builder().chatId(invite.getChatId()).text(text).parseMode("html").replyMarkup(createInlineKeyboardButton()).build();
+                    Message execute = null;
                     try {
-                        Message execute = bot.execute(sendMessage);
+                        execute = bot.execute(sendMessage);
 
                         Integer messageId = invite.getMessageId();
                         if(messageId == null){
@@ -99,7 +108,8 @@ public class StartMessageMessage implements IMessage{
                             inviteMapper.updateById(invite);
                         }
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        // 更新messageId为空
+                        inviteMapper.updateMessageIdById(execute.getMessageId(), invite.getInviteId());
                     }
                 });
             }else {
@@ -114,7 +124,7 @@ public class StartMessageMessage implements IMessage{
         if(message.getChat().getType().equals("private")){
             User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, message.getFrom().getId()));
             if(user.getIsAdmin()){
-                groupSendMessage(bot);
+                groupSendMessage(bot,message);
                 SendMessage sendMessage = SendMessage.builder().chatId(message.getChatId()).text("推送完成").build();
                 bot.execute(sendMessage);
             }

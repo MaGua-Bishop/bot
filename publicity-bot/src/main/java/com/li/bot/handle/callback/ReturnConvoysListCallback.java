@@ -31,11 +31,9 @@ public class ReturnConvoysListCallback implements ICallback{
     @Autowired
     private ConvoysMapper convoysMapper ;
 
-    private InlineKeyboardMarkup createInlineKeyboardButton(){
+    private InlineKeyboardMarkup createInlineKeyboardButton(List<Convoys> convoys){
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
 
-
-        List<Convoys> convoys = convoysMapper.selectList(null);
         if(convoys.isEmpty()){
             buttonList.add(InlineKeyboardButton.builder().text("暂无车队").callbackData("null").build());
         }else {
@@ -52,10 +50,16 @@ public class ReturnConvoysListCallback implements ICallback{
 
     @Override
     public void execute(BotServiceImpl bot, CallbackQuery callbackQuery) throws TelegramApiException {
+        List<Convoys> convoys = convoysMapper.selectList(null);
+        String text = "" ;
+        for (Convoys convoy : convoys) {
+            text += "\uD83C\uDFCE\uFE0F" ;
+        }
         bot.execute(EditMessageText.builder()
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
-                .text("请选择需要申请的车队").replyMarkup(createInlineKeyboardButton())
+                .text("请选择需要申请的车队\n\n车队数量:"+convoys.size()+"\n"+text+"\n\n快来加入吧!!!").replyMarkup(createInlineKeyboardButton(convoys))
+                        .parseMode("html")
                 .build());
     }
 }

@@ -2,8 +2,10 @@ package com.li.bot.handle.message;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
+import com.li.bot.config.BotConfig;
 import com.li.bot.mapper.UserMapper;
 import com.li.bot.service.impl.BotServiceImpl;
+import com.li.bot.service.impl.FileService;
 import com.li.bot.utils.BotMessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -16,6 +18,9 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @Author: li
@@ -32,16 +37,27 @@ public class StartMessage implements IMessage{
     @Autowired
     private UserMapper userMapper ;
 
+    @Autowired
+    private BotConfig botConfig ;
+
+    @Autowired
+    private FileService fileService ;
+
+
     private InlineKeyboardMarkup createInlineKeyboardButton(com.li.bot.entity.database.User user){
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
 
-        buttonList.add(InlineKeyboardButton.builder().text("邀请到频道").url("https://t.me/lidemobot?startchannel=true").build());
+        buttonList.add(InlineKeyboardButton.builder().text("➕邀请到频道").url("https://"+botConfig.getBotname()+"?startchannel=true").build());
 //        buttonList.add(InlineKeyboardButton.builder().text("车队列表").url("https://t.me/lidemobot?startchannel=true").build());
-        buttonList.add(InlineKeyboardButton.builder().text("查看车队").callbackData("selectConvoysList").build());
-        buttonList.add(InlineKeyboardButton.builder().text("审批频道").url("https://t.me/demo2test").build());
+        buttonList.add(InlineKeyboardButton.builder().text("\uD83D\uDE97查看车队").callbackData("selectConvoysList").build());
+        Map<String, String> map = fileService.getAdminChannelList();
+        String url = map.get("url");
+        buttonList.add(InlineKeyboardButton.builder().text("审批频道").url(url).build());
         if(user.getIsAdmin()){
-            buttonList.add(InlineKeyboardButton.builder().text("创建车队").callbackData("adminAddConvoys").build());
+            buttonList.add(InlineKeyboardButton.builder().text("\uD83D\uDE97创建车队").callbackData("adminAddConvoys").build());
             buttonList.add(InlineKeyboardButton.builder().text("创建互推导航按钮").callbackData("adminAddButton").build());
+            buttonList.add(InlineKeyboardButton.builder().text("\uD83D\uDDD1删除互推导航按钮").callbackData("adminDeleteButton").build());
+            buttonList.add(InlineKeyboardButton.builder().text("\uD83D\uDDB9创建晚安文本").callbackData("adminAddText").build());
         }
 
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
