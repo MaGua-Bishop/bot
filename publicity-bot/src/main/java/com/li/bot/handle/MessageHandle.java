@@ -3,6 +3,8 @@ package com.li.bot.handle;
 import com.li.bot.handle.message.IMessage;
 import com.li.bot.handle.message.MessageFactory;
 import com.li.bot.service.impl.BotServiceImpl;
+import com.li.bot.sessions.UpdateConvoysSession;
+import com.li.bot.sessions.UpdateConvoysSessionList;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -19,15 +21,23 @@ public class MessageHandle {
     private Message message ;
     private MessageFactory messageFactory ;
 
-    public MessageHandle(BotServiceImpl bot, Message message, MessageFactory messageFactory) {
+    private UpdateConvoysSessionList updateConvoysSessionList ;
+
+    public MessageHandle(BotServiceImpl bot, Message message, MessageFactory messageFactory, UpdateConvoysSessionList updateConvoysSessionList) {
         this.bot = bot;
         this.message = message;
         this.messageFactory = messageFactory;
+        this.updateConvoysSessionList = updateConvoysSessionList;
     }
 
     public void handle() throws TelegramApiException {
         String text = message.getText();
 
+        UpdateConvoysSession userSession = updateConvoysSessionList.getUserSession(message.getFrom().getId());
+        if(userSession != null){
+            messageFactory.getMessage("updateConvoysTime").execute(bot,message);
+            return ;
+        }
         if(text.startsWith("#车队名")){
             messageFactory.getMessage("addConvoys").execute(bot,message);
         }

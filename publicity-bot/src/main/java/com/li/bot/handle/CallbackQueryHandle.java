@@ -35,6 +35,10 @@ public class CallbackQueryHandle {
             callback.execute(bot,callbackQuery);
             return ;
         }
+        if(data.indexOf("updateConvoysTime:") == 0){
+            callbackFactory.getCallback("updateConvoysTime").execute(bot,callbackQuery);
+            return;
+        }
         if(data.indexOf("selectConvoysInfo:") == 0){
             callbackFactory.getCallback("selectConvoysInfo").execute(bot,callbackQuery);
             return;

@@ -46,7 +46,7 @@ public class SelectConvoysListCallback implements ICallback{
             for (Convoys convoy : convoys) {
                 List<ConvoysInvite> convoysInviteList = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoy.getConvoysId()));
                 String code = "";
-                if(convoys.equals(convoysInviteList.size())){
+                if(convoy.getCapacity()==convoysInviteList.size()){
                     code = "\uD83D\uDD34";
                 }else {
                     code = "\uD83D\uDFE2";

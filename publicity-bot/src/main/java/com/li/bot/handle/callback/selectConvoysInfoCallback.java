@@ -5,9 +5,11 @@ import com.google.common.collect.Lists;
 import com.li.bot.entity.database.Convoys;
 import com.li.bot.entity.database.ConvoysInvite;
 import com.li.bot.entity.database.Invite;
+import com.li.bot.entity.database.User;
 import com.li.bot.mapper.ConvoysInviteMapper;
 import com.li.bot.mapper.ConvoysMapper;
 import com.li.bot.mapper.InviteMapper;
+import com.li.bot.mapper.UserMapper;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.utils.BotMessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +42,9 @@ public class selectConvoysInfoCallback implements ICallback{
 
     @Autowired
     private InviteMapper inviteMapper ;
+
+    @Autowired
+    private UserMapper userMapper ;
 
     @Autowired
     private ConvoysInviteMapper convoysInviteMapper ;
@@ -92,7 +97,10 @@ public class selectConvoysInfoCallback implements ICallback{
                 }
             }
         }
-
+        User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, tgId));
+        if(user.getIsAdmin()){
+            buttonList.add(InlineKeyboardButton.builder().text("修改车队推送间隔").callbackData("updateConvoysTime:"+convoysId).build());
+        }
         buttonList.add(InlineKeyboardButton.builder().text("\uD83D\uDD19返回").callbackData("returnConvoysList").build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 1);
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();

@@ -48,6 +48,7 @@ public class StartMessage implements IMessage{
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
 
         buttonList.add(InlineKeyboardButton.builder().text("➕邀请到频道").url("https://"+botConfig.getBotname()+"?startchannel=true").build());
+        buttonList.add(InlineKeyboardButton.builder().text("➕邀请到群聊").url("https://"+botConfig.getBotname()+"?startgroup").build());
 //        buttonList.add(InlineKeyboardButton.builder().text("车队列表").url("https://t.me/lidemobot?startchannel=true").build());
         buttonList.add(InlineKeyboardButton.builder().text("\uD83D\uDE97查看车队").callbackData("selectConvoysList").build());
         Map<String, String> map = fileService.getAdminChannelList();

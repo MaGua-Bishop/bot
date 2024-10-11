@@ -6,8 +6,10 @@ import com.li.bot.entity.database.Convoys;
 import com.li.bot.mapper.ConvoysMapper;
 import com.li.bot.mapper.UserMapper;
 import com.li.bot.service.impl.BotServiceImpl;
+import com.li.bot.service.impl.FleetService;
 import com.li.bot.utils.BotMessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -34,8 +36,14 @@ public class AddConvoysMessage implements IMessage{
     }
 
 
-    @Autowired
-    private ConvoysMapper convoysMapper ;
+    private  final FleetService fleetService ;
+
+    public AddConvoysMessage(@Lazy FleetService fleetService) {
+        this.fleetService = fleetService;
+    }
+
+
+
 
     @Override
     public void execute(BotServiceImpl bot, Message message) throws TelegramApiException {
@@ -67,7 +75,8 @@ public class AddConvoysMessage implements IMessage{
             convoys.setCapacity(fleetCapacity);
             convoys.setSubscription(minSubscribers);
             convoys.setTgId(message.getFrom().getId());
-            convoysMapper.insert(convoys);
+
+            fleetService.addNewConvoy(convoys);
 
             bot.execute(SendMessage.builder()
                     .chatId(message.getChatId().toString())

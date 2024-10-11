@@ -3,11 +3,17 @@ package com.li.bot.service.impl;
 
 import com.li.bot.config.BotConfig;
 import com.li.bot.handle.CallbackQueryHandle;
+import com.li.bot.handle.ChannelPostHandle;
 import com.li.bot.handle.MessageHandle;
 import com.li.bot.handle.callback.CallbackFactory;
 import com.li.bot.handle.ChatMemberUpdatedHandle;
+import com.li.bot.handle.callback.SelectConvoysListCallback;
 import com.li.bot.handle.message.MessageFactory;
+import com.li.bot.mapper.ButtonMapper;
+import com.li.bot.mapper.ConvoysInviteMapper;
+import com.li.bot.mapper.ConvoysMapper;
 import com.li.bot.mapper.InviteMapper;
+import com.li.bot.sessions.UpdateConvoysSessionList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
@@ -16,6 +22,7 @@ import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.updates.SetWebhook;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.ChatMemberUpdated;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -89,13 +96,30 @@ public class BotServiceImpl extends TelegramWebhookBot {
 
     @Autowired
     private InviteMapper inviteMapper ;
+    @Autowired
+    private ConvoysMapper convoysMapper;
+
+    @Autowired
+    private ConvoysInviteMapper convoysInviteMapper;
+
+    @Autowired
+    private UpdateConvoysSessionList updateConvoysSessionList ;
+
+    @Autowired
+    private FileService fileService ;
+
+    @Autowired
+    private ButtonMapper buttonMapper ;
+
+
+
 
     @Override
     public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
         if (update.hasMessage()) {
             if (update.getMessage().hasText()) {
                 try {
-                    new MessageHandle(this, update.getMessage(),messageFactory).handle();
+                    new MessageHandle(this, update.getMessage(),messageFactory,updateConvoysSessionList).handle();
                 } catch (TelegramApiException e) {
                     throw new RuntimeException(e);
                 }
@@ -114,12 +138,16 @@ public class BotServiceImpl extends TelegramWebhookBot {
         if(update.hasMyChatMember()){
             ChatMemberUpdated myChatMember = update.getMyChatMember();
             try {
-                new ChatMemberUpdatedHandle(this,myChatMember, inviteMapper).handle();
+                new ChatMemberUpdatedHandle(this,myChatMember, inviteMapper, convoysMapper, convoysInviteMapper).handle();
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
-
         }
+        if(update.hasChannelPost()){
+            Message channelPost = update.getChannelPost();
+            new ChannelPostHandle(this, channelPost, convoysInviteMapper, inviteMapper, fileService, buttonMapper).handle();
+        }
+
         return null;
     }
 }

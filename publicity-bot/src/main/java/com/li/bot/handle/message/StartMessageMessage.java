@@ -6,6 +6,7 @@ import com.li.bot.entity.database.*;
 import com.li.bot.mapper.*;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.service.impl.FileService;
+import com.li.bot.service.impl.FleetService;
 import com.li.bot.utils.BotMessageUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,7 +71,7 @@ public class StartMessageMessage implements IMessage{
         return inlineKeyboardMarkup;
     }
 
-    private void groupSendMessage(BotServiceImpl bot,Message message) throws TelegramApiException {
+    private void groupSendMessage(BotServiceImpl bot, Message message) throws TelegramApiException {
         //有哪些车队
         List<Convoys> convoysList = convoysMapper.selectList(null);
         log.info("当前有{}个车队",convoysList.size());
