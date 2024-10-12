@@ -29,5 +29,8 @@ public class Convoys {
     private Long subscription;
     @TableField("interval_minutes")
     private int intervalMinutes;
+    @TableField("read")
+    private Long read;
+
 
 }

@@ -20,7 +20,7 @@ public class AdminAddConvoysCallback implements ICallback{
 
     @Override
     public void execute(BotServiceImpl bot, CallbackQuery callbackQuery) throws TelegramApiException {
-        SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("创建车队格式:\n<code>#车队名 车队名\n#车队文案 车队文案\n#车队容量 车队容量\n#频道最低订阅数量 频道订阅数量</code>").parseMode("html").build();
+        SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("创建车队格式:\n<code>#车队标题 车队标题\n#车队介绍 车队介绍\n#车队容量 车队容量\n#最低订阅数量 订阅数量\n#最低阅读数量 阅读数量</code>").parseMode("html").build();
         bot.execute(sendMessage);
     }
 }

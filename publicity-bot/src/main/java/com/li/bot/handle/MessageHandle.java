@@ -38,7 +38,7 @@ public class MessageHandle {
             messageFactory.getMessage("updateConvoysTime").execute(bot,message);
             return ;
         }
-        if(text.startsWith("#车队名")){
+        if(text.startsWith("#车队标题")){
             messageFactory.getMessage("addConvoys").execute(bot,message);
         }
         if(text.startsWith("#按钮名")){

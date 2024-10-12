@@ -59,6 +59,14 @@ public class CallbackQueryHandle {
             callbackFactory.getCallback("deleteButton").execute(bot,callbackQuery);
             return;
         }
+        if(data.indexOf("next:select:convoys:") ==0 || data.indexOf("prev:select:convoys:")==0){
+            callbackFactory.getCallback("page:select:convoys").execute(bot,callbackQuery);
+            return ;
+        }
+        if(data.indexOf("applyToJoin:") ==0){
+            callbackFactory.getCallback("applyToJoin").execute(bot,callbackQuery);
+            return ;
+        }
 
 
 

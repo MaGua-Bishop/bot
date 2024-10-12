@@ -2,18 +2,22 @@ package com.li.bot.handle.callback;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
+import com.li.bot.entity.database.Convoys;
 import com.li.bot.entity.database.ConvoysInvite;
 import com.li.bot.entity.database.Invite;
 import com.li.bot.entity.database.User;
+import com.li.bot.enums.ConvoysInviteStatus;
 import com.li.bot.mapper.ConvoysInviteMapper;
+import com.li.bot.mapper.ConvoysMapper;
 import com.li.bot.mapper.InviteMapper;
 import com.li.bot.mapper.UserMapper;
 import com.li.bot.service.impl.BotServiceImpl;
+import com.li.bot.utils.UnitConversionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -41,6 +45,9 @@ public class adminNoAudiCallback implements ICallback{
 
     @Autowired
     private InviteMapper inviteMapper ;
+
+    @Autowired
+    private ConvoysMapper convoysMapper ;
 
     private InlineKeyboardMarkup createButton(String name){
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
@@ -72,9 +79,8 @@ public class adminNoAudiCallback implements ICallback{
         convoysInvite.setReviewTgId(callbackQuery.getFrom().getId());
         convoysInviteMapper.updateById(convoysInvite);
 
-        String name = "已拒绝";
-        EditMessageReplyMarkup editMessageReplyMarkup = EditMessageReplyMarkup.builder().chatId(callbackQuery.getMessage().getChatId()).messageId(callbackQuery.getMessage().getMessageId()).replyMarkup(createButton(name)).build();
-        bot.execute(editMessageReplyMarkup);
+
+
 
         Long inviteId = convoysInvite.getInviteId();
 
@@ -85,6 +91,39 @@ public class adminNoAudiCallback implements ICallback{
                     "申请未通过";
             SendMessage sendMessage = SendMessage.builder().chatId(invite.getTgId()).text(text).parseMode("html").build();
             bot.execute(sendMessage);
+            Convoys convoys = convoysMapper.selectOne(new LambdaQueryWrapper<Convoys>().eq(Convoys::getConvoysId, convoysInvite.getConvoysId()));
+            Integer status = convoysInvite.getStatus();
+            String msg = "";
+            String code ="";
+            if(status.equals(ConvoysInviteStatus.IDLE.getCode())){
+                code = "\uD83D\uDFE2";
+                msg = "空闲";
+            }else if(status.equals(ConvoysInviteStatus.REVIEW.getCode())){
+                code = "\uD83D\uDFE1";
+                msg = "待审核";
+            }else if(status.equals(ConvoysInviteStatus.BOARDED.getCode())){
+                code = "\uD83D\uDFE2";
+                msg = "审核成功";
+            }else if(status.equals(ConvoysInviteStatus.DISABLED.getCode())){
+                code = "\uD83D\uDD34";
+                msg = "被禁用";
+            }
+            String x = "📣系统通知📣\n"
+                    + "申请车队名: " + convoys.getName() + "\n"
+                    + "车队类型: 频道\n"
+                    + "车队介绍: " + convoys.getCopywriter() + "\n"
+                    + "当前/最大(成员): " + invite.getMemberCount() + "/" + convoys.getCapacity() + "\n"
+                    + "最低订阅: " + UnitConversionUtils.tensOfThousands(convoys.getSubscription()) + "\n"+
+                    "最低阅读: " + convoys.getRead() + "\n\n"+
+                    "申请频道id:" + invite.getChatId() + "\n" +
+                    "申请频道: <a href=\""+invite.getLink()+"\">"+"" + invite.getName() + "</a>\n" +
+                    "订阅人数: " + invite.getMemberCount() + "\n" +
+                    "申请人ID: " + invite.getTgId() + "\n" +
+                    "申请人名: " + invite.getUserName() +"\n"+
+                    "申请状态:"+ code+msg;
+            EditMessageText editMessageText = EditMessageText.builder().messageId(callbackQuery.getMessage().getMessageId()).chatId(callbackQuery.getMessage().getChatId().toString()).text(x).replyMarkup(createButton("未通过")).parseMode("html").build();
+            bot.execute(editMessageText);
+
         }
 
 

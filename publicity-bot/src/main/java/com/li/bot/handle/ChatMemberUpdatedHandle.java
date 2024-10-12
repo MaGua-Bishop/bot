@@ -2,6 +2,8 @@ package com.li.bot.handle;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.collect.Lists;
 import com.li.bot.entity.database.Convoys;
 import com.li.bot.entity.database.ConvoysInvite;
@@ -12,10 +14,14 @@ import com.li.bot.mapper.ConvoysInviteMapper;
 import com.li.bot.mapper.ConvoysMapper;
 import com.li.bot.mapper.InviteMapper;
 import com.li.bot.service.impl.BotServiceImpl;
+import com.li.bot.utils.BotMessageUtils;
+import com.li.bot.utils.ConvoysPageUtils;
+import com.li.bot.utils.UnitConversionUtils;
 import org.springframework.beans.BeanUtils;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.ExportChatInviteLink;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatMemberCount;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.ChatMemberUpdated;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -27,6 +33,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @Author: li
@@ -73,29 +80,6 @@ public class ChatMemberUpdatedHandle {
             inviteMapper.updateById(selectOne);
         }
     }
-
-    private InlineKeyboardMarkup createInlineKeyboardButton(List<Convoys> convoys){
-        List<InlineKeyboardButton> buttonList = new ArrayList<>();
-
-        if(convoys.isEmpty()){
-            buttonList.add(InlineKeyboardButton.builder().text("暂无车队").callbackData("null").build());
-        }else {
-            for (Convoys convoy : convoys) {
-                List<ConvoysInvite> convoysInviteList = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoy.getConvoysId()).eq(ConvoysInvite::getIsReview,true));
-                String code = "";
-                if(convoy.getCapacity()==convoysInviteList.size()){
-                    code = "\uD83D\uDD34";
-                }else {
-                    code = "\uD83D\uDFE2";
-                }
-                buttonList.add(InlineKeyboardButton.builder().text(convoy.getCopywriter()+"("+convoysInviteList.size()+")"+code).callbackData("selectConvoysInfo:"+convoy.getConvoysId()).build());
-            }
-        }
-        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
-        InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
-        return inlineKeyboardMarkup;
-    }
-
     public void handle() throws TelegramApiException {
         // 获取群组信息
         Chat chat = myChatMember.getChat();
@@ -108,8 +92,13 @@ public class ChatMemberUpdatedHandle {
             String newStatus = myChatMember.getNewChatMember().getStatus();
 
             if ("kicked".equals(newStatus) || "left".equals(newStatus)) {
+                System.out.println("机器人离开群聊");
                 // 处理机器人离开群聊的情况
                 Invite selectOne = inviteMapper.selectOne(new LambdaQueryWrapper<Invite>().eq(Invite::getChatId, myChatMember.getChat().getId()));
+                ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, selectOne.getInviteId()));
+               if(convoysInvite != null){
+                   convoysInviteMapper.deleteById(convoysInvite);
+               }
 
                 SendMessage sendMessage = new SendMessage();
                 sendMessage.setChatId(selectOne.getTgId());
@@ -146,15 +135,12 @@ public class ChatMemberUpdatedHandle {
             addInviteOrUpdate(invite);
 
 
-            List<Convoys> convoys = convoysMapper.selectList(null);
-            String text = "" ;
-            for (Convoys convoy : convoys) {
-                text += "\uD83C\uDFCE\uFE0F" ;
-            }
-            SendMessage send = SendMessage.builder().chatId(myChatMember.getFrom().getId()).text("请选择需要申请的车队\n\n车队数量:"+convoys.size()+"\n"+text+"\n\n快来加入吧!!!").replyMarkup(createInlineKeyboardButton(convoys))
+            Page<Convoys> page = new Page<>(1, ConvoysPageUtils.PAGESIZE);
+            IPage<Convoys> convoysIPage = convoysMapper.selectConvoysList(page);
+            List<Invite> list = convoysInviteMapper.getConvoysInviteListByConvoysIds(convoysIPage.getRecords().stream().map(Convoys::getConvoysId).collect(Collectors.toList()));
+            SendMessage send = SendMessage.builder().chatId(myChatMember.getFrom().getId()).text(BotMessageUtils.getConvoysHall(convoysIPage.getRecords().size(),list.size())).replyMarkup(ConvoysPageUtils.createInlineKeyboardButton(convoysIPage,convoysInviteMapper))
                     .parseMode("html").build();
             bot.execute(send);
-
             return;
         }
 
@@ -186,31 +172,29 @@ public class ChatMemberUpdatedHandle {
                 sendMessage.setText("<b>《"+title+"》</b>"+"添加机器人成功\n\n权限检测正常");
                 sendMessage.setParseMode("html");
                 bot.execute(sendMessage);
+                addInviteOrUpdate(invite);
             }else{
-                invite.setIsPermissions(false);
                 SendMessage sendMessage = new SendMessage();
                 sendMessage.setChatId(myChatMember.getFrom().getId());
-                sendMessage.setText("<b>《"+title+"》</b>"+"添加机器人成功\n\n权限检测不正常\n\n管理权限：发布消息/编辑其他人的消息/删除其他人的消息/邀请其他人权限，缺失权限机器人不能正常工作");
+                sendMessage.setText("<b>《"+title+"》</b>"+"添加机器人失败\n\n权限检测不正常\n\n管理权限：发布消息/编辑其他人的消息/删除其他人的消息/邀请其他人权限，缺失权限机器人不能正常工作");
                 sendMessage.setParseMode("html");
                 bot.execute(sendMessage);
             }
-            addInviteOrUpdate(invite);
-
-            List<Convoys> convoys = convoysMapper.selectList(null);
-            String text = "" ;
-            for (Convoys convoy : convoys) {
-                text += "\uD83C\uDFCE\uFE0F" ;
-            }
-            SendMessage sendMessage = SendMessage.builder().chatId(myChatMember.getFrom().getId()).text("请选择需要申请的车队\n\n车队数量:"+convoys.size()+"\n"+text+"\n\n快来加入吧!!!").replyMarkup(createInlineKeyboardButton(convoys))
+            Page<Convoys> page = new Page<>(1, ConvoysPageUtils.PAGESIZE);
+            IPage<Convoys> convoysIPage = convoysMapper.selectConvoysList(page);
+            List<Invite> list = convoysInviteMapper.getConvoysInviteListByConvoysIds(convoysIPage.getRecords().stream().map(Convoys::getConvoysId).collect(Collectors.toList()));
+            SendMessage send = SendMessage.builder().chatId(myChatMember.getFrom().getId()).text(BotMessageUtils.getConvoysHall(convoysIPage.getRecords().size(),list.size())).replyMarkup(ConvoysPageUtils.createInlineKeyboardButton(convoysIPage,convoysInviteMapper))
                     .parseMode("html").build();
-            bot.execute(sendMessage);
+            bot.execute(send);
 
-
-
+            //kicked
         } else if (myChatMember.getNewChatMember() instanceof ChatMemberLeft) {
             // 处理机器人离开群聊的情况
             Invite selectOne = inviteMapper.selectOne(new LambdaQueryWrapper<Invite>().eq(Invite::getChatId, myChatMember.getChat().getId()));
-
+            ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, selectOne.getInviteId()));
+            if(convoysInvite != null){
+                convoysInviteMapper.deleteById(convoysInvite);
+            }
             SendMessage sendMessage = new SendMessage();
             sendMessage.setChatId(selectOne.getTgId());
             sendMessage.setText("机器人离开了"+"<b>《"+title+"》</b>");

@@ -13,13 +13,10 @@ import com.li.bot.mapper.ConvoysMapper;
 import com.li.bot.mapper.InviteMapper;
 import com.li.bot.mapper.UserMapper;
 import com.li.bot.service.impl.BotServiceImpl;
-import com.li.bot.service.impl.FileService;
 import com.li.bot.utils.UnitConversionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -28,20 +25,18 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @Author: li
  * @CreateTime: 2024-10-09
  */
 @Component
-public class channelRequestCallback implements ICallback{
+public class applyToJoinConvoysCallback implements ICallback{
 
     @Override
     public String getCallbackName() {
-        return "channelRequest";
+        return "applyToJoin";
     }
 
     @Autowired
@@ -51,14 +46,10 @@ public class channelRequestCallback implements ICallback{
     private InviteMapper inviteMapper ;
 
     @Autowired
-    private ConvoysInviteMapper convoysInviteMapper ;
-
-    @Autowired
-    private FileService fileService ;
-
-
-    @Autowired
     private BotConfig botConfig ;
+
+    @Autowired
+    private ConvoysInviteMapper convoysInviteMapper ;
 
     @Autowired
     private UserMapper userMapper ;
@@ -68,11 +59,31 @@ public class channelRequestCallback implements ICallback{
 
     private void getConvoysCapacity(Long ConvoysId){
         List<ConvoysInvite> list = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, ConvoysId).eq(ConvoysInvite::getIsReview, true));
-        if(list.isEmpty()){
-            currentConvoysCapacity = 0;
-        }else {
-            currentConvoysCapacity = list.size();
+       if(list.isEmpty()){
+           currentConvoysCapacity = 0;
+       }else {
+           currentConvoysCapacity = list.size();
+       }
+    }
+
+    private List<Invite> getConvoysMemberList(Long ConvoysId){
+        List<ConvoysInvite> list = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, ConvoysId).eq(ConvoysInvite::getIsReview, true));
+        List<Invite> inviteList = new ArrayList<>();
+        if(!list.isEmpty()){
+            //根据inviteId查出所有的
+            List<Long> inviteIds = list.stream().map(ConvoysInvite::getInviteId).collect(Collectors.toList());
+            inviteList = inviteMapper.getInviteListByIds(inviteIds);
+            //把link字段信息提取
         }
+       return inviteList;
+    }
+
+
+
+
+    private Convoys selectConvoysInfo(Long convoysId){
+        Convoys convoys = convoysMapper.selectOne(new LambdaQueryWrapper<Convoys>().eq(Convoys::getConvoysId, convoysId));
+        return convoys;
     }
 
     public InlineKeyboardMarkup createInlineKeyboardButton(Long tgId, Long subscription, Long convoysId, Long capacity) {
@@ -166,112 +177,25 @@ public class channelRequestCallback implements ICallback{
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
         return inlineKeyboardMarkup;
     }
-
-
-
-
-    private InlineKeyboardMarkup createInlineKeyboardButton02(Long id){
-        List<InlineKeyboardButton> buttonList = new ArrayList<>();
-
-        buttonList.add(InlineKeyboardButton.builder().text("同意").callbackData("adminYesAudi:"+id).build());
-        buttonList.add(InlineKeyboardButton.builder().text("拒绝").callbackData("adminNoAudi:"+id).build());
-
-        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 1);
-        InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
-        return inlineKeyboardMarkup;
-    }
-
-    private Convoys selectConvoysInfo(Long convoysId){
-        Convoys convoys = convoysMapper.selectOne(new LambdaQueryWrapper<Convoys>().eq(Convoys::getConvoysId, convoysId));
-        return convoys;
-    }
-
-
-
     @Override
-    @Transactional
     public void execute(BotServiceImpl bot, CallbackQuery callbackQuery) throws TelegramApiException {
         String data = callbackQuery.getData();
+        String convoysId = data.substring(data.lastIndexOf(":") + 1);
+        Long id = Long.valueOf(convoysId);
 
-        Pattern pattern = Pattern.compile(":(\\d+)");
-        Matcher matcher = pattern.matcher(data);
+        Convoys convoys = selectConvoysInfo(id);
 
-        Long inviteId = -1L, convoysId = -1L; // 初始化为-1或其他默认值
-        if (matcher.find()) {
-            inviteId = Long.valueOf(matcher.group(1));
-        }
-        if (matcher.find()) {
-            convoysId = Long.valueOf(matcher.group(1));
-        }
-        Convoys convoys = selectConvoysInfo(convoysId);
-        getConvoysCapacity(convoysId);
-
-
-        Invite invite = inviteMapper.selectOne(new LambdaQueryWrapper<Invite>().eq(Invite::getInviteId, inviteId));
-        if(invite == null){
-            bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("请检查机器人是否离开了").build());
-            return;
-        }
-
-
-        ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoysId).eq(ConvoysInvite::getInviteId, inviteId));
-
-        if(convoysInvite != null){
-            bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("您该频道已申请过该车队,请勿重复申请").build());
-            return;
-        }
-        convoysInvite = new ConvoysInvite();
-        convoysInvite.setConvoysId(convoysId);
-        convoysInvite.setInviteId(inviteId);
-        convoysInvite.setStatus(ConvoysInviteStatus.REVIEW.getCode());
-        convoysInviteMapper.insert(convoysInvite);
-
-        //发消息提示用户
-        SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text(invite.getName() + "已申请,请等待审核").build();
-        bot.execute(sendMessage);
-        inviteMapper.updateById(invite);
-
-        EditMessageReplyMarkup editMessageReplyMarkup = EditMessageReplyMarkup.builder().chatId(callbackQuery.getMessage().getChatId()).messageId(callbackQuery.getMessage().getMessageId()).replyMarkup(createInlineKeyboardButton(callbackQuery.getFrom().getId(),convoys.getSubscription(),convoysId,convoys.getCapacity())).build();
-        bot.execute(editMessageReplyMarkup);
-
-        //发送消息给频道管理员同意或拒绝加入
-        Map<String,String> adminChannelList = fileService.getAdminChannelList();
-
-        String string = adminChannelList.get("id");
-
-        Integer status = convoysInvite.getStatus();
-        String msg = "";
-        String code ="";
-        if(status.equals(ConvoysInviteStatus.IDLE.getCode())){
-            code = "\uD83D\uDFE2";
-            msg = "空闲";
-        }else if(status.equals(ConvoysInviteStatus.REVIEW.getCode())){
-            code = "\uD83D\uDFE1";
-            msg = "待审核";
-        }else if(status.equals(ConvoysInviteStatus.BOARDED.getCode())){
-            code = "\uD83D\uDFE3";
-            msg = "审核成功";
-        }else if(status.equals(ConvoysInviteStatus.DISABLED.getCode())){
-            code = "\uD83D\uDD34";
-            msg = "被禁用";
-        }
-
-        String text = "📣系统通知📣\n"
-                + "申请车队名: " + convoys.getName() + "\n"
-                + "车队类型: 频道\n"
-                + "车队介绍: " + convoys.getCopywriter() + "\n"
-                + "当前/最大(成员): " + invite.getMemberCount() + "/" + convoys.getCapacity() + "\n"
-                + "最低订阅: " + UnitConversionUtils.tensOfThousands(convoys.getSubscription()) + "\n"+
-                "最低阅读: " + convoys.getRead() + "\n\n"+
-                "申请频道id:" + invite.getChatId() + "\n" +
-                "申请频道: <a href=\""+invite.getLink()+"\">"+"" + invite.getName() + "</a>\n" +
-                "订阅人数: " + invite.getMemberCount() + "\n" +
-                "申请人ID: " + invite.getTgId() + "\n" +
-                "申请人名: " + invite.getUserName() +"\n"+
-                "申请状态:"+ code+msg;
-
-        SendMessage send = SendMessage.builder().chatId(string).text(text).parseMode("html").replyMarkup(createInlineKeyboardButton02(convoysInvite.getId())).build();
-        bot.execute(send);
-
+        String message ="选择频道\n" +
+                "\n" +
+                "以下只显示您满足要求的频道列表\n" +
+                "\n" +
+                "要求订阅:"+UnitConversionUtils.toThousands(convoys.getSubscription())+"\n" +
+                "图示：\uD83D\uDFE2空闲\uD83D\uDFE1待审核\uD83D\uDFE3已上车\uD83D\uDD34被禁用\n" +
+                "已上车的频道再次申请会自动下车\n" +
+                "请确认是否已经将机器人拉入并设置管理员\n" +
+                "\n" +
+                "\uD83D\uDC47请选择一个提交";
+        EditMessageText editMessageText = EditMessageText.builder().messageId(callbackQuery.getMessage().getMessageId()).chatId(callbackQuery.getMessage().getChatId().toString()).text(message).replyMarkup(createInlineKeyboardButton(callbackQuery.getFrom().getId(),convoys.getSubscription(),id,convoys.getCapacity())).parseMode("html").build();
+        bot.execute(editMessageText);
     }
 }

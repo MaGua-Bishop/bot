@@ -29,4 +29,7 @@ public class ConvoysInvite {
     @TableField("is_review")
     private Boolean isReview;
 
+    @TableField("status")
+    private Integer status;
+
 }

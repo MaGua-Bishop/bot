@@ -48,6 +48,9 @@ public class AddButtonMessage implements IMessage{
             // 提取匹配的内容
             String name = matcher.group(1).trim();
             String url = matcher.group(2).trim();
+            if(url.startsWith("@")){
+                url = url.replace("@", "https://t.me/");
+            }
 
             Button one = buttonMapper.selectOne(new LambdaQueryWrapper<Button>().eq(Button::getName, name));
             if(one != null){

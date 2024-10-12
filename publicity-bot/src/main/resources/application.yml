@@ -6,7 +6,7 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:${DATABASE_BOT_PORT}/publicity_bot?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+    url: jdbc:postgresql://localhost:${DATABASE_BOT_PORT}/publicity_bot_new?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Shanghai
     username: ${DATABASE_BOT_USERNAME}
     password: ${DATABASE_BOT_PASSWORD}
 

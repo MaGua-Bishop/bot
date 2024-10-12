@@ -47,6 +47,16 @@ public class AddTextMessage implements IMessage{
             // 提取匹配的内容
             String t = matcher.group(1).trim();
 
+            // 检查t是否包含@符号
+            if (t.indexOf("@") != -1) {
+                // 找到@符号的位置
+                int atIndex = t.indexOf("@");
+                // 提取@符号后的用户名
+                String username = t.substring(atIndex + 1);
+                // 构造新的带有链接的字符串
+                t = t.substring(0, atIndex) + "<a href=\"https://t.me/" + username + "\">@" + username + "</a>";
+            }
+
             fileService.addText(t);
 
             bot.execute(SendMessage.builder()

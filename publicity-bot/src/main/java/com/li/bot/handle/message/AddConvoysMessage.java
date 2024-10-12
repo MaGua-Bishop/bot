@@ -52,10 +52,11 @@ public class AddConvoysMessage implements IMessage{
         // 定义正则表达式模式
         Pattern pattern = Pattern.compile(
                 "(?s)" +              // 单行模式，使.匹配包括换行符在内的所有字符
-                        "#车队名\\s+(.*?)\\n" +  // 匹配 #车队名 后面跟着任意非空白字符，直到下一个换行符
-                        "#车队文案\\s+(.*?)\\n" +  // 匹配 #车队文案 后面跟着任意非空白字符，直到下一个换行符
+                        "#车队标题\\s+(.*?)\\n" +  // 匹配 #车队名 后面跟着任意非空白字符，直到下一个换行符
+                        "#车队介绍\\s+(.*?)\\n" +  // 匹配 #车队文案 后面跟着任意非空白字符，直到下一个换行符
                         "#车队容量\\s+(\\d+)\\n" +  // 匹配 #车队容量 后面跟着一个或多个数字，直到下一个换行符
-                        "#频道最低订阅数量\\s+(\\d+)"  // 匹配 #频道最低订阅数量 后面跟着一个或多个数字
+                        "#最低订阅数量\\s+(\\d+)\\n"+  // 匹配 #频道最低订阅数量 后面跟着一个或多个数字
+                        "#最低阅读数量\\s+(\\d+)"
         );
 
         // 创建Matcher对象
@@ -64,16 +65,18 @@ public class AddConvoysMessage implements IMessage{
         // 检查是否找到匹配项
         if (matcher.find()) {
             // 提取匹配的内容
-            String fleetName = matcher.group(1).trim();  // 车队名
-            String fleetText = matcher.group(2).trim();  // 车队文案
+            String fleetName = matcher.group(1).trim();  // 车队标题
+            String fleetText = matcher.group(2).trim();  // 车队介绍
             Long fleetCapacity = Long.valueOf(matcher.group(3));  // 车队容量
             Long minSubscribers = Long.valueOf(matcher.group(4));  // 频道最低订阅数量
+            Long read = Long.valueOf(matcher.group(5));  // 阅读
 
             Convoys convoys = new Convoys();
             convoys.setName(fleetName);
             convoys.setCopywriter(fleetText);
             convoys.setCapacity(fleetCapacity);
             convoys.setSubscription(minSubscribers);
+            convoys.setRead(read);
             convoys.setTgId(message.getFrom().getId());
 
             fleetService.addNewConvoy(convoys);

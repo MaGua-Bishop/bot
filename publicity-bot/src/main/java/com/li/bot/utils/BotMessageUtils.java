@@ -55,6 +55,18 @@ public class BotMessageUtils {
         return text.toString();
     }
 
+    public static String getConvoysHall(int number,int number02){
+        return "\n" +
+                "频道-车队大厅\n" +
+                "\n" +
+                "车队数量:"+number+"\n" +
+                "频道数量:"+number02+"\n" +
+                "图标介绍:\n" +
+                "车队名|队内成员数-最大成员数|最小订阅需求\n" +
+                "\n" +
+                "选择下方车队进入指定车队，然后选择你要申请的分组进行上车提交。";
+    }
+
 
 
 
