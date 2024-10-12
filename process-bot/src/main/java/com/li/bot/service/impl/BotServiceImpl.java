@@ -4,6 +4,7 @@ package com.li.bot.service.impl;
 import com.li.bot.config.BotConfig;
 import com.li.bot.handle.CallbackQueryHandle;
 import com.li.bot.handle.MessageHandle;
+import com.li.bot.handle.callback.AdminEditBusinessCallbackImpl;
 import com.li.bot.handle.callback.CallbackFactory;
 import com.li.bot.handle.key.BotKeyFactory;
 import com.li.bot.handle.menu.BotMenuFactory;
@@ -107,6 +108,9 @@ public class BotServiceImpl extends TelegramWebhookBot {
     @Autowired
     private AddOrderSessionList addOrderSessionList;
 
+    @Autowired
+    private AdminEditSessionList adminEditSessionList;
+
 
 
     @Override
@@ -126,7 +130,18 @@ public class BotServiceImpl extends TelegramWebhookBot {
                     menu.execute(this,update.getMessage());
                     return null;
                 }
+                if(text.indexOf("#用户id") == 0){
+                    IBotMenu menu = botMenuFactory.getMenu("查询用户余额");
+                    menu.execute(this,update.getMessage());
+                    return null;
+                }
+                if(text.indexOf("#修改用户金额") == 0){
+                    IBotMenu menu = botMenuFactory.getMenu("修改用户金额");
+                    menu.execute(this,update.getMessage());
+                    return null;
+                }
             }
+
 
             if(update.getMessage().getChat().getType().equals("private")){
                 Long tgId = update.getMessage().getFrom().getId();
@@ -135,6 +150,10 @@ public class BotServiceImpl extends TelegramWebhookBot {
                 if (orderSession != null) {
                     AddOrder addOrder = new AddOrder(this, orderSession, update.getMessage(), addOrderSessionList, orderMapper, userMapper);
                     addOrder.execute(botMenuFactory,botKeyFactory);
+                    return null;
+                }
+                if(adminEditSessionList.getUserSession(tgId) != null){
+                    new AdminEdit(this,update.getMessage(), adminEditSessionList, businessMapper).execute(botMenuFactory,botKeyFactory);
                     return null;
                 }
 

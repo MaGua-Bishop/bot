@@ -46,13 +46,22 @@ public class BusinessCallbackImpl implements ICallback {
         return businessMapper.selectOne(wrapper);
     }
 
-    private InlineKeyboardMarkup createInlineKeyboardButton(Long businessId,Long tgId) {
+    private InlineKeyboardMarkup createInlineKeyboardButton(Long businessId,Long tgId,Business businessInfo) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
-        buttonList.add(InlineKeyboardButton.builder().text("下一步").callbackData("nextstep").build());
-
+        if(businessInfo.getIsShelving()){
+            buttonList.add(InlineKeyboardButton.builder().text("下一步").callbackData("nextstep").build());
+        }
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, tgId));
         if (user != null && user.getIsAdmin()) {
+            buttonList.add(InlineKeyboardButton.builder().text("修改业务文案").callbackData("adminEditBusiness:"+businessId).build());
+            buttonList.add(InlineKeyboardButton.builder().text("修改业务价格").callbackData("adminEditPrice:"+businessId).build());
+            if(businessInfo.getIsShelving()){
+                buttonList.add(InlineKeyboardButton.builder().text("下架该业务(点击按钮直接下架)").callbackData("adminShelving:"+businessId).build());
+            }else {
+                buttonList.add(InlineKeyboardButton.builder().text("上架该业务(点击按钮直接上架)").callbackData("adminShelving:"+businessId).build());
+            }
             buttonList.add(InlineKeyboardButton.builder().text("删除该业务").callbackData("adminDeleteBusiness:"+businessId).build());
+
         }
 
 
@@ -84,7 +93,7 @@ public class BusinessCallbackImpl implements ICallback {
         copyMessage.setChatId(callbackQuery.getFrom().getId());
         copyMessage.setMessageId(businessInfo.getMessageId());
         copyMessage.setFromChatId(businessInfo.getTgId());
-        copyMessage.setReplyMarkup(createInlineKeyboardButton(businessId,callbackQuery.getFrom().getId()));
+        copyMessage.setReplyMarkup(createInlineKeyboardButton(businessId,callbackQuery.getFrom().getId(),businessInfo));
 
 //        String text = "```" + businessInfo.getName() + "业务信息\n" +
 //                "业务描述：" + businessInfo.getDescription() + "\n" +

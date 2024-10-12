@@ -3,7 +3,9 @@ package com.li.bot.handle.callback;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
 import com.li.bot.entity.database.Business;
+import com.li.bot.entity.database.User;
 import com.li.bot.mapper.BusinessMapper;
+import com.li.bot.mapper.UserMapper;
 import com.li.bot.service.impl.BotServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -30,18 +32,36 @@ public class SelectBusinessTypeCallbackImpl implements ICallback {
     @Autowired
     private BusinessMapper businessMapper ;
 
-    private InlineKeyboardMarkup createInlineKeyboardButton(Integer type){
+    @Autowired
+    private UserMapper userMapper ;
+
+    private InlineKeyboardMarkup createInlineKeyboardButton(Long tgId,Integer type){
 
         //查出全部业务只要名称和主键
         LambdaQueryWrapper<Business> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(Business::getBusinessId,Business::getName);
+        wrapper.select(Business::getBusinessId,Business::getName,Business::getIsShelving);
         wrapper.eq(Business::getStatus,type);
         List<Business> businesses = businessMapper.selectList(wrapper);
 
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
-        for (Business business : businesses) {
-            buttonList.add(InlineKeyboardButton.builder().text(business.getName()).callbackData("businessId:"+String.valueOf(business.getBusinessId())).build());
+        User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, tgId));
+        if(user != null && user.getIsAdmin() ){
+            for (Business business : businesses) {
+                if(business.getIsShelving()){
+                    buttonList.add(InlineKeyboardButton.builder().text(business.getName()+"("+"上架中"+")").callbackData("businessId:"+String.valueOf(business.getBusinessId())).build());
+                }else {
+                    buttonList.add(InlineKeyboardButton.builder().text(business.getName()+"("+"下架中"+")").callbackData("businessId:"+String.valueOf(business.getBusinessId())).build());
+                }
+            }
+        }else {
+            for (Business business : businesses) {
+                if(business.getIsShelving()){
+                    buttonList.add(InlineKeyboardButton.builder().text(business.getName()).callbackData("businessId:"+String.valueOf(business.getBusinessId())).build());
+                }
+            }
         }
+
+
 
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
 
@@ -60,7 +80,7 @@ public class SelectBusinessTypeCallbackImpl implements ICallback {
         String substring = data.substring(data.lastIndexOf(":") + 1);
 
 
-        InlineKeyboardMarkup inlineKeyboardButton = createInlineKeyboardButton(Integer.valueOf(substring));
+        InlineKeyboardMarkup inlineKeyboardButton = createInlineKeyboardButton(callbackQuery.getFrom().getId(),Integer.valueOf(substring));
 
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(callbackQuery.getMessage().getChatId());

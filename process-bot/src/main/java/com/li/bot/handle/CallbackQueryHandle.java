@@ -34,6 +34,18 @@ public class CallbackQueryHandle {
             callback.execute(bot,callbackQuery);
             return ;
         }
+        if(data.indexOf("adminShelving:") == 0){
+            callbackFactory.getCallback("adminShelving").execute(bot,callbackQuery);
+            return;
+        }
+        if(data.indexOf("adminEditBusiness:") == 0){
+            callbackFactory.getCallback("adminEditBusiness").execute(bot,callbackQuery);
+            return;
+        }
+        if(data.indexOf("adminEditPrice:") == 0){
+            callbackFactory.getCallback("adminEditPrice").execute(bot,callbackQuery);
+            return;
+        }
         if(data.indexOf("user:recharge:") == 0){
             callbackFactory.getCallback("userRecharge").execute(bot,callbackQuery);
             return;

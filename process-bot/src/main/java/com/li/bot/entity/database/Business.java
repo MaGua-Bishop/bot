@@ -33,6 +33,9 @@ public class Business {
 
     @TableField("status")
     private Integer status;
+    @TableField("is_shelving")
+    private Boolean isShelving;
+
 
     @TableField(exist = false)
     private String messageText;
