@@ -110,7 +110,10 @@ public class ChatMemberUpdatedHandle {
             if ("kicked".equals(newStatus) || "left".equals(newStatus)) {
                 // 处理机器人离开群聊的情况
                 Invite selectOne = inviteMapper.selectOne(new LambdaQueryWrapper<Invite>().eq(Invite::getChatId, myChatMember.getChat().getId()));
-
+                ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, selectOne.getInviteId()));
+                if(convoysInvite != null){
+                    convoysInviteMapper.deleteById(convoysInvite);
+                }
                 SendMessage sendMessage = new SendMessage();
                 sendMessage.setChatId(selectOne.getTgId());
                 sendMessage.setText("机器人离开了"+"<b>《"+title+"》</b>");
@@ -210,7 +213,10 @@ public class ChatMemberUpdatedHandle {
         } else if (myChatMember.getNewChatMember() instanceof ChatMemberLeft) {
             // 处理机器人离开群聊的情况
             Invite selectOne = inviteMapper.selectOne(new LambdaQueryWrapper<Invite>().eq(Invite::getChatId, myChatMember.getChat().getId()));
-
+            ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, selectOne.getInviteId()));
+            if(convoysInvite != null){
+                convoysInviteMapper.deleteById(convoysInvite);
+            }
             SendMessage sendMessage = new SendMessage();
             sendMessage.setChatId(selectOne.getTgId());
             sendMessage.setText("机器人离开了"+"<b>《"+title+"》</b>");
