@@ -137,6 +137,10 @@ public class ChatMemberUpdatedHandle {
 
             Page<Convoys> page = new Page<>(1, ConvoysPageUtils.PAGESIZE);
             IPage<Convoys> convoysIPage = convoysMapper.selectConvoysList(page);
+            if(convoysIPage.getRecords().isEmpty()){
+                bot.execute(SendMessage.builder().chatId(myChatMember.getFrom().getId()).text("暂无互推").build());
+                return;
+            }
             List<Invite> list = convoysInviteMapper.getConvoysInviteListByConvoysIds(convoysIPage.getRecords().stream().map(Convoys::getConvoysId).collect(Collectors.toList()));
             SendMessage send = SendMessage.builder().chatId(myChatMember.getFrom().getId()).text(BotMessageUtils.getConvoysHall(convoysIPage.getRecords().size(),list.size())).replyMarkup(ConvoysPageUtils.createInlineKeyboardButton(convoysIPage,convoysInviteMapper))
                     .parseMode("html").build();
@@ -182,6 +186,10 @@ public class ChatMemberUpdatedHandle {
             }
             Page<Convoys> page = new Page<>(1, ConvoysPageUtils.PAGESIZE);
             IPage<Convoys> convoysIPage = convoysMapper.selectConvoysList(page);
+            if(convoysIPage.getRecords().isEmpty()){
+                bot.execute(SendMessage.builder().chatId(myChatMember.getFrom().getId()).text("暂无互推").build());
+                return;
+            }
             List<Invite> list = convoysInviteMapper.getConvoysInviteListByConvoysIds(convoysIPage.getRecords().stream().map(Convoys::getConvoysId).collect(Collectors.toList()));
             SendMessage send = SendMessage.builder().chatId(myChatMember.getFrom().getId()).text(BotMessageUtils.getConvoysHall(convoysIPage.getRecords().size(),list.size())).replyMarkup(ConvoysPageUtils.createInlineKeyboardButton(convoysIPage,convoysInviteMapper))
                     .parseMode("html").build();

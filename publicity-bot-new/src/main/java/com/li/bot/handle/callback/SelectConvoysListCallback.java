@@ -49,6 +49,10 @@ public class SelectConvoysListCallback implements ICallback{
     public void execute(BotServiceImpl bot, CallbackQuery callbackQuery) throws TelegramApiException {
         Page<Convoys> page = new Page<>(1, ConvoysPageUtils.PAGESIZE);
         IPage<Convoys> convoysIPage = convoysMapper.selectConvoysList(page);
+        if(convoysIPage.getRecords().isEmpty()){
+            bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("暂无互推").build());
+            return;
+        }
         List<Invite> list = convoysInviteMapper.getConvoysInviteListByConvoysIds(convoysIPage.getRecords().stream().map(Convoys::getConvoysId).collect(Collectors.toList()));
 
         EditMessageText sendMessage = EditMessageText.builder().chatId(callbackQuery.getMessage().getChatId()).text(BotMessageUtils.getConvoysHall(convoysIPage.getRecords().size(),list.size())).replyMarkup(ConvoysPageUtils.createInlineKeyboardButton(convoysIPage,convoysInviteMapper)).messageId(callbackQuery.getMessage().getMessageId())
