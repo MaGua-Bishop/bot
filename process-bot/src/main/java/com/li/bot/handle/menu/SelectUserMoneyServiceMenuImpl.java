@@ -86,7 +86,7 @@ public class SelectUserMoneyServiceMenuImpl implements IBotMenu {
         String userId = getUserId(text);
         if(userId == null){
             try {
-                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("请输入正确的格式：#用户id 用户id").build());
+                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("请输入正确的格式：#用户id 输入的用户id").build());
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }

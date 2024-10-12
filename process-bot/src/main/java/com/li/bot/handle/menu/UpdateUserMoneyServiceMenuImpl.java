@@ -139,7 +139,7 @@ public class UpdateUserMoneyServiceMenuImpl implements IBotMenu {
             }
         } else {
             try {
-                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("请输入正确的格式：#修改用户金额 用户id 用户的id 金额 修改的金额(必须保留两位小数)").build());
+                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("请输入正确的格式：#修改用户金额 用户id 输入用户的id 金额 输入要修改多少金额(必须保留两位小数)").build());
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
