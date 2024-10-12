@@ -25,7 +25,7 @@ public class TelegramBotController {
         this.botService = botService;
     }
 
-    @PostMapping("/webhook")
+    @PostMapping("/tgbot/publicity_bot_new")
     public ResponseEntity<?> handleUpdate(@RequestBody Update update) {
         try {
             // 调用你的Bot处理更新的方法

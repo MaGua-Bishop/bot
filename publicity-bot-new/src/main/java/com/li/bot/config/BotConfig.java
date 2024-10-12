@@ -32,8 +32,7 @@ public class BotConfig {
         DefaultBotOptions botOptions = new DefaultBotOptions();
         botOptions.setProxyHost(host);
         botOptions.setProxyPort(port);
-
-        //选择代理类型:[HTTP|SOCKS4|SOCKS5](默认:NO_PROXY)
+//        选择代理类型:[HTTP|SOCKS4|SOCKS5](默认:NO_PROXY)
         botOptions.setProxyType(DefaultBotOptions.ProxyType.SOCKS5);
 
         return botOptions;
