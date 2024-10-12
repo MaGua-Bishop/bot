@@ -148,6 +148,10 @@ public class channelRequestCallback implements ICallback{
                 .text("\uD83D\uDD19返回")
                 .callbackData("returnConvoysList")
                 .build());
+        buttonList.add(InlineKeyboardButton.builder()
+                .text("首页")
+                .callbackData("/start")
+                .build());
 
         // 创建行列表
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
@@ -267,7 +271,7 @@ public class channelRequestCallback implements ICallback{
                 "申请频道: <a href=\""+invite.getLink()+"\">"+"" + invite.getName() + "</a>\n" +
                 "订阅人数: " + invite.getMemberCount() + "\n" +
                 "申请人ID: " + invite.getTgId() + "\n" +
-                "申请人名: " + invite.getUserName() +"\n"+
+                "申请人名: " + "<a href=\"tg://user?id="+invite.getTgId()+"\">@"+invite.getUserName()+"</a>" +"\n"+
                 "申请状态:"+ code+msg;
 
         SendMessage send = SendMessage.builder().chatId(string).text(text).parseMode("html").replyMarkup(createInlineKeyboardButton02(convoysInvite.getId())).build();

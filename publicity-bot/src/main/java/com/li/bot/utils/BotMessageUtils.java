@@ -15,7 +15,7 @@ public class BotMessageUtils {
         String name = botName.replace("t.me/","");
         return "<b>\uD83D\uDE80Telegram互推: </b>" + "<a href=\"https://" + botName + "\">@" + name + "</a>\n" +
                 "\n" +
-                "<b>UID " + tgId + "</b> 尊敬的 " + userName + " 你好:\n" +
+                "<b>UID " + tgId + "</b> 尊敬的 "+"<a href=\"tg://user?id="+tgId+"\">@"+userName+"</a>"+" 你好:\n" +
                 "\n" +
                 "<b>自动互推机器人</b>\n" +
                 "\n" +

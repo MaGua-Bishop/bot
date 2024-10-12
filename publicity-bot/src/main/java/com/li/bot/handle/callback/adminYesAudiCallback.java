@@ -108,11 +108,6 @@ public class adminYesAudiCallback implements ICallback {
         invite.setIsReview(true);
         inviteMapper.updateById(invite);
         if (invite != null) {
-            String text = "频道名: <a href=\"" + invite.getLink() + "\">" + invite.getName() + "</a>\n"
-                    + "申请人: <a href=\"tg://user?id=" + invite.getTgId() + "\">" + invite.getUserName() + "</a>\n" +
-                    "申请通过";
-            SendMessage sendMessage = SendMessage.builder().chatId(invite.getTgId()).text(text).parseMode("html").build();
-            bot.execute(sendMessage);
             Convoys convoys = convoysMapper.selectOne(new LambdaQueryWrapper<Convoys>().eq(Convoys::getConvoysId, convoysInvite.getConvoysId()));
             Integer status = convoysInvite.getStatus();
             String msg = "";
@@ -141,8 +136,11 @@ public class adminYesAudiCallback implements ICallback {
                     "申请频道: <a href=\""+invite.getLink()+"\">"+"" + invite.getName() + "</a>\n" +
                     "订阅人数: " + invite.getMemberCount() + "\n" +
                     "申请人ID: " + invite.getTgId() + "\n" +
-                    "申请人名: " + invite.getUserName() +"\n"+
+                    "申请人名: " + "<a href=\"tg://user?id="+invite.getTgId()+"\">@"+invite.getUserName()+"</a>"+"\n"+
                     "申请状态:"+ code+msg;
+            SendMessage sendMessage = SendMessage.builder().chatId(invite.getTgId()).text(x).parseMode("html").build();
+            bot.execute(sendMessage);
+
             EditMessageText editMessageText = EditMessageText.builder().messageId(callbackQuery.getMessage().getMessageId()).chatId(callbackQuery.getMessage().getChatId().toString()).text(x).replyMarkup(createButton("已同意")).parseMode("html").build();
             bot.execute(editMessageText);
 

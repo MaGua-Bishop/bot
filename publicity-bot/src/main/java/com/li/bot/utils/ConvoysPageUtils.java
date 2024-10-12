@@ -37,6 +37,10 @@ public class ConvoysPageUtils {
                     .text("下一页")
                     .callbackData("next:select:convoys:" + (page.getCurrent() + 1)+":convoysId:"+businessId)
                     .build());
+            buttonList.add(InlineKeyboardButton.builder()
+                    .text("首页")
+                    .callbackData("/start")
+                    .build());
         } else if (page.getCurrent() < page.getPages()) { // 中间页
             buttonList.add(InlineKeyboardButton.builder()
                     .text("上一页")
@@ -46,10 +50,18 @@ public class ConvoysPageUtils {
                     .text("下一页")
                     .callbackData("next:select:convoys:" + (page.getCurrent() + 1)+":convoysId:"+businessId)
                     .build());
+            buttonList.add(InlineKeyboardButton.builder()
+                    .text("首页")
+                    .callbackData("/start")
+                    .build());
         } else if(page.getPages() > 1){ // 最后一页
             buttonList.add(InlineKeyboardButton.builder()
                     .text("上一页")
                     .callbackData("prev:select:convoys:" + (page.getCurrent() - 1)+":convoysId:"+businessId)
+                    .build());
+            buttonList.add(InlineKeyboardButton.builder()
+                    .text("首页")
+                    .callbackData("/start")
                     .build());
         }
 

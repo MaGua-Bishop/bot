@@ -2,6 +2,7 @@ package com.li.bot.handle;
 
 import com.li.bot.handle.callback.CallbackFactory;
 import com.li.bot.handle.callback.ICallback;
+import com.li.bot.handle.message.StartMessage;
 import com.li.bot.service.impl.BotServiceImpl;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -34,6 +35,10 @@ public class CallbackQueryHandle {
         if(Objects.nonNull(callback)){
             callback.execute(bot,callbackQuery);
             return ;
+        }
+        if(data.indexOf("/start") == 0){
+            callbackFactory.getCallback("/start").execute(bot,callbackQuery);
+            return;
         }
         if(data.indexOf("updateConvoysTime:") == 0){
             callbackFactory.getCallback("updateConvoysTime").execute(bot,callbackQuery);

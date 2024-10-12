@@ -77,20 +77,14 @@ public class adminNoAudiCallback implements ICallback{
         }
         convoysInvite.setIsReview(false);
         convoysInvite.setReviewTgId(callbackQuery.getFrom().getId());
+        convoysInvite.setStatus(ConvoysInviteStatus.DISABLED.getCode());
         convoysInviteMapper.updateById(convoysInvite);
-
-
 
 
         Long inviteId = convoysInvite.getInviteId();
 
         Invite invite = inviteMapper.selectOne(new LambdaQueryWrapper<Invite>().eq(Invite::getInviteId, inviteId));
         if(invite != null){
-            String text = "频道名: <a href=\"" + invite.getLink() + "\">" + invite.getName() + "</a>\n"
-                    + "申请人: <a href=\"tg://user?id=" + invite.getTgId() + "\">" + invite.getUserName() + "</a>\n"+
-                    "申请未通过";
-            SendMessage sendMessage = SendMessage.builder().chatId(invite.getTgId()).text(text).parseMode("html").build();
-            bot.execute(sendMessage);
             Convoys convoys = convoysMapper.selectOne(new LambdaQueryWrapper<Convoys>().eq(Convoys::getConvoysId, convoysInvite.getConvoysId()));
             Integer status = convoysInvite.getStatus();
             String msg = "";
@@ -119,8 +113,11 @@ public class adminNoAudiCallback implements ICallback{
                     "申请频道: <a href=\""+invite.getLink()+"\">"+"" + invite.getName() + "</a>\n" +
                     "订阅人数: " + invite.getMemberCount() + "\n" +
                     "申请人ID: " + invite.getTgId() + "\n" +
-                    "申请人名: " + invite.getUserName() +"\n"+
+                    "申请人名: " + "<a href=\"tg://user?id="+invite.getTgId()+"\">@"+invite.getUserName()+"</a>"+"\n"+
                     "申请状态:"+ code+msg;
+            SendMessage sendMessage = SendMessage.builder().chatId(invite.getTgId()).text(x).parseMode("html").build();
+            bot.execute(sendMessage);
+
             EditMessageText editMessageText = EditMessageText.builder().messageId(callbackQuery.getMessage().getMessageId()).chatId(callbackQuery.getMessage().getChatId().toString()).text(x).replyMarkup(createButton("未通过")).parseMode("html").build();
             bot.execute(editMessageText);
 

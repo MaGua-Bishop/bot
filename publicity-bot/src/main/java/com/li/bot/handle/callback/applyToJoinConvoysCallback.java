@@ -159,6 +159,10 @@ public class applyToJoinConvoysCallback implements ICallback{
                 .text("\uD83D\uDD19返回")
                 .callbackData("returnConvoysList")
                 .build());
+        buttonList.add(InlineKeyboardButton.builder()
+                .text("首页")
+                .callbackData("/start")
+                .build());
 
         // 创建行列表
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
@@ -188,6 +192,9 @@ public class applyToJoinConvoysCallback implements ICallback{
         String message ="选择频道\n" +
                 "\n" +
                 "以下只显示您满足要求的频道列表\n" +
+                "请确保机器人具备以下权限:"+"\n"+
+                "群聊:管理群聊和通过链接邀请用户"+"\n"+
+                "频道:更改频道详情和管理信息(3个全需要)和通过链接邀请用户"+"\n"+
                 "\n" +
                 "要求订阅:"+UnitConversionUtils.toThousands(convoys.getSubscription())+"\n" +
                 "图示：\uD83D\uDFE2空闲\uD83D\uDFE1待审核\uD83D\uDFE3已上车\uD83D\uDD34被禁用\n" +

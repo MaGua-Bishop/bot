@@ -105,7 +105,10 @@ public class selectConvoysInfoCallback implements ICallback{
             }
         }
 
-
+        buttonList.add(InlineKeyboardButton.builder()
+                .text("首页")
+                .callbackData("/start")
+                .build());
         buttonList.add(InlineKeyboardButton.builder().text("\uD83D\uDD19返回").callbackData("returnConvoysList").build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 1);
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
@@ -121,6 +124,10 @@ public class selectConvoysInfoCallback implements ICallback{
             buttonList.add(InlineKeyboardButton.builder().text("修改车队推送间隔").callbackData("updateConvoysTime:"+convoysId).build());
         }
         buttonList.add(InlineKeyboardButton.builder().text("\uD83D\uDD19返回").callbackData("returnConvoysList").build());
+        buttonList.add(InlineKeyboardButton.builder()
+                .text("首页")
+                .callbackData("/start")
+                .build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 1);
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
         return inlineKeyboardMarkup;
