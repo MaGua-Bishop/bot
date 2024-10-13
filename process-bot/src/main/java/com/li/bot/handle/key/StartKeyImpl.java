@@ -94,23 +94,20 @@ public class StartKeyImpl implements IKeyboard {
         //查出全部业务只要名称和主键
         LambdaQueryWrapper<Business> wrapper = new LambdaQueryWrapper<>();
         wrapper.select(Business::getBusinessId,Business::getName,Business::getIsShelving);
+        wrapper.eq(Business::getIsShelving,true);
         List<Business> businesses = businessMapper.selectList(wrapper);
 
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, tgId));
         if(user != null && user.getIsAdmin() ){
             for (Business business : businesses) {
-                if(business.getIsShelving()){
-                    buttonList.add(InlineKeyboardButton.builder().text(business.getName()+"("+"上架中"+")").callbackData("businessId:"+String.valueOf(business.getBusinessId())).build());
-                }else {
-                    buttonList.add(InlineKeyboardButton.builder().text(business.getName()+"("+"下架中"+")").callbackData("businessId:"+String.valueOf(business.getBusinessId())).build());
-                }
+                List<Order> orders = orderMapper.selectList(new LambdaQueryWrapper<Order>().eq(Order::getBusinessId, business.getBusinessId()).eq(Order::getStatus, OrderStatus.PENDING.getCode()));
+                buttonList.add(InlineKeyboardButton.builder().text(business.getName()+"("+orders.size()+")").callbackData("businessId:"+String.valueOf(business.getBusinessId())).build());
             }
         }else {
             for (Business business : businesses) {
-                if(business.getIsShelving()){
-                    buttonList.add(InlineKeyboardButton.builder().text(business.getName()).callbackData("businessId:"+String.valueOf(business.getBusinessId())).build());
-                }
+                List<Order> orders = orderMapper.selectList(new LambdaQueryWrapper<Order>().eq(Order::getBusinessId, business.getBusinessId()).eq(Order::getStatus, OrderStatus.PENDING.getCode()));
+                buttonList.add(InlineKeyboardButton.builder().text(business.getName()+"("+orders.size()+")").callbackData("businessId:"+String.valueOf(business.getBusinessId())).build());
             }
         }
         buttonList.add(InlineKeyboardButton.builder().text("接单记录").callbackData("select:reply:records:").build());

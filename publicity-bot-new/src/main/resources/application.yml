@@ -21,11 +21,11 @@ mybatis-plus:
 bot:
 #  botname: t.me/redianhutuibot # 机器人名称
 #  token: 8083224393:AAGPPVevhZ6VQr5GrVniEswayjh_6H3glTY # token
-  botname: t.me/redianhutuibot # 机器人名称
-  token: 8083224393:AAGPPVevhZ6VQr5GrVniEswayjh_6H3glTY # token
+  botname: t.me/lidemobot # 机器人名称
+  token: 8030696965:AAFY6eZti5yIg7J0p-mXIHSH9fLsmrvHBFE # token
   host: 127.0.0.1 #ip
   port: 7890    #端口
-  url: https://3d47-111-55-96-129.ngrok-free.app/tgbot/publicity_bot_new #ngrok地址
+  url: https://83d2-111-55-96-129.ngrok-free.app/tgbot/publicity_bot_new #ngrok地址
   adminChannelFile: adminChannel.json
   textFile: text.txt
   textBottomFile: textBottom.txt
