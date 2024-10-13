@@ -124,9 +124,9 @@ public class FleetService {
         inviteList.forEach(in -> {
             StringBuilder builder = new StringBuilder();
             builder.append("<a href=\"https://"+botConfig.getBotname()+"\">" +"\uD83D\uDE80来自热点精品互推"+convoys.getName()+"\uD83D\uDE80\n</a>" );
-            builder.append(fileService.getText() + "\n" );
+            builder.append("<b>"+fileService.getText() + "</b>\n" );
             builder.append(BotMessageUtils.getConvoysMemberInfoList(inviteList));
-            builder.append("\n"+fileService.getButtonText());
+            builder.append("\n"+"<b>"+fileService.getButtonText()+ "</b>");
             SendMessage send = SendMessage.builder().chatId(in.getChatId()).text(String.valueOf(builder)).parseMode("html").replyMarkup(createInlineKeyboardButton()).build();
             Message execute = null;
             Long cId = null;

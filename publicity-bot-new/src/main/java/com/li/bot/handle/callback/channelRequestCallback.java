@@ -84,9 +84,7 @@ public class channelRequestCallback implements ICallback{
         } else if (user.getIsAdmin()) {
             List<Invite> invites = inviteMapper.selectList(new LambdaQueryWrapper<Invite>().eq(Invite::getTgId, tgId));
             for (Invite invite : invites) {
-                ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>()
-                        .eq(ConvoysInvite::getInviteId, invite.getInviteId())
-                        .eq(ConvoysInvite::getConvoysId, convoysId));
+                ConvoysInvite convoysInvite = convoysInviteMapper.getConvoysInviteByInviteIdAndStatus(invite.getInviteId());
                 Integer status = convoysInvite == null ? ConvoysInviteStatus.IDLE.getCode() : convoysInvite.getStatus();
                 String code = "";
                 if (status.equals(ConvoysInviteStatus.IDLE.getCode())) {
@@ -109,9 +107,7 @@ public class channelRequestCallback implements ICallback{
                 buttonList.add(InlineKeyboardButton.builder().text("未找到符合要求的频道请添加").callbackData("null").build());
             } else {
                 for (Invite invite : inviteList) {
-                    ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>()
-                            .eq(ConvoysInvite::getInviteId, invite.getInviteId())
-                            .eq(ConvoysInvite::getConvoysId, convoysId));
+                    ConvoysInvite convoysInvite = convoysInviteMapper.getConvoysInviteByInviteIdAndStatus(invite.getInviteId());
                     Integer status = convoysInvite == null ? ConvoysInviteStatus.IDLE.getCode() : convoysInvite.getStatus();
                     String code = "";
                     if (status.equals(ConvoysInviteStatus.IDLE.getCode())) {
@@ -227,10 +223,9 @@ public class channelRequestCallback implements ICallback{
             }
         }
 
-        ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoysId).eq(ConvoysInvite::getInviteId, inviteId));
-
+        ConvoysInvite convoysInvite = convoysInviteMapper.getConvoysInviteByInviteIdAndStatus(invite.getInviteId());
         if(convoysInvite != null){
-            bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("您该频道已申请过该车队,请勿重复申请").build());
+            bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("您该频道已申请过车队,请勿重复申请").build());
             return;
         }
         convoysInvite = new ConvoysInvite();

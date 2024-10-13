@@ -95,9 +95,7 @@ public class applyToJoinConvoysCallback implements ICallback{
         } else if (user.getIsAdmin()) {
             List<Invite> invites = inviteMapper.selectList(new LambdaQueryWrapper<Invite>().eq(Invite::getTgId, tgId));
             for (Invite invite : invites) {
-                ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>()
-                        .eq(ConvoysInvite::getInviteId, invite.getInviteId())
-                        .eq(ConvoysInvite::getConvoysId, convoysId));
+                ConvoysInvite convoysInvite = convoysInviteMapper.getConvoysInviteByInviteIdAndStatus(invite.getInviteId());
                 Integer status = convoysInvite == null ? ConvoysInviteStatus.IDLE.getCode() : convoysInvite.getStatus();
                 String code = "";
                 if (status.equals(ConvoysInviteStatus.IDLE.getCode())) {
@@ -120,9 +118,7 @@ public class applyToJoinConvoysCallback implements ICallback{
                 buttonList.add(InlineKeyboardButton.builder().text("未找到符合要求的频道请添加").callbackData("null").build());
             } else {
                 for (Invite invite : inviteList) {
-                    ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>()
-                            .eq(ConvoysInvite::getInviteId, invite.getInviteId())
-                            .eq(ConvoysInvite::getConvoysId, convoysId));
+                    ConvoysInvite convoysInvite = convoysInviteMapper.getConvoysInviteByInviteIdAndStatus(invite.getInviteId());
                     Integer status = convoysInvite == null ? ConvoysInviteStatus.IDLE.getCode() : convoysInvite.getStatus();
                     String code = "";
                     if (status.equals(ConvoysInviteStatus.IDLE.getCode())) {

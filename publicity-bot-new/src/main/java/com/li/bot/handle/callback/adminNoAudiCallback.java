@@ -87,10 +87,7 @@ public class adminNoAudiCallback implements ICallback{
             bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("该申请不存在或已处理了").build());
             return;
         }
-        convoysInvite.setIsReview(false);
-        convoysInvite.setReviewTgId(callbackQuery.getFrom().getId());
-        convoysInvite.setStatus(ConvoysInviteStatus.DISABLED.getCode());
-        convoysInviteMapper.updateById(convoysInvite);
+        convoysInviteMapper.deleteById(convoysInvite);
 
 
         Long inviteId = convoysInvite.getInviteId();
@@ -127,7 +124,7 @@ public class adminNoAudiCallback implements ICallback{
                     "订阅人数: " + invite.getMemberCount() + "\n" +
                     "申请人ID: " + invite.getTgId() + "\n" +
                     "申请人名: " + "<a href=\"tg://user?id="+invite.getTgId()+"\">@"+invite.getUserName()+"</a>"+"\n"+
-                    "申请状态:"+ code+msg;
+                    "申请状态:"+ "🟢审核成功(已拒绝)";
             SendMessage sendMessage = SendMessage.builder().chatId(invite.getTgId()).text(x).parseMode("html").build();
             bot.execute(sendMessage);
 

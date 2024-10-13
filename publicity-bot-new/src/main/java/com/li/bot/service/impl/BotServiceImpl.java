@@ -3,11 +3,9 @@ package com.li.bot.service.impl;
 
 import com.li.bot.config.BotConfig;
 import com.li.bot.handle.CallbackQueryHandle;
-import com.li.bot.handle.ChannelPostHandle;
+import com.li.bot.handle.ChatMemberUpdatedHandle;
 import com.li.bot.handle.MessageHandle;
 import com.li.bot.handle.callback.CallbackFactory;
-import com.li.bot.handle.ChatMemberUpdatedHandle;
-import com.li.bot.handle.callback.SelectConvoysListCallback;
 import com.li.bot.handle.message.MessageFactory;
 import com.li.bot.mapper.ButtonMapper;
 import com.li.bot.mapper.ConvoysInviteMapper;
@@ -22,7 +20,6 @@ import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.updates.SetWebhook;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.ChatMemberUpdated;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -142,10 +139,6 @@ public class BotServiceImpl extends TelegramWebhookBot {
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
-        }
-        if(update.hasChannelPost()){
-            Message channelPost = update.getChannelPost();
-            new ChannelPostHandle(this, channelPost, convoysInviteMapper, inviteMapper, fileService, buttonMapper,convoysMapper,botConfig).handle();
         }
 
         return null;
