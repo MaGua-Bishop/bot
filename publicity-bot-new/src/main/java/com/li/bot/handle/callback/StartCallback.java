@@ -3,6 +3,7 @@ package com.li.bot.handle.callback;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.li.bot.config.BotConfig;
 import com.li.bot.handle.message.IMessage;
+import com.li.bot.mapper.ConvoysInviteMapper;
 import com.li.bot.mapper.UserMapper;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.service.impl.FileService;
@@ -43,6 +44,10 @@ public class StartCallback implements ICallback {
 
     @Autowired
     private FileService fileService ;
+
+    @Autowired
+    private ConvoysInviteMapper convoysInviteMapper ;
+
     private InlineKeyboardMarkup createInlineKeyboardButton(com.li.bot.entity.database.User user) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
 
@@ -146,11 +151,14 @@ public class StartCallback implements ICallback {
 
         com.li.bot.entity.database.User u = addUser(tgId, userName);
 
+        Long countByConvoys = convoysInviteMapper.getCountByConvoys();
+
+
         bot.execute(EditMessageText.builder()
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .parseMode("html")
-                .text(BotMessageUtils.getStartMessage(tgId,userName,botConfig.getBotname()))
+                .text(BotMessageUtils.getStartMessage(tgId,userName,botConfig.getBotname(),countByConvoys))
                 .replyMarkup(createInlineKeyboardButton(u))
                 .build());
 

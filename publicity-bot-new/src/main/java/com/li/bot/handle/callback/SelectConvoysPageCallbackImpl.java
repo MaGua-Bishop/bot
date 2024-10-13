@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.collect.Lists;
 import com.li.bot.entity.database.Convoys;
+import com.li.bot.entity.database.ConvoysInfoListVo;
 import com.li.bot.entity.database.ConvoysInvite;
 import com.li.bot.entity.database.Invite;
 import com.li.bot.mapper.ConvoysInviteMapper;
@@ -68,15 +69,15 @@ public class SelectConvoysPageCallbackImpl implements ICallback{
         if (matcher.find()) {
             int pageCount = Integer.parseInt(matcher.group(1));
             Page<Convoys> page = new Page<>(pageCount, ConvoysPageUtils.PAGESIZE);
-            IPage<Convoys> pageData = convoysMapper.selectPage(page, null);
-            List<Invite> list = convoysInviteMapper.getConvoysInviteListByConvoysIds(pageData.getRecords().stream().map(Convoys::getConvoysId).collect(Collectors.toList()));
-            if(!pageData.getRecords().isEmpty()){
+            IPage<ConvoysInfoListVo> convoysList = convoysMapper.selectConvoysList(page);
+            if(!convoysList.getRecords().isEmpty()){
                 try {
+                    Long number = convoysList.getRecords().stream().map(ConvoysInfoListVo::getCurrentCapacity).reduce(Long::sum).get();
                     bot.execute(EditMessageText.builder()
                             .chatId(callbackQuery.getMessage().getChatId())
                             .messageId(callbackQuery.getMessage().getMessageId())
-                            .text(BotMessageUtils.getConvoysHall(pageData.getRecords().size(),list.size()))
-                            .replyMarkup(ConvoysPageUtils.createInlineKeyboardButton(pageData, convoysInviteMapper))
+                            .text(BotMessageUtils.getConvoysHall(convoysList.getRecords().size(),number))
+                            .replyMarkup(ConvoysPageUtils.createInlineKeyboardButton(convoysList))
                             .build());
                 } catch (TelegramApiException e) {
                     throw new RuntimeException(e);

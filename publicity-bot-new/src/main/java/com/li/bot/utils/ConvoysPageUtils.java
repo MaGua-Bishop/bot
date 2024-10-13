@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.google.common.collect.Lists;
 import com.li.bot.entity.database.Convoys;
+import com.li.bot.entity.database.ConvoysInfoListVo;
 import com.li.bot.entity.database.ConvoysInvite;
 import com.li.bot.mapper.ConvoysInviteMapper;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -21,12 +22,11 @@ public class ConvoysPageUtils {
     public  static final Long PAGESIZE = 20L;
 
 
-    public static InlineKeyboardMarkup createInlineKeyboardButton(IPage<Convoys> page, ConvoysInviteMapper convoysInviteMapper) {
+    public static InlineKeyboardMarkup createInlineKeyboardButton(IPage<ConvoysInfoListVo> page) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
-        for (Convoys vo : page.getRecords()) {
-            List<ConvoysInvite> convoysInviteList = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, vo.getConvoysId()).eq(ConvoysInvite::getIsReview,true));
+        for (ConvoysInfoListVo vo : page.getRecords()) {
             buttonList.add(InlineKeyboardButton.builder()
-                    .text(vo.getName()+"|"+convoysInviteList.size()+"-"+vo.getCapacity()+"|"+ UnitConversionUtils.toThousands(vo.getSubscription())).callbackData("selectConvoysInfo:"+vo.getConvoysId())
+                    .text(vo.getConvoysName()+"|"+vo.getCurrentCapacity()+"-"+vo.getConvoysCapacity()+"|"+ UnitConversionUtils.toThousands(vo.getConvoysSubscription())).callbackData("selectConvoysInfo:"+vo.getConvoysId())
                     .callbackData("selectConvoysInfo:" + vo.getConvoysId())
                     .build());
         }

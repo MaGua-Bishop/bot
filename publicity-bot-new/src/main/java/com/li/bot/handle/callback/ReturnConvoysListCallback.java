@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.collect.Lists;
 import com.li.bot.entity.database.Convoys;
+import com.li.bot.entity.database.ConvoysInfoListVo;
 import com.li.bot.entity.database.ConvoysInvite;
 import com.li.bot.entity.database.Invite;
 import com.li.bot.mapper.ConvoysInviteMapper;
@@ -49,9 +50,10 @@ public class ReturnConvoysListCallback implements ICallback{
     @Override
     public void execute(BotServiceImpl bot, CallbackQuery callbackQuery) throws TelegramApiException {
         Page<Convoys> page = new Page<>(1, ConvoysPageUtils.PAGESIZE);
-        IPage<Convoys> convoysIPage = convoysMapper.selectConvoysList(page);
-        List<Invite> list = convoysInviteMapper.getConvoysInviteListByConvoysIds(convoysIPage.getRecords().stream().map(Convoys::getConvoysId).collect(Collectors.toList()));
-        EditMessageText sendMessage = EditMessageText.builder().chatId(callbackQuery.getMessage().getChatId()).text(BotMessageUtils.getConvoysHall(convoysIPage.getRecords().size(),list.size())).replyMarkup(ConvoysPageUtils.createInlineKeyboardButton(convoysIPage,convoysInviteMapper)).messageId(callbackQuery.getMessage().getMessageId())
+        IPage<ConvoysInfoListVo> convoysList = convoysMapper.selectConvoysList(page);
+        Long number = convoysList.getRecords().stream().map(ConvoysInfoListVo::getCurrentCapacity).reduce(Long::sum).get();
+
+        EditMessageText sendMessage = EditMessageText.builder().chatId(callbackQuery.getMessage().getChatId()).text(BotMessageUtils.getConvoysHall(convoysList.getRecords().size(),number)).replyMarkup(ConvoysPageUtils.createInlineKeyboardButton(convoysList)).messageId(callbackQuery.getMessage().getMessageId())
                 .parseMode("html").build();
         bot.execute(sendMessage);
     }

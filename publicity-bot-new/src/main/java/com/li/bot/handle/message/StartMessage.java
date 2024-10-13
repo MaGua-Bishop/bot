@@ -3,6 +3,7 @@ package com.li.bot.handle.message;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
 import com.li.bot.config.BotConfig;
+import com.li.bot.mapper.ConvoysInviteMapper;
 import com.li.bot.mapper.UserMapper;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.service.impl.FileService;
@@ -39,6 +40,9 @@ public class StartMessage implements IMessage{
 
     @Autowired
     private FileService fileService ;
+
+    @Autowired
+    private ConvoysInviteMapper convoysInviteMapper ;
     private InlineKeyboardMarkup createInlineKeyboardButton(com.li.bot.entity.database.User user) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
 
@@ -144,7 +148,9 @@ public class StartMessage implements IMessage{
 
         com.li.bot.entity.database.User u = addUser(tgId, userName);
 
-        SendMessage send = SendMessage.builder().text(BotMessageUtils.getStartMessage(tgId,userName,botConfig.getBotname())).chatId(message.getChatId()).replyMarkup(createInlineKeyboardButton(u)).parseMode("html").build();
+        Long countByConvoys = convoysInviteMapper.getCountByConvoys();
+
+        SendMessage send = SendMessage.builder().text(BotMessageUtils.getStartMessage(tgId,userName,botConfig.getBotname(),countByConvoys)).chatId(message.getChatId()).replyMarkup(createInlineKeyboardButton(u)).parseMode("html").build();
 
         bot.execute(send);
     }

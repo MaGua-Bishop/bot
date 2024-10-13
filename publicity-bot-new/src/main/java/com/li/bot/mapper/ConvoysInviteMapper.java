@@ -31,5 +31,11 @@ public interface ConvoysInviteMapper extends BaseMapper<ConvoysInvite> {
     @Select("UPDATE tg_convoys_invite SET message_id = #{messageId} WHERE invite_id = #{inviteId} and convoys_id = #{convoysId}")
     void updateMessageIdById(@Param("messageId") Integer messageId, @Param("inviteId") Long inviteId, @Param("convoysId") Long convoysId);
 
+    @Select("SELECT count(id) from tg_convoys_invite where status = 2")
+    Long getCountByConvoys();
+
+
+
+
 
 }

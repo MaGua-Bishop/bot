@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class BotMessageUtils {
 
-    public static String getStartMessage(Long tgId, String userName, String botName) {
+    public static String getStartMessage(Long tgId, String userName, String botName,Long number) {
         String name = botName.replace("t.me/","");
         return "<b>\uD83D\uDE80Telegram互推: </b>" + "<a href=\"https://" + botName + "\">@" + name + "</a>\n" +
                 "\n" +
@@ -24,6 +24,8 @@ public class BotMessageUtils {
                 "<a href=\"https://" + botName + "?startchannel=true\">机器人进频道</a>\n" +
                 "\n" +
                 "<b>管理权限：</b>发布消息/编辑其他人的消息/删除其他人的消息/邀请其他人权限，缺失权限机器人不能正常工作\n" +
+                "\n" +
+                "<b>总参与数："+number+"</b>\n" +
                 "\n" +
                 "👇点击添加机器人到群组/频道请点击机器人标题进详情页添加";
     }
@@ -55,7 +57,7 @@ public class BotMessageUtils {
         return text.toString();
     }
 
-    public static String getConvoysHall(int number,int number02){
+    public static String getConvoysHall(int number,Long number02){
         return "\n" +
                 "频道-车队大厅\n" +
                 "\n" +

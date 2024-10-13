@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.li.bot.mapper.ConvoysMapper">
+
+
+    <resultMap id="ConvoysList" type="ConvoysInfoListVo">
+        <result property="convoysId" column="convoys_id" />
+        <result property="convoysName" column="convoys_name" />
+        <result property="convoysCapacity" column="convoys_capacity" />
+        <result property="convoysSubscription" column="convoys_subscription" />
+        <result property="currentCapacity" column="current_capacity" />
+    </resultMap>
+
+
+    <select id="selectConvoysList" resultMap="ConvoysList">
+        SELECT c.convoys_id convoys_id,c.name convoys_name,c.capacity convoys_capacity,c.subscription convoys_subscription,Count(i.convoys_id) current_capacity
+        FROM tg_convoys c
+        LEFT JOIN tg_convoys_invite i ON c.convoys_id = i.convoys_id
+        GROUP BY c.convoys_id
+    </select>
+
+
+</mapper>

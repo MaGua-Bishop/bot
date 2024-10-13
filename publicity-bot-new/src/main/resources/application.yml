@@ -7,9 +7,9 @@ spring:
     type: com.alibaba.druid.pool.DruidDataSource
     driverClassName: org.postgresql.Driver
     # ${DATABASE_BOT_HOST}
-    url: jdbc:postgresql://5.45.72.79:5400/publicity_bot_new?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Shanghai
-    username: user_HHC7zR
-    password: password_PpfikBkasdwqkcoq
+    url: jdbc:postgresql://${DATABASE_BOT_HOST}:${DATABASE_BOT_PORT}/publicity_bot_new?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+    username: ${DATABASE_BOT_USERNAME}
+    password: ${DATABASE_BOT_PASSWORD}
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/*.xml
@@ -19,13 +19,11 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 bot:
-#  botname: t.me/redianhutuibot # 机器人名称
-#  token: 8083224393:AAGPPVevhZ6VQr5GrVniEswayjh_6H3glTY # token
-  botname: t.me/lidemobot # 机器人名称
-  token: 8030696965:AAFY6eZti5yIg7J0p-mXIHSH9fLsmrvHBFE # token
+  botname: t.me/redianhutuibot # 机器人名称
+  token: 8083224393:AAGPPVevhZ6VQr5GrVniEswayjh_6H3glTY # token
   host: 127.0.0.1 #ip
   port: 7890    #端口
-  url: https://83d2-111-55-96-129.ngrok-free.app/tgbot/publicity_bot_new #ngrok地址
+  url: https://3d47-111-55-96-129.ngrok-free.app/tgbot/publicity_bot_new #ngrok地址
   adminChannelFile: adminChannel.json
   textFile: text.txt
   textBottomFile: textBottom.txt
