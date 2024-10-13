@@ -27,6 +27,8 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class BotServiceImpl extends TelegramWebhookBot {
@@ -111,6 +113,20 @@ public class BotServiceImpl extends TelegramWebhookBot {
     @Autowired
     private AdminEditSessionList adminEditSessionList;
 
+    private Long getUserId(String text){
+        // 正则表达式模式，用于匹配固定十位数的ID
+        Pattern idPattern = Pattern.compile("\\b\\d{10}\\b");
+        Matcher idMatcher = idPattern.matcher(text);
+
+        // 查找并打印所有匹配的ID
+        if (idMatcher.find()) {
+            String id = idMatcher.group(0);  // 提取ID
+            return Long.parseLong(id);
+        }
+        return null;
+    }
+
+
 
 
     @Override
@@ -130,7 +146,8 @@ public class BotServiceImpl extends TelegramWebhookBot {
                     menu.execute(this,update.getMessage());
                     return null;
                 }
-                if(text.indexOf("#用户id") == 0){
+                Long userId = getUserId(text);
+                if(userId != null){
                     IBotMenu menu = botMenuFactory.getMenu("查询用户余额");
                     menu.execute(this,update.getMessage());
                     return null;

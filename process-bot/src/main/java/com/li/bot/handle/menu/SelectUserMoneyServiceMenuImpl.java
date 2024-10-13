@@ -45,23 +45,17 @@ public class SelectUserMoneyServiceMenuImpl implements IBotMenu {
     private UserMapper userMapper ;
 
 
-    private String getUserId(String input) {
-        String regex = "#用户id\\s*(\\d+)";
+    private Long getUserId(String text){
+        // 正则表达式模式，用于匹配固定十位数的ID
+        Pattern idPattern = Pattern.compile("\\b\\d{10}\\b");
+        Matcher idMatcher = idPattern.matcher(text);
 
-        // 编译正则表达式
-        Pattern pattern = Pattern.compile(regex);
-
-        // 创建匹配器
-        Matcher matcher = pattern.matcher(input);
-
-        // 查找匹配
-        if (matcher.find()) {
-            // 获取用户 ID
-            String userId = matcher.group(1);
-            return userId;
-        } else {
-            return null ;
+        // 查找并打印所有匹配的ID
+        if (idMatcher.find()) {
+            String id = idMatcher.group(0);  // 提取ID
+            return Long.parseLong(id);
         }
+        return null;
     }
 
     @Override
@@ -83,10 +77,10 @@ public class SelectUserMoneyServiceMenuImpl implements IBotMenu {
         }
 
         String text = message.getText();
-        String userId = getUserId(text);
-        if(userId == null){
+        Long userId = getUserId(text);
+        if(userId == 0L){
             try {
-                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("请输入正确的格式：#用户id 输入的用户id").build());
+                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("请输入正确的用户id").build());
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
