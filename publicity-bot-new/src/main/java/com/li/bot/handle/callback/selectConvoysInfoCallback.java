@@ -50,16 +50,16 @@ public class selectConvoysInfoCallback implements ICallback{
     @Autowired
     private ConvoysInviteMapper convoysInviteMapper ;
 
-    private int currentConvoysCapacity = 0 ;
+    private Long currentConvoysCapacity = 0L ;
 
 
-    private void getConvoysCapacity(Long ConvoysId){
-        List<ConvoysInvite> list = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, ConvoysId).eq(ConvoysInvite::getIsReview, true));
-       if(list.isEmpty()){
-           currentConvoysCapacity = 0;
-       }else {
-           currentConvoysCapacity = list.size();
-       }
+    private void getConvoysCapacity(Long convoysId){
+        Long countById = convoysInviteMapper.getCountById(convoysId);
+        if(countById == null){
+            currentConvoysCapacity = 0L;
+        }else {
+            currentConvoysCapacity = countById ;
+        }
     }
 
     private List<Invite> getConvoysMemberList(Long ConvoysId){

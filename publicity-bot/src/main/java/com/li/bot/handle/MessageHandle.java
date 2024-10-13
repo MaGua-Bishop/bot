@@ -47,6 +47,9 @@ public class MessageHandle {
         if(text.startsWith("#顶部文案")){
             messageFactory.getMessage("addText").execute(bot,message);
         }
+        if(text.startsWith("#底部文案")){
+            messageFactory.getMessage("addBottomText").execute(bot,message);
+        }
 
         IMessage m = messageFactory.getMessage(text);
         if(m !=null){

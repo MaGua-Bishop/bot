@@ -9,11 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @Author: li
@@ -43,10 +42,22 @@ public class FileService {
     }
 
     public void addText(String text){
-        try {
-            new ObjectMapper().writeValue(new File(botConfig.getTextFile()), text);
+        try (FileWriter fileWriter = new FileWriter(new File(botConfig.getTextFile()))) {
+            // 将字符串写入文件
+            fileWriter.write(text);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            // 处理异常
+        }
+    }
+
+    public void addButtonText(String text){
+        try (FileWriter fileWriter = new FileWriter(new File(botConfig.getTextBottomFile()))) {
+            // 将字符串写入文件
+            fileWriter.write(text);
+        } catch (IOException e) {
+            e.printStackTrace();
+            // 处理异常
         }
     }
 
@@ -54,7 +65,16 @@ public class FileService {
         String string = null;
         try {
             string = FileUtils.readFileToString(new File(botConfig.getTextFile()));
-            string = string.replaceAll("\"", "");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return string;
+    }
+
+    public String getButtonText(){
+        String string = null;
+        try {
+            string = FileUtils.readFileToString(new File(botConfig.getTextBottomFile()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

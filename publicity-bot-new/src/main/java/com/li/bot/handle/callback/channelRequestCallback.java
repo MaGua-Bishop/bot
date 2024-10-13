@@ -63,15 +63,15 @@ public class channelRequestCallback implements ICallback{
     @Autowired
     private UserMapper userMapper ;
 
-    private int currentConvoysCapacity = 0 ;
+    private Long currentConvoysCapacity = 0L ;
 
 
-    private void getConvoysCapacity(Long ConvoysId){
-        List<ConvoysInvite> list = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, ConvoysId).eq(ConvoysInvite::getIsReview, true));
-        if(list.isEmpty()){
-            currentConvoysCapacity = 0;
+    private void getConvoysCapacity(Long convoysId){
+        Long countById = convoysInviteMapper.getCountById(convoysId);
+        if(countById == null){
+            currentConvoysCapacity = 0L;
         }else {
-            currentConvoysCapacity = list.size();
+            currentConvoysCapacity = countById ;
         }
     }
 
@@ -79,7 +79,7 @@ public class channelRequestCallback implements ICallback{
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, tgId));
 
-        if (capacity == currentConvoysCapacity) {
+        if (capacity.equals(currentConvoysCapacity)) {
             buttonList.add(InlineKeyboardButton.builder().text("车队已满").callbackData("null").build());
         } else if (user.getIsAdmin()) {
             List<Invite> invites = inviteMapper.selectList(new LambdaQueryWrapper<Invite>().eq(Invite::getTgId, tgId));
@@ -273,7 +273,7 @@ public class channelRequestCallback implements ICallback{
                 + "申请车队名: " + convoys.getName() + "\n"
                 + "车队类型: 频道\n"
                 + "车队介绍: " + convoys.getCopywriter() + "\n"
-                + "当前/最大(成员): " + invite.getMemberCount() + "/" + convoys.getCapacity() + "\n"
+                + "当前/最大(成员): " +currentConvoysCapacity + "/" + convoys.getCapacity() + "\n"
                 + "最低订阅: " + UnitConversionUtils.tensOfThousands(convoys.getSubscription()) + "\n"+
                 "最低阅读: " + convoys.getRead() + "\n\n"+
                 "申请频道id:" + invite.getChatId() + "\n" +

@@ -49,6 +49,18 @@ public class adminNoAudiCallback implements ICallback{
     @Autowired
     private ConvoysMapper convoysMapper ;
 
+    private Long currentConvoysCapacity = 0L;
+
+
+    private void getConvoysCapacity(Long convoysId){
+        Long countById = convoysInviteMapper.getCountById(convoysId);
+        if(countById == null){
+            currentConvoysCapacity = 0L;
+        }else {
+            currentConvoysCapacity = countById ;
+        }
+    }
+
     private InlineKeyboardMarkup createButton(String name){
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         buttonList.add(InlineKeyboardButton.builder().text(name).callbackData("无").build());
@@ -86,6 +98,7 @@ public class adminNoAudiCallback implements ICallback{
         Invite invite = inviteMapper.selectOne(new LambdaQueryWrapper<Invite>().eq(Invite::getInviteId, inviteId));
         if(invite != null){
             Convoys convoys = convoysMapper.selectOne(new LambdaQueryWrapper<Convoys>().eq(Convoys::getConvoysId, convoysInvite.getConvoysId()));
+            getConvoysCapacity(convoys.getConvoysId());
             Integer status = convoysInvite.getStatus();
             String msg = "";
             String code ="";
@@ -106,7 +119,7 @@ public class adminNoAudiCallback implements ICallback{
                     + "申请车队名: " + convoys.getName() + "\n"
                     + "车队类型: 频道\n"
                     + "车队介绍: " + convoys.getCopywriter() + "\n"
-                    + "当前/最大(成员): " + invite.getMemberCount() + "/" + convoys.getCapacity() + "\n"
+                    + "当前/最大(成员): " + currentConvoysCapacity + "/" + convoys.getCapacity() + "\n"
                     + "最低订阅: " + UnitConversionUtils.tensOfThousands(convoys.getSubscription()) + "\n"+
                     "最低阅读: " + convoys.getRead() + "\n\n"+
                     "申请频道id:" + invite.getChatId() + "\n" +

@@ -19,8 +19,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @Author: li
@@ -59,6 +57,11 @@ public class StartMessage implements IMessage{
             buttonList.add(InlineKeyboardButton.builder().text("创建互推导航按钮").callbackData("adminAddButton").build());
             buttonList.add(InlineKeyboardButton.builder().text("\uD83D\uDDD1删除互推导航按钮").callbackData("adminDeleteButton").build());
             buttonList.add(InlineKeyboardButton.builder().text("\uD83D\uDDB9创建顶部文案").callbackData("adminAddText").build());
+            buttonList.add(InlineKeyboardButton.builder()
+                    .text("\uD83D\uDDB9创建底部文案")
+                    .callbackData("adminAddBottomText")
+                    .build());
+
         }
 
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);

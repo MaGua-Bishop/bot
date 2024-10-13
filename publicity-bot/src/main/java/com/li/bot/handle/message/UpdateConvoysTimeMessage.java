@@ -1,12 +1,9 @@
 package com.li.bot.handle.message;
 
 import com.li.bot.entity.database.Convoys;
-import com.li.bot.mapper.ConvoysMapper;
 import com.li.bot.service.impl.BotServiceImpl;
-import com.li.bot.service.impl.FleetService;
 import com.li.bot.sessions.UpdateConvoysSession;
 import com.li.bot.sessions.UpdateConvoysSessionList;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;

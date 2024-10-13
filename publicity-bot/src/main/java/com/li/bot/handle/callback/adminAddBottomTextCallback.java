@@ -11,16 +11,16 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
  * @CreateTime: 2024-10-09
  */
 @Component
-public class AdminAddTextCallback implements ICallback{
+public class adminAddBottomTextCallback implements ICallback{
 
     @Override
     public String getCallbackName() {
-        return "adminAddText";
+        return "adminAddBottomText";
     }
 
     @Override
     public void execute(BotServiceImpl bot, CallbackQuery callbackQuery) throws TelegramApiException {
-        SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("请输入顶部文案\n格式:\n<code>#顶部文案\n#文案 输入文案\n#AD 链接 文字</code>\n提示:文案只能有一个,AD不限制.请按格式填写").parseMode("html").build();
+        SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("请输入底部文案\n格式:\n<code>#底部文案\n#文案 输入文案\n#AD 链接 文字</code>\n提示:文案只能有一个,AD不限制.请按格式填写").parseMode("html").build();
         bot.execute(sendMessage);
     }
 }

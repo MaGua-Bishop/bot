@@ -2,11 +2,14 @@ package com.li.bot.handle;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
+import com.li.bot.config.BotConfig;
 import com.li.bot.entity.database.Button;
+import com.li.bot.entity.database.Convoys;
 import com.li.bot.entity.database.ConvoysInvite;
 import com.li.bot.entity.database.Invite;
 import com.li.bot.mapper.ButtonMapper;
 import com.li.bot.mapper.ConvoysInviteMapper;
+import com.li.bot.mapper.ConvoysMapper;
 import com.li.bot.mapper.InviteMapper;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.service.impl.FileService;
@@ -40,13 +43,19 @@ public class ChannelPostHandle {
 
     private final ButtonMapper buttonMapper ;
 
-    public ChannelPostHandle(BotServiceImpl bot, Message message, ConvoysInviteMapper convoysInviteMapper, InviteMapper inviteMapper, FileService fileService, ButtonMapper buttonMapper) {
+    private BotConfig botConfig ;
+
+    private final ConvoysMapper convoysMapper ;
+
+    public ChannelPostHandle(BotServiceImpl bot, Message message, ConvoysInviteMapper convoysInviteMapper, InviteMapper inviteMapper, FileService fileService, ButtonMapper buttonMapper,BotConfig botConfig, ConvoysMapper convoysMapper) {
         this.bot = bot;
         this.message = message;
         this.convoysInviteMapper = convoysInviteMapper;
         this.inviteMapper = inviteMapper;
         this.fileService = fileService;
         this.buttonMapper = buttonMapper;
+        this.botConfig = botConfig ;
+        this.convoysMapper = convoysMapper ;
     }
 
     private InlineKeyboardMarkup createInlineKeyboardButton(){
@@ -77,11 +86,14 @@ public class ChannelPostHandle {
 
             List<ConvoysInvite> convoysInviteList = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoysId).eq(ConvoysInvite::getIsReview, true));
             List<Invite> inviteList = inviteMapper.getInviteListByIds(convoysInviteList.stream().map(ConvoysInvite::getInviteId).collect(Collectors.toList()));
-
+            Convoys convoys = convoysMapper.selectOne(new LambdaQueryWrapper<Convoys>().eq(Convoys::getConvoysId, convoysInvite.getConvoysId()));
             inviteList.forEach(in -> {
-                String t = fileService.getText() + "\n\n";
-                t += BotMessageUtils.getConvoysMemberInfoList(inviteList);
-                SendMessage send = SendMessage.builder().chatId(in.getChatId()).text(t).parseMode("html").replyMarkup(createInlineKeyboardButton()).build();
+                StringBuilder builder = new StringBuilder();
+                builder.append("<a href=\"https://"+botConfig.getBotname()+"\">" +"\uD83D\uDE80"+convoys.getName()+convoys.getCopywriter()+"\uD83D\uDE80\n</a>" );
+                builder.append(fileService.getText() + "\n" );
+                builder.append(BotMessageUtils.getConvoysMemberInfoList(inviteList));
+                builder.append("\n"+fileService.getButtonText());
+                SendMessage send = SendMessage.builder().chatId(in.getChatId()).text(String.valueOf(builder)).parseMode("html").replyMarkup(createInlineKeyboardButton()).build();
                 Message execute = null;
                 try {
                     execute = bot.execute(send);

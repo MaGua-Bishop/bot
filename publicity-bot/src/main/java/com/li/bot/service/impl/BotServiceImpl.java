@@ -145,7 +145,7 @@ public class BotServiceImpl extends TelegramWebhookBot {
         }
         if(update.hasChannelPost()){
             Message channelPost = update.getChannelPost();
-            new ChannelPostHandle(this, channelPost, convoysInviteMapper, inviteMapper, fileService, buttonMapper).handle();
+            new ChannelPostHandle(this, channelPost, convoysInviteMapper, inviteMapper, fileService, buttonMapper, botConfig,convoysMapper).handle();
         }
 
         return null;
