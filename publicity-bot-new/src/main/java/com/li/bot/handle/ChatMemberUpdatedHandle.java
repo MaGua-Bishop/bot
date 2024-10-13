@@ -25,7 +25,10 @@ import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageTe
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.ChatMemberUpdated;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.User;
+import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMember;
 import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMemberAdministrator;
+import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMemberBanned;
 import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMemberLeft;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -195,7 +198,6 @@ public class ChatMemberUpdatedHandle {
                     .parseMode("html").build();
             bot.execute(send);
 
-            //kicked
         } else if (myChatMember.getNewChatMember() instanceof ChatMemberLeft) {
             // 处理机器人离开群聊的情况
             Invite selectOne = inviteMapper.selectOne(new LambdaQueryWrapper<Invite>().eq(Invite::getChatId, myChatMember.getChat().getId()));
@@ -209,6 +211,34 @@ public class ChatMemberUpdatedHandle {
             sendMessage.setParseMode("html");
             bot.execute(sendMessage);
             inviteMapper.deleteById(selectOne);
+        }else if(myChatMember.getOldChatMember() instanceof ChatMemberAdministrator){
+            Invite selectOne = inviteMapper.selectOne(new LambdaQueryWrapper<Invite>().eq(Invite::getChatId, myChatMember.getChat().getId()));
+            ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, selectOne.getInviteId()));
+            if(convoysInvite != null){
+                convoysInviteMapper.deleteById(convoysInvite);
+            }
+            SendMessage sendMessage = new SendMessage();
+            sendMessage.setChatId(selectOne.getTgId());
+            sendMessage.setText("机器人离开了"+"<b>《"+title+"》</b>");
+            sendMessage.setParseMode("html");
+            bot.execute(sendMessage);
+            inviteMapper.deleteById(selectOne);
+        }else if(myChatMember.getNewChatMember() instanceof ChatMemberBanned){
+            ChatMember newChatMember = myChatMember.getNewChatMember();
+            ChatMemberBanned banned = (ChatMemberBanned) newChatMember;
+            if(banned.getUntilDate() != null && banned.getUntilDate() > 0){
+                Invite selectOne = inviteMapper.selectOne(new LambdaQueryWrapper<Invite>().eq(Invite::getChatId, myChatMember.getChat().getId()));
+                ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, selectOne.getInviteId()));
+                if(convoysInvite != null){
+                    convoysInviteMapper.deleteById(convoysInvite);
+                }
+                SendMessage sendMessage = new SendMessage();
+                sendMessage.setChatId(selectOne.getTgId());
+                sendMessage.setText("机器人离开了"+"<b>《"+title+"》</b>");
+                sendMessage.setParseMode("html");
+                bot.execute(sendMessage);
+                inviteMapper.deleteById(selectOne);
+            }
         }
     }
 }

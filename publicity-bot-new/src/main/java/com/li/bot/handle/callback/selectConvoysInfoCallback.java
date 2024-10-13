@@ -82,7 +82,7 @@ public class selectConvoysInfoCallback implements ICallback{
         return convoys;
     }
 
-    private InlineKeyboardMarkup createInlineKeyboardButton(Long tgId,Long subscription,Long convoysId,Long capacity){
+    private InlineKeyboardMarkup createInlineKeyboardButton(Long tgId,Long convoysId,Long capacity){
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, tgId));
         if(capacity == currentConvoysCapacity ){
@@ -93,9 +93,10 @@ public class selectConvoysInfoCallback implements ICallback{
                     buttonList.add(InlineKeyboardButton.builder().text(invite.getName()).callbackData("channelRequest:"+invite.getInviteId()+":convoysId:"+convoysId).build());
                 }
                 buttonList.add(InlineKeyboardButton.builder().text("修改车队推送间隔").callbackData("updateConvoysTime:"+convoysId).build());
+            buttonList.add(InlineKeyboardButton.builder().text("删除车队(点击按钮直接删除)").callbackData("deleteConvoysTime:"+convoysId).build());
         } else {
             //根据tgId和订阅数是否等于或大于capacity，判断是否可以订阅
-            List<Invite> inviteList = inviteMapper.getInviteListByChatIdAndMemberCount(tgId,subscription);
+            List<Invite> inviteList = inviteMapper.getInviteListByChatIdAndMemberCount(tgId);
             if(inviteList.isEmpty()){
                 buttonList.add(InlineKeyboardButton.builder().text("您暂无符合的频道").callbackData("null").build());
             }else {
@@ -122,6 +123,7 @@ public class selectConvoysInfoCallback implements ICallback{
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, tgId));
         if(user.getIsAdmin()){
             buttonList.add(InlineKeyboardButton.builder().text("修改车队推送间隔").callbackData("updateConvoysTime:"+convoysId).build());
+            buttonList.add(InlineKeyboardButton.builder().text("删除车队(点击按钮直接删除)").callbackData("deleteConvoysTime:"+convoysId).build());
         }
         buttonList.add(InlineKeyboardButton.builder().text("\uD83D\uDD19返回").callbackData("returnConvoysList").build());
         buttonList.add(InlineKeyboardButton.builder()

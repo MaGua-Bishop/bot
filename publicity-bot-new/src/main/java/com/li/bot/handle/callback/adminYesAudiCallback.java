@@ -2,6 +2,7 @@ package com.li.bot.handle.callback;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
+import com.li.bot.config.BotConfig;
 import com.li.bot.entity.database.*;
 import com.li.bot.enums.ConvoysInviteStatus;
 import com.li.bot.mapper.*;
@@ -55,6 +56,9 @@ public class adminYesAudiCallback implements ICallback {
     @Autowired
     private ConvoysMapper convoysMapper ;
 
+    @Autowired
+    private BotConfig botConfig ;
+
     private InlineKeyboardMarkup createButton(String name) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         buttonList.add(InlineKeyboardButton.builder().text(name).callbackData("无").build());
@@ -81,7 +85,6 @@ public class adminYesAudiCallback implements ICallback {
 
 
     @Override
-    @Transactional
     public void execute(BotServiceImpl bot, CallbackQuery callbackQuery) throws TelegramApiException {
 
         String data = callbackQuery.getData();
@@ -144,38 +147,40 @@ public class adminYesAudiCallback implements ICallback {
             EditMessageText editMessageText = EditMessageText.builder().messageId(callbackQuery.getMessage().getMessageId()).chatId(callbackQuery.getMessage().getChatId().toString()).text(x).replyMarkup(createButton("已同意")).parseMode("html").build();
             bot.execute(editMessageText);
 
-            //车队加入后 频道互发消息
+            //加入后车队频道互发消息 找出当前车队已上车成员
 
-            List<ConvoysInvite> convoysInviteList = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoysInvite.getConvoysId()).eq(ConvoysInvite::getIsReview,true));
+            List<ConvoysInvite> convoysInviteList = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoysInvite.getConvoysId()).eq(ConvoysInvite::getStatus, ConvoysInviteStatus.BOARDED.getCode()));
             List<Invite> inviteList = inviteMapper.getInviteListByIds(convoysInviteList.stream().map(ConvoysInvite::getInviteId).collect(Collectors.toList()));
 
             inviteList.forEach(in -> {
-                String t = fileService.getText() + "\n\n";
-                t += BotMessageUtils.getConvoysMemberInfoList(inviteList);
-                SendMessage send = SendMessage.builder().chatId(in.getChatId()).text(t).parseMode("html").replyMarkup(createInlineKeyboardButton()).build();
+                StringBuilder builder = new StringBuilder();
+                builder.append("<a href=\"https://"+botConfig.getBotname()+"\">" +"\uD83D\uDE80来自热点精品互推"+convoys.getName()+"\uD83D\uDE80\n</a>" );
+                builder.append(fileService.getText() + "\n" );
+                builder.append(BotMessageUtils.getConvoysMemberInfoList(inviteList));
+                builder.append("\n"+fileService.getButtonText());
+                SendMessage send = SendMessage.builder().chatId(in.getChatId()).text(String.valueOf(builder)).parseMode("html").replyMarkup(createInlineKeyboardButton()).build();
                 Message execute = null;
+                Long cId = convoysInvite.getConvoysId() ;
                 try {
                     execute = bot.execute(send);
-
-                    Integer messageId = in.getMessageId();
+                    ConvoysInvite convoysInvite1 = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, cId).eq(ConvoysInvite::getInviteId, in.getInviteId()));
+                    Integer messageId = convoysInvite1.getMessageId();
                     if (messageId == null) {
-                        in.setMessageId(execute.getMessageId());
-                        inviteMapper.updateById(in);
+                        convoysInviteMapper.updateMessageIdById(execute.getMessageId(), in.getInviteId(),convoysInvite1.getConvoysId());
                     } else {
                         try {
                             bot.execute(DeleteMessage.builder()
                                     .chatId(in.getChatId())
-                                    .messageId(in.getMessageId())
+                                    .messageId(convoysInvite1.getMessageId())
                                     .build());
                         } catch (TelegramApiException e) {
                             throw new RuntimeException(e);
                         }
-                        in.setMessageId(execute.getMessageId());
-                        inviteMapper.updateById(in);
+                        convoysInviteMapper.updateMessageIdById(execute.getMessageId(), in.getInviteId(),convoysInvite1.getConvoysId());
                     }
                 } catch (Exception e) {
                     // 更新messageId为空
-                    inviteMapper.updateMessageIdById(execute.getMessageId(), in.getInviteId());
+                    convoysInviteMapper.updateMessageIdById(execute.getMessageId(), in.getInviteId(),cId);
                 }
             });
 

@@ -88,6 +88,10 @@ public class StartCallback implements ICallback {
                     .text("\uD83D\uDDB9创建顶部文案")
                     .callbackData("adminAddText")
                     .build());
+            buttonList.add(InlineKeyboardButton.builder()
+                    .text("\uD83D\uDDB9创建底部文案")
+                    .callbackData("adminAddBottomText")
+                    .build());
         }
 
         // 创建行列表，手动指定每行的按钮

@@ -25,6 +25,8 @@ public class BotConfig {
 
     private String textFile;
 
+    private String textBottomFile ;
+
 
 
     public DefaultBotOptions getDefaultBotOptions(){

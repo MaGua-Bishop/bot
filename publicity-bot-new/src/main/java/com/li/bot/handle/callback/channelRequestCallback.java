@@ -75,7 +75,7 @@ public class channelRequestCallback implements ICallback{
         }
     }
 
-    public InlineKeyboardMarkup createInlineKeyboardButton(Long tgId, Long subscription, Long convoysId, Long capacity) {
+    public InlineKeyboardMarkup createInlineKeyboardButton(Long tgId, Long convoysId, Long capacity) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, tgId));
 
@@ -104,7 +104,7 @@ public class channelRequestCallback implements ICallback{
                         .build());
             }
         } else {
-            List<Invite> inviteList = inviteMapper.getInviteListByChatIdAndMemberCount(tgId, subscription);
+            List<Invite> inviteList = inviteMapper.getInviteListByChatIdAndMemberCount(tgId);
             if (inviteList.isEmpty()) {
                 buttonList.add(InlineKeyboardButton.builder().text("未找到符合要求的频道请添加").callbackData("null").build());
             } else {
@@ -210,6 +210,8 @@ public class channelRequestCallback implements ICallback{
         Convoys convoys = selectConvoysInfo(convoysId);
         getConvoysCapacity(convoysId);
 
+        Long convoysCapacity = convoys.getCapacity();
+        Long subscription = convoys.getSubscription();
 
         Invite invite = inviteMapper.selectOne(new LambdaQueryWrapper<Invite>().eq(Invite::getInviteId, inviteId));
         if(invite == null){
@@ -217,6 +219,13 @@ public class channelRequestCallback implements ICallback{
             return;
         }
 
+        User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, callbackQuery.getFrom().getId()));
+        if (!user.getIsAdmin()) {
+            if(invite.getMemberCount() < subscription){
+                bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("<b>《"+invite.getName()+"》</b>\n"+"订阅量不满足该车队要求").parseMode("html").build());
+                return;
+            }
+        }
 
         ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoysId).eq(ConvoysInvite::getInviteId, inviteId));
 
@@ -235,7 +244,7 @@ public class channelRequestCallback implements ICallback{
         bot.execute(sendMessage);
         inviteMapper.updateById(invite);
 
-        EditMessageReplyMarkup editMessageReplyMarkup = EditMessageReplyMarkup.builder().chatId(callbackQuery.getMessage().getChatId()).messageId(callbackQuery.getMessage().getMessageId()).replyMarkup(createInlineKeyboardButton(callbackQuery.getFrom().getId(),convoys.getSubscription(),convoysId,convoys.getCapacity())).build();
+        EditMessageReplyMarkup editMessageReplyMarkup = EditMessageReplyMarkup.builder().chatId(callbackQuery.getMessage().getChatId()).messageId(callbackQuery.getMessage().getMessageId()).replyMarkup(createInlineKeyboardButton(callbackQuery.getFrom().getId(),convoysId,convoys.getCapacity())).build();
         bot.execute(editMessageReplyMarkup);
 
         //发送消息给频道管理员同意或拒绝加入

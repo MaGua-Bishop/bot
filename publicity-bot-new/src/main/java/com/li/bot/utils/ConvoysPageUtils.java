@@ -18,7 +18,7 @@ import java.util.List;
  */
 public class ConvoysPageUtils {
 
-    public  static final Long PAGESIZE = 10L;
+    public  static final Long PAGESIZE = 20L;
 
 
     public static InlineKeyboardMarkup createInlineKeyboardButton(IPage<Convoys> page, ConvoysInviteMapper convoysInviteMapper) {

@@ -17,8 +17,8 @@ import java.util.List;
 public interface InviteMapper extends BaseMapper<Invite> {
 
 
-    @Select("select * from tg_invite where tg_id = #{tgId} and member_count >= #{memberCount} and is_review = false")
-    List<Invite> getInviteListByChatIdAndMemberCount(@Param("tgId") Long tgId,@Param("memberCount") Long memberCount);
+    @Select("select * from tg_invite where tg_id = #{tgId}")
+    List<Invite> getInviteListByChatIdAndMemberCount(@Param("tgId") Long tgId);
 
 
     @Select("<script>" +

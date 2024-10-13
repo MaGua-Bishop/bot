@@ -1,12 +1,8 @@
 package com.li.bot.handle.message;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.li.bot.entity.TextAndLink;
-import com.li.bot.entity.database.Button;
-import com.li.bot.mapper.ButtonMapper;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.service.impl.FileService;
-import com.li.bot.service.impl.FleetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -23,11 +19,11 @@ import java.util.regex.Pattern;
  * @CreateTime: 2024-10-09
  */
 @Component
-public class AddTextMessage implements IMessage{
+public class AddBottomTextMessage implements IMessage{
 
     @Override
     public String getMessageName() {
-        return "addText";
+        return "addBottomText";
     }
 
 
@@ -65,14 +61,14 @@ public class AddTextMessage implements IMessage{
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append(copyText+"\n");
         for (TextAndLink textAndLink : list) {
             String link = textAndLink.getLink();
             String t = textAndLink.getText();
             sb.append("AD: <a href=\""+link+"\">"+t+"</a>\n");
         }
+        sb.append(copyText+"\n");
 
-            fileService.addText(String.valueOf(sb));
+            fileService.addButtonText(String.valueOf(sb));
 
             bot.execute(SendMessage.builder()
                     .chatId(message.getChatId().toString())

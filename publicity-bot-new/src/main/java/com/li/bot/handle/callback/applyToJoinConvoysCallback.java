@@ -86,7 +86,7 @@ public class applyToJoinConvoysCallback implements ICallback{
         return convoys;
     }
 
-    public InlineKeyboardMarkup createInlineKeyboardButton(Long tgId, Long subscription, Long convoysId, Long capacity) {
+    public InlineKeyboardMarkup createInlineKeyboardButton(Long tgId, Long convoysId, Long capacity) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, tgId));
 
@@ -115,7 +115,7 @@ public class applyToJoinConvoysCallback implements ICallback{
                         .build());
             }
         } else {
-            List<Invite> inviteList = inviteMapper.getInviteListByChatIdAndMemberCount(tgId, subscription);
+            List<Invite> inviteList = inviteMapper.getInviteListByChatIdAndMemberCount(tgId);
             if (inviteList.isEmpty()) {
                 buttonList.add(InlineKeyboardButton.builder().text("未找到符合要求的频道请添加").callbackData("null").build());
             } else {
@@ -186,7 +186,7 @@ public class applyToJoinConvoysCallback implements ICallback{
         String data = callbackQuery.getData();
         String convoysId = data.substring(data.lastIndexOf(":") + 1);
         Long id = Long.valueOf(convoysId);
-
+        getConvoysCapacity(id);
         Convoys convoys = selectConvoysInfo(id);
 
         String message ="选择频道\n" +
@@ -202,7 +202,7 @@ public class applyToJoinConvoysCallback implements ICallback{
                 "请确认是否已经将机器人拉入并设置管理员\n" +
                 "\n" +
                 "\uD83D\uDC47请选择一个提交";
-        EditMessageText editMessageText = EditMessageText.builder().messageId(callbackQuery.getMessage().getMessageId()).chatId(callbackQuery.getMessage().getChatId().toString()).text(message).replyMarkup(createInlineKeyboardButton(callbackQuery.getFrom().getId(),convoys.getSubscription(),id,convoys.getCapacity())).parseMode("html").build();
+        EditMessageText editMessageText = EditMessageText.builder().messageId(callbackQuery.getMessage().getMessageId()).chatId(callbackQuery.getMessage().getChatId().toString()).text(message).replyMarkup(createInlineKeyboardButton(callbackQuery.getFrom().getId(),id,convoys.getCapacity())).parseMode("html").build();
         bot.execute(editMessageText);
     }
 }

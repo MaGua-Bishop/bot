@@ -18,7 +18,7 @@ import java.util.Date;
 public class User {
     @TableId(value = "tg_id",type = IdType.INPUT)
     private Long tgId;
-    @TableField("tg_name")
+    @TableField(value = "tg_name")
     private String tgName ;
     @TableField("is_admin")
     private Boolean isAdmin ;

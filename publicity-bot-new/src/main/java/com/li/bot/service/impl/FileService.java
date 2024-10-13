@@ -53,10 +53,30 @@ public class FileService {
         }
     }
 
+    public void addButtonText(String text){
+        try (FileWriter fileWriter = new FileWriter(new File(botConfig.getTextBottomFile()))) {
+            // 将字符串写入文件
+            fileWriter.write(text);
+        } catch (IOException e) {
+            e.printStackTrace();
+            // 处理异常
+        }
+    }
+
     public String getText(){
         String string = null;
         try {
             string = FileUtils.readFileToString(new File(botConfig.getTextFile()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return string;
+    }
+
+    public String getButtonText(){
+        String string = null;
+        try {
+            string = FileUtils.readFileToString(new File(botConfig.getTextBottomFile()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

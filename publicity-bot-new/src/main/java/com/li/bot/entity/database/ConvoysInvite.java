@@ -32,4 +32,7 @@ public class ConvoysInvite {
     @TableField("status")
     private Integer status;
 
+    @TableField("message_id")
+    private Integer messageId;
+
 }
