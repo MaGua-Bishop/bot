@@ -79,6 +79,14 @@ public class CallbackQueryHandle {
             callbackFactory.getCallback("applyToJoin").execute(bot,callbackQuery);
             return ;
         }
+        if(data.indexOf("deleteConvoysMembers:") == 0){
+            callbackFactory.getCallback("deleteConvoysMembers").execute(bot,callbackQuery);
+            return;
+        }
+        if(data.indexOf("adminDeleteConvoysMembers:") == 0){
+            callbackFactory.getCallback("adminDeleteConvoysMembers").execute(bot,callbackQuery);
+            return;
+        }
 
 
 

@@ -91,6 +91,7 @@ public class selectConvoysInfoCallback implements ICallback{
             buttonList.add(InlineKeyboardButton.builder().text("修改车队推送间隔").callbackData("updateConvoysTime:"+convoysId).build());
             buttonList.add(InlineKeyboardButton.builder().text("修改车队成员链接").callbackData("updateConvoysMembers:"+convoysId).build());
             buttonList.add(InlineKeyboardButton.builder().text("删除车队(点击按钮直接删除)").callbackData("deleteConvoysTime:"+convoysId).build());
+            buttonList.add(InlineKeyboardButton.builder().text("删除车队成员").callbackData("deleteConvoysMembers:"+convoysId).build());
         }
         buttonList.add(InlineKeyboardButton.builder().text("\uD83D\uDD19返回").callbackData("returnConvoysList").build());
         buttonList.add(InlineKeyboardButton.builder()
