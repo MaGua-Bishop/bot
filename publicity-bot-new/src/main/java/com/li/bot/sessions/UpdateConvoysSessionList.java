@@ -16,9 +16,10 @@ public class UpdateConvoysSessionList {
 
     private Map<Long, UpdateConvoysSession> convoysSessionMap = new HashMap<>();
 
-    public void addConvoysSession(Long tgId,Convoys convoys) {
+    public void addConvoysSession(Long tgId,Convoys convoys,Integer type) {
         UpdateConvoysSession businessSession = new UpdateConvoysSession(convoys);
         businessSession.setState(UpdateConvoysSessionState.WAITING);
+        businessSession.setType(type);
         convoysSessionMap.put(tgId, businessSession);
     }
     public UpdateConvoysSession getUserSession(Long tgId) {

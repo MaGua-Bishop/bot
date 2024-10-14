@@ -10,6 +10,8 @@ public class UpdateConvoysSession {
     private UpdateConvoysSessionState state;
     private Convoys convoys;
 
+    private Integer type  ;
+
     public UpdateConvoysSession(Convoys convoys) {
         this.convoys = convoys;
     }
@@ -27,4 +29,19 @@ public class UpdateConvoysSession {
         return convoys;
     }
 
+    public Convoys getConvoys() {
+        return convoys;
+    }
+
+    public void setConvoys(Convoys convoys) {
+        this.convoys = convoys;
+    }
+
+    public Integer getType() {
+        return type;
+    }
+
+    public void setType(Integer type) {
+        this.type = type;
+    }
 }

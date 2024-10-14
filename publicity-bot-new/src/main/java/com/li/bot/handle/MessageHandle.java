@@ -34,8 +34,12 @@ public class MessageHandle {
         String text = message.getText();
 
         UpdateConvoysSession userSession = updateConvoysSessionList.getUserSession(message.getFrom().getId());
-        if(userSession != null){
+        if(userSession != null && userSession.getType() == 0){
             messageFactory.getMessage("updateConvoysTime").execute(bot,message);
+            return ;
+        }
+        if(userSession != null && userSession.getType() == 1){
+            messageFactory.getMessage("updateInviteUrl").execute(bot,message);
             return ;
         }
         if(text.startsWith("#车队标题")){

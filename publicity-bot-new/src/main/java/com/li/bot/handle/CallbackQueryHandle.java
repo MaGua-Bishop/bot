@@ -43,9 +43,12 @@ public class CallbackQueryHandle {
         if(data.indexOf("updateConvoysTime:") == 0){
             callbackFactory.getCallback("updateConvoysTime").execute(bot,callbackQuery);
             return;
+        }if(data.indexOf("updateConvoysMembersUrl:") == 0){
+            callbackFactory.getCallback("updateConvoysMembersUrl").execute(bot,callbackQuery);
+            return;
         }
-        if(data.indexOf("deleteConvoysTime:") == 0){
-            callbackFactory.getCallback("deleteConvoysTime").execute(bot,callbackQuery);
+        if(data.indexOf("updateConvoysMembers:") == 0){
+            callbackFactory.getCallback("updateConvoysMembers").execute(bot,callbackQuery);
             return;
         }
         if(data.indexOf("selectConvoysInfo:") == 0){

@@ -89,6 +89,7 @@ public class selectConvoysInfoCallback implements ICallback{
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, tgId));
         if(user.getIsAdmin()){
             buttonList.add(InlineKeyboardButton.builder().text("修改车队推送间隔").callbackData("updateConvoysTime:"+convoysId).build());
+            buttonList.add(InlineKeyboardButton.builder().text("修改车队成员链接").callbackData("updateConvoysMembers:"+convoysId).build());
             buttonList.add(InlineKeyboardButton.builder().text("删除车队(点击按钮直接删除)").callbackData("deleteConvoysTime:"+convoysId).build());
         }
         buttonList.add(InlineKeyboardButton.builder().text("\uD83D\uDD19返回").callbackData("returnConvoysList").build());
@@ -127,7 +128,7 @@ public class selectConvoysInfoCallback implements ICallback{
                 "\n\n"+
                 "车队成员列表:"+"\n"+
                 BotMessageUtils.getConvoysMemberList(InviteList);
-        EditMessageText editMessageText = EditMessageText.builder().messageId(callbackQuery.getMessage().getMessageId()).chatId(callbackQuery.getMessage().getChatId().toString()).text(message).replyMarkup(createInlineKeyboardButton02(callbackQuery.getFrom().getId(),id)).parseMode("html").build();
+        EditMessageText editMessageText = EditMessageText.builder().messageId(callbackQuery.getMessage().getMessageId()).chatId(callbackQuery.getMessage().getChatId().toString()).text(message).replyMarkup(createInlineKeyboardButton02(callbackQuery.getFrom().getId(),id)).parseMode("html").disableWebPagePreview(true).build();
         bot.execute(editMessageText);
     }
 }

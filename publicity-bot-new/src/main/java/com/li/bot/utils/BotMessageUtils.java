@@ -38,7 +38,7 @@ public class BotMessageUtils {
            AtomicInteger i = new AtomicInteger(1);
            list.forEach(item->{
                text.append(i.get()).append(". ").append("<a href=\"").append(item.getLink()).append("\">")
-                      .append(item.getName()).append("</a>\n");
+                      .append(item.getName()).append("</a> "+UnitConversionUtils.toThousands(item.getMemberCount())+"\n");
                i.getAndIncrement();
            });
        }

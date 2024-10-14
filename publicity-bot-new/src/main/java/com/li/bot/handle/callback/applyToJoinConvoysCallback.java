@@ -108,7 +108,7 @@ public class applyToJoinConvoysCallback implements ICallback{
                     code = "\uD83D\uDD34";
                 }
                 buttonList.add(InlineKeyboardButton.builder()
-                        .text(code + invite.getName())
+                        .text(code + invite.getName()+"|"+UnitConversionUtils.toThousands(invite.getMemberCount()))
                         .callbackData("channelRequest:" + invite.getInviteId() + ":convoysId:" + convoysId)
                         .build());
             }
@@ -131,7 +131,7 @@ public class applyToJoinConvoysCallback implements ICallback{
                         code = "\uD83D\uDD34";
                     }
                     buttonList.add(InlineKeyboardButton.builder()
-                            .text(code + invite.getName())
+                            .text(code + invite.getName()+"|"+UnitConversionUtils.toThousands(invite.getMemberCount()))
                             .callbackData("channelRequest:" + invite.getInviteId() + ":convoysId:" + convoysId)
                             .build());
                 }

@@ -55,7 +55,7 @@ public class updateConvoysTimeCallback implements ICallback {
         SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text(convoys.getName()+"\n当前车队推送间隔:"+convoys.getIntervalMinutes()+"分钟\n新的推送时间是0或负数是取消推送\n"+"请输入新的推送时间(输入分钟数)").build();
         bot.execute(sendMessage);
 
-        updateConvoysSessionList.addConvoysSession(callbackQuery.getFrom().getId(), convoys);
+        updateConvoysSessionList.addConvoysSession(callbackQuery.getFrom().getId(), convoys,0);
 
 
 

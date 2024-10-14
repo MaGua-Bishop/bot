@@ -171,7 +171,7 @@ public class adminYesAudiCallback implements ICallback {
                 builder.append("<b>"+fileService.getText() + "</b>\n" );
                 builder.append(BotMessageUtils.getConvoysMemberInfoList(inviteList));
                 builder.append("\n<b>"+fileService.getButtonText()+"</b>");
-                SendMessage send = SendMessage.builder().chatId(in.getChatId()).text(String.valueOf(builder)).parseMode("html").replyMarkup(createInlineKeyboardButton()).build();
+                SendMessage send = SendMessage.builder().chatId(in.getChatId()).text(String.valueOf(builder)).parseMode("html").replyMarkup(createInlineKeyboardButton()).disableWebPagePreview(true).build();
                 Message execute = null;
                 Long cId = convoysInvite.getConvoysId() ;
                 try {
