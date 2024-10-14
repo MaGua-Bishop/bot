@@ -67,7 +67,7 @@ public class AdminDeleteConvoysMembersCallback implements ICallback {
                 convoysInviteMapper.deleteById(convoysInvite);
             }
             Invite invite = inviteMapper.selectOne(new LambdaQueryWrapper<Invite>().eq(Invite::getInviteId, Long.valueOf(inviteId)));
-            SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("《" + invite.getName() + "》\n机器人在频道状态异常或权限不足无法发送消息已退出").disableWebPagePreview(true).build();
+            SendMessage sendMessage = SendMessage.builder().chatId(invite.getChatId()).text("《" + invite.getName() + "》\n机器人在频道状态异常或权限不足无法发送消息已退出").disableWebPagePreview(true).build();
             bot.execute(sendMessage);
             inviteMapper.deleteById(Long.valueOf(inviteId));
 
