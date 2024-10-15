@@ -84,9 +84,7 @@ public class channelRequestCallback implements ICallback{
         } else if (user.getIsAdmin()) {
             List<Invite> invites = inviteMapper.selectList(new LambdaQueryWrapper<Invite>().eq(Invite::getTgId, tgId));
             for (Invite invite : invites) {
-                ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>()
-                        .eq(ConvoysInvite::getInviteId, invite.getInviteId())
-                        .eq(ConvoysInvite::getConvoysId, convoysId));
+                ConvoysInvite convoysInvite = convoysInviteMapper.getConvoysInviteByInviteIdAndStatus(invite.getInviteId());
                 Integer status = convoysInvite == null ? ConvoysInviteStatus.IDLE.getCode() : convoysInvite.getStatus();
                 String code = "";
                 if (status.equals(ConvoysInviteStatus.IDLE.getCode())) {
@@ -99,7 +97,7 @@ public class channelRequestCallback implements ICallback{
                     code = "\uD83D\uDD34";
                 }
                 buttonList.add(InlineKeyboardButton.builder()
-                        .text(code + invite.getName())
+                        .text(code + invite.getName()+"|"+UnitConversionUtils.toThousands(invite.getMemberCount()))
                         .callbackData("channelRequest:" + invite.getInviteId() + ":convoysId:" + convoysId)
                         .build());
             }
@@ -109,9 +107,7 @@ public class channelRequestCallback implements ICallback{
                 buttonList.add(InlineKeyboardButton.builder().text("未找到符合要求的频道请添加").callbackData("null").build());
             } else {
                 for (Invite invite : inviteList) {
-                    ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>()
-                            .eq(ConvoysInvite::getInviteId, invite.getInviteId())
-                            .eq(ConvoysInvite::getConvoysId, convoysId));
+                    ConvoysInvite convoysInvite = convoysInviteMapper.getConvoysInviteByInviteIdAndStatus(invite.getInviteId());
                     Integer status = convoysInvite == null ? ConvoysInviteStatus.IDLE.getCode() : convoysInvite.getStatus();
                     String code = "";
                     if (status.equals(ConvoysInviteStatus.IDLE.getCode())) {
@@ -124,7 +120,7 @@ public class channelRequestCallback implements ICallback{
                         code = "\uD83D\uDD34";
                     }
                     buttonList.add(InlineKeyboardButton.builder()
-                            .text(code + invite.getName())
+                            .text(code + invite.getName()+"|"+UnitConversionUtils.toThousands(invite.getMemberCount()))
                             .callbackData("channelRequest:" + invite.getInviteId() + ":convoysId:" + convoysId)
                             .build());
                 }
@@ -137,7 +133,7 @@ public class channelRequestCallback implements ICallback{
 //                .url("https://" + botConfig.getBotname() + "?startgroup")
 //                .build());
 //        buttonList.add(InlineKeyboardButton.builder()
-//                .text("添加频道")
+//                .text("\uD83C\uDF1E电脑添加")
 //                .url("https://" + botConfig.getBotname() + "?startchannel=true")
 //                .build());
 //        buttonList.add(InlineKeyboardButton.builder()
@@ -227,10 +223,9 @@ public class channelRequestCallback implements ICallback{
             }
         }
 
-        ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoysId).eq(ConvoysInvite::getInviteId, inviteId));
-
+        ConvoysInvite convoysInvite = convoysInviteMapper.getConvoysInviteByInviteIdAndStatus(invite.getInviteId());
         if(convoysInvite != null){
-            bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("您该频道已申请过该车队,请勿重复申请").build());
+            bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("您该频道已申请过车队,请勿重复申请").build());
             return;
         }
         convoysInvite = new ConvoysInvite();
@@ -269,9 +264,7 @@ public class channelRequestCallback implements ICallback{
             msg = "被禁用";
         }
 
-        String text =
-//                "📣系统通知📣\n"
-                 "申请车队名: " + convoys.getName() + "\n"
+        String text = "申请车队名: " + convoys.getName() + "\n"
                 + "车队类型: 频道\n"
                 + "车队介绍: " + convoys.getCopywriter() + "\n"
                 + "当前/最大(成员): " +currentConvoysCapacity + "/" + convoys.getCapacity() + "\n"
@@ -284,7 +277,7 @@ public class channelRequestCallback implements ICallback{
                 "申请人名: " + "<a href=\"tg://user?id="+invite.getTgId()+"\">@"+invite.getUserName()+"</a>" +"\n"+
                 "申请状态:"+ code+msg;
 
-        SendMessage send = SendMessage.builder().chatId(string).text(text).parseMode("html").replyMarkup(createInlineKeyboardButton02(convoysInvite.getId())).disableWebPagePreview(true).build();
+        SendMessage send = SendMessage.builder().chatId(string).text(text).parseMode("html").replyMarkup(createInlineKeyboardButton02(convoysInvite.getId())).build();
         bot.execute(send);
 
     }

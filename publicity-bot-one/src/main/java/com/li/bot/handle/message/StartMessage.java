@@ -63,12 +63,12 @@ public class StartMessage implements IMessage{
                 .build());
 
         // 获取并添加第四个按钮，单独一行
-//        Map<String, String> map = fileService.getAdminChannelList();
-//        String url = map.get("url");
-//        buttonList.add(InlineKeyboardButton.builder()
-//                .text("❔车队教程")
-//                .url(url)
-//                .build());
+        Map<String, String> map = fileService.getAdminChannelList();
+        String url = map.get("url");
+        buttonList.add(InlineKeyboardButton.builder()
+                .text("审核频道")
+                .url(url)
+                .build());
 
         // 如果用户是管理员，添加额外的按钮
         if (user.getIsAdmin()) {

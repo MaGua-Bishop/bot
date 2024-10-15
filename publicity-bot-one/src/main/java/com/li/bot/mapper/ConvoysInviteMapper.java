@@ -39,6 +39,9 @@ public interface ConvoysInviteMapper extends BaseMapper<ConvoysInvite> {
     Long getCountById(@Param("convoysId") Long convoysId);
 
 
+    @Select("SELECT * FROM tg_convoys_invite WHERE invite_id = #{inviteId} AND (status = 2 OR status = 1)")
+    ConvoysInvite getConvoysInviteByInviteIdAndStatus(@Param("inviteId") Long inviteId);
+
 
 
 }

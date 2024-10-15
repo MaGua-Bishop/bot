@@ -139,11 +139,9 @@ public class adminYesAudiCallback implements ICallback {
                 msg = "审核成功";
             }else if(status.equals(ConvoysInviteStatus.DISABLED.getCode())){
                 code = "\uD83D\uDD34";
-                msg = "审核成功()";
+                msg = "被禁用";
             }
-            String x =
-//                    "📣系统通知📣\n"
-                     "申请车队名: " + convoys.getName() + "\n"
+            String x = "申请车队名: " + convoys.getName() + "\n"
                     + "车队类型: 频道\n"
                     + "车队介绍: " + convoys.getCopywriter() + "\n"
                     + "当前/最大(成员): " + currentConvoysCapacity + "/" + convoys.getCapacity() + "\n"
@@ -155,7 +153,7 @@ public class adminYesAudiCallback implements ICallback {
                     "申请人ID: " + invite.getTgId() + "\n" +
                     "申请人名: " + "<a href=\"tg://user?id="+invite.getTgId()+"\">@"+invite.getUserName()+"</a>"+"\n"+
                     "申请状态:"+ code+msg;
-            SendMessage sendMessage = SendMessage.builder().chatId(invite.getTgId()).text(x).parseMode("html").disableWebPagePreview(true).build();
+            SendMessage sendMessage = SendMessage.builder().chatId(invite.getTgId()).text(x).parseMode("html").build();
             bot.execute(sendMessage);
 
             EditMessageText editMessageText = EditMessageText.builder().messageId(callbackQuery.getMessage().getMessageId()).chatId(callbackQuery.getMessage().getChatId().toString()).text(x).replyMarkup(createButton("已同意")).parseMode("html").build();
@@ -169,9 +167,9 @@ public class adminYesAudiCallback implements ICallback {
             inviteList.forEach(in -> {
                 StringBuilder builder = new StringBuilder();
                 builder.append("<a href=\"https://"+botConfig.getBotname()+"\">" +"\uD83D\uDE80来自"+convoys.getName()+"\uD83D\uDE80\n</a>" );
-                builder.append(fileService.getText() + "\n" );
+                builder.append("<b>"+fileService.getText() + "</b>\n" );
                 builder.append(BotMessageUtils.getConvoysMemberInfoList(inviteList));
-                builder.append("\n"+fileService.getButtonText());
+                builder.append("\n<b>"+fileService.getButtonText()+"</b>");
                 SendMessage send = SendMessage.builder().chatId(in.getChatId()).text(String.valueOf(builder)).parseMode("html").replyMarkup(createInlineKeyboardButton()).disableWebPagePreview(true).build();
                 Message execute = null;
                 Long cId = convoysInvite.getConvoysId() ;

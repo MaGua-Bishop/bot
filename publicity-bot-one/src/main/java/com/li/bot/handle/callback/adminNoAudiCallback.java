@@ -87,10 +87,7 @@ public class adminNoAudiCallback implements ICallback{
             bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("该申请不存在或已处理了").build());
             return;
         }
-        convoysInvite.setIsReview(false);
-        convoysInvite.setReviewTgId(callbackQuery.getFrom().getId());
-        convoysInvite.setStatus(ConvoysInviteStatus.DISABLED.getCode());
-        convoysInviteMapper.updateById(convoysInvite);
+        convoysInviteMapper.deleteById(convoysInvite);
 
 
         Long inviteId = convoysInvite.getInviteId();
@@ -113,11 +110,9 @@ public class adminNoAudiCallback implements ICallback{
                 msg = "审核成功";
             }else if(status.equals(ConvoysInviteStatus.DISABLED.getCode())){
                 code = "\uD83D\uDD34";
-                msg = "审核成功(拒绝)";
+                msg = "被禁用";
             }
-            String x =
-//                    "📣系统通知📣\n"
-                     "申请车队名: " + convoys.getName() + "\n"
+            String x ="申请车队名: " + convoys.getName() + "\n"
                     + "车队类型: 频道\n"
                     + "车队介绍: " + convoys.getCopywriter() + "\n"
                     + "当前/最大(成员): " + currentConvoysCapacity + "/" + convoys.getCapacity() + "\n"
@@ -128,8 +123,8 @@ public class adminNoAudiCallback implements ICallback{
                     "订阅人数: " + invite.getMemberCount() + "\n" +
                     "申请人ID: " + invite.getTgId() + "\n" +
                     "申请人名: " + "<a href=\"tg://user?id="+invite.getTgId()+"\">@"+invite.getUserName()+"</a>"+"\n"+
-                    "申请状态:"+ code+msg;
-            SendMessage sendMessage = SendMessage.builder().chatId(invite.getTgId()).text(x).parseMode("html").disableWebPagePreview(true).build();
+                    "申请状态:"+ "🟢审核成功(已拒绝)";
+            SendMessage sendMessage = SendMessage.builder().chatId(invite.getTgId()).text(x).parseMode("html").build();
             bot.execute(sendMessage);
 
             EditMessageText editMessageText = EditMessageText.builder().messageId(callbackQuery.getMessage().getMessageId()).chatId(callbackQuery.getMessage().getChatId().toString()).text(x).replyMarkup(createButton("未通过")).parseMode("html").build();

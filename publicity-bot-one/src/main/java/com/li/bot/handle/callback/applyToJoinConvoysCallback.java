@@ -75,7 +75,7 @@ public class applyToJoinConvoysCallback implements ICallback{
             inviteList = inviteMapper.getInviteListByIds(inviteIds);
             //把link字段信息提取
         }
-       return inviteList;
+        return inviteList;
     }
 
 
@@ -95,9 +95,7 @@ public class applyToJoinConvoysCallback implements ICallback{
         } else if (user.getIsAdmin()) {
             List<Invite> invites = inviteMapper.selectList(new LambdaQueryWrapper<Invite>().eq(Invite::getTgId, tgId));
             for (Invite invite : invites) {
-                ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>()
-                        .eq(ConvoysInvite::getInviteId, invite.getInviteId())
-                        .eq(ConvoysInvite::getConvoysId, convoysId));
+                ConvoysInvite convoysInvite = convoysInviteMapper.getConvoysInviteByInviteIdAndStatus(invite.getInviteId());
                 Integer status = convoysInvite == null ? ConvoysInviteStatus.IDLE.getCode() : convoysInvite.getStatus();
                 String code = "";
                 if (status.equals(ConvoysInviteStatus.IDLE.getCode())) {
@@ -110,7 +108,7 @@ public class applyToJoinConvoysCallback implements ICallback{
                     code = "\uD83D\uDD34";
                 }
                 buttonList.add(InlineKeyboardButton.builder()
-                        .text(code + invite.getName())
+                        .text(code + invite.getName()+"|"+UnitConversionUtils.toThousands(invite.getMemberCount()))
                         .callbackData("channelRequest:" + invite.getInviteId() + ":convoysId:" + convoysId)
                         .build());
             }
@@ -120,9 +118,7 @@ public class applyToJoinConvoysCallback implements ICallback{
                 buttonList.add(InlineKeyboardButton.builder().text("未找到符合要求的频道请添加").callbackData("null").build());
             } else {
                 for (Invite invite : inviteList) {
-                    ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>()
-                            .eq(ConvoysInvite::getInviteId, invite.getInviteId())
-                            .eq(ConvoysInvite::getConvoysId, convoysId));
+                    ConvoysInvite convoysInvite = convoysInviteMapper.getConvoysInviteByInviteIdAndStatus(invite.getInviteId());
                     Integer status = convoysInvite == null ? ConvoysInviteStatus.IDLE.getCode() : convoysInvite.getStatus();
                     String code = "";
                     if (status.equals(ConvoysInviteStatus.IDLE.getCode())) {
@@ -135,7 +131,7 @@ public class applyToJoinConvoysCallback implements ICallback{
                         code = "\uD83D\uDD34";
                     }
                     buttonList.add(InlineKeyboardButton.builder()
-                            .text(code + invite.getName())
+                            .text(code + invite.getName()+"|"+UnitConversionUtils.toThousands(invite.getMemberCount()))
                             .callbackData("channelRequest:" + invite.getInviteId() + ":convoysId:" + convoysId)
                             .build());
                 }
@@ -143,26 +139,11 @@ public class applyToJoinConvoysCallback implements ICallback{
         }
 
         // 添加特殊按钮
-//        buttonList.add(InlineKeyboardButton.builder()
-//                .text("\uD83C\uDF38手机添加")
-//                .url("https://" + botConfig.getBotname() + "?startgroup")
-//                .build());
-//        buttonList.add(InlineKeyboardButton.builder()
-//                .text("添加频道")
-//                .url("https://" + botConfig.getBotname() + "?startchannel=true")
-//                .build());
-//        buttonList.add(InlineKeyboardButton.builder()
-//                .text("\uD83D\uDD03刷新")
-//                .callbackData("selectConvoysInfo:" + convoysId)
-//                .build());
+
         buttonList.add(InlineKeyboardButton.builder()
                 .text("\uD83D\uDD19返回")
                 .callbackData("returnConvoysList")
                 .build());
-//        buttonList.add(InlineKeyboardButton.builder()
-//                .text("首页")
-//                .callbackData("/start")
-//                .build());
 
         // 创建行列表
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
@@ -193,16 +174,16 @@ public class applyToJoinConvoysCallback implements ICallback{
                 "\n" +
                 "以下只显示您满足要求的频道列表\n" +
                 "请确保机器人具备以下权限:"+"\n"+
-//                "群聊:管理群聊和通过链接邀请用户"+"\n"+
+                "群聊:管理群聊和通过链接邀请用户"+"\n"+
                 "频道:更改频道详情和管理信息(3个全需要)和通过链接邀请用户"+"\n"+
                 "\n" +
                 "要求订阅:"+UnitConversionUtils.toThousands(convoys.getSubscription())+"\n" +
-                "图示：\uD83D\uDFE2空闲\uD83D\uDFE1待审核\uD83D\uDFE3已上车\n" +
+                "图示：\uD83D\uDFE2空闲\uD83D\uDFE1待审核\uD83D\uDFE3已上车\uD83D\uDD34被禁用\n" +
                 "已上车的频道再次申请会自动下车\n" +
                 "请确认是否已经将机器人拉入并设置管理员\n" +
                 "\n" +
-                "请选择一个提交";
-        EditMessageText editMessageText = EditMessageText.builder().messageId(callbackQuery.getMessage().getMessageId()).chatId(callbackQuery.getMessage().getChatId().toString()).text(message).replyMarkup(createInlineKeyboardButton(callbackQuery.getFrom().getId(),id,convoys.getCapacity())).parseMode("html").build();
+                "\uD83D\uDC47请选择一个提交";
+        EditMessageText editMessageText = EditMessageText.builder().messageId(callbackQuery.getMessage().getMessageId()).chatId(callbackQuery.getMessage().getChatId().toString()).text(message).replyMarkup(createInlineKeyboardButton(callbackQuery.getFrom().getId(),id,convoys.getCapacity())).disableWebPagePreview(true).parseMode("html").build();
         bot.execute(editMessageText);
     }
 }

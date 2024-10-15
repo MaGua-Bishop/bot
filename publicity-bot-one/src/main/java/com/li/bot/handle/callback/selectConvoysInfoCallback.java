@@ -129,7 +129,7 @@ public class selectConvoysInfoCallback implements ICallback{
                 "\n\n"+
                 "车队成员列表:"+"\n"+
                 BotMessageUtils.getConvoysMemberList(InviteList);
-        EditMessageText editMessageText = EditMessageText.builder().messageId(callbackQuery.getMessage().getMessageId()).chatId(callbackQuery.getMessage().getChatId().toString()).text(message).replyMarkup(createInlineKeyboardButton02(callbackQuery.getFrom().getId(),id)).parseMode("html").build();
+        EditMessageText editMessageText = EditMessageText.builder().messageId(callbackQuery.getMessage().getMessageId()).chatId(callbackQuery.getMessage().getChatId().toString()).text(message).replyMarkup(createInlineKeyboardButton02(callbackQuery.getFrom().getId(),id)).parseMode("html").disableWebPagePreview(true).build();
         bot.execute(editMessageText);
     }
 }

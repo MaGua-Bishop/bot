@@ -134,7 +134,7 @@ public class BotServiceImpl extends TelegramWebhookBot {
         if(update.hasMyChatMember()){
             ChatMemberUpdated myChatMember = update.getMyChatMember();
             try {
-                new ChatMemberUpdatedHandle(this,myChatMember, inviteMapper, convoysMapper, convoysInviteMapper,fileService).handle();
+                new ChatMemberUpdatedHandle(this,myChatMember, inviteMapper, convoysMapper, convoysInviteMapper, fileService).handle();
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }

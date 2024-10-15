@@ -1,7 +1,6 @@
 package com.li.bot.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.google.common.collect.Lists;
 import com.li.bot.config.BotConfig;
 import com.li.bot.entity.database.Button;
@@ -14,10 +13,12 @@ import com.li.bot.mapper.ConvoysInviteMapper;
 import com.li.bot.mapper.ConvoysMapper;
 import com.li.bot.mapper.InviteMapper;
 import com.li.bot.utils.BotMessageUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChat;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
  * @CreateTime: 2024-10-11
  */
 @Service
+@Slf4j
 public class FleetService {
 
     @Autowired
@@ -64,6 +66,7 @@ public class FleetService {
 
     @Autowired
     private BotServiceImpl bot ;
+
 
     private Map<Long, ScheduledFuture<?>> scheduledTasks = new HashMap<>();
 
@@ -121,13 +124,28 @@ public class FleetService {
         }
         List<Invite> inviteList = inviteMapper.getInviteListByIds(convoysInviteList.stream().map(ConvoysInvite::getInviteId).collect(Collectors.toList()));
 
-        inviteList.forEach(in -> {
+        for (Invite in : inviteList) {
+            GetChat getChat = new GetChat();
+            getChat.setChatId(in.getChatId());
+            try {
+                bot.execute(getChat);
+            } catch (TelegramApiException e) {
+                ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, in.getInviteId()).eq(ConvoysInvite::getStatus, ConvoysInviteStatus.BOARDED.getCode()));
+                inviteMapper.deleteById(in);
+                convoysInviteMapper.deleteById(convoysInvite);
+                SendMessage send = SendMessage.builder().chatId(in.getTgId()).text("《"+in.getName()+"》\n检测到机器人发不了消息,机器人已自动退出").parseMode("html").build();
+                try {
+                    bot.execute(send);
+                } catch (TelegramApiException ex) {
+                    throw new RuntimeException(ex);
+                }
+                continue;
+            }
             StringBuilder builder = new StringBuilder();
             builder.append("<a href=\"https://"+botConfig.getBotname()+"\">" +"\uD83D\uDE80来自"+convoys.getName()+"\uD83D\uDE80\n</a>" );
-            builder.append(fileService.getText() + "\n" );
+            builder.append("<b>"+fileService.getText() + "</b>\n" );
             builder.append(BotMessageUtils.getConvoysMemberInfoList(inviteList));
-            builder.append("\n"+fileService.getButtonText());
-
+            builder.append("\n"+"<b>"+fileService.getButtonText()+ "</b>");
             SendMessage send = SendMessage.builder().chatId(in.getChatId()).text(String.valueOf(builder)).parseMode("html").replyMarkup(createInlineKeyboardButton()).disableWebPagePreview(true).build();
             Message execute = null;
             Long cId = null;
@@ -153,15 +171,16 @@ public class FleetService {
             } catch (Exception e) {
                 // 更新messageId为空
                 convoysInviteMapper.updateMessageIdById(execute.getMessageId(), in.getInviteId(),cId);
+                log.error("车队:{}发送消息失败", convoys.getName());
             }
-        });
+        }
         System.out.println("车队 " + convoys.getName() + " 的定时任务执行了！当前时间：" + new java.util.Date());
     }
 
     public void updateFleetInterval(Convoys convoys) {
         Convoys c = convoysMapper.selectById(convoys.getConvoysId());
         if (c != null) {
-           c.setName(convoys.getName());
+            c.setIntervalMinutes(convoys.getIntervalMinutes());
             convoysMapper.updateById(c);
             scheduleConvoyTask(c);
         }
