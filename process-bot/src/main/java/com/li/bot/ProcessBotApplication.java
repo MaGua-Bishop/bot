@@ -6,7 +6,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-
 @EnableScheduling
 @MapperScan("com.li.bot.mapper")
 public class ProcessBotApplication {
