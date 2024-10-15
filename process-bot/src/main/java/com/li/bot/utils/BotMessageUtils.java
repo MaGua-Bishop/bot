@@ -1,6 +1,7 @@
 package com.li.bot.utils;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.li.bot.entity.database.Order;
 import com.li.bot.entity.database.Reply;
 import com.li.bot.entity.database.User;
@@ -118,6 +119,22 @@ public class BotMessageUtils {
                 "<strong>报单时间:</strong>"+formatDate(dateTime)+"\n"+
                 " 订单id:\n" +
                 "<code>"+orderId+"</code>";
+    }
+
+    private static String removeEmpty(String text){
+        return text.replaceAll("null","");
+    }
+
+    public static String getAdminQueryUserInfo(Page<User> userPage){
+        StringBuilder text = new StringBuilder();
+        text.append("序号\tid\t用户名\t用户余额\n");
+        int index = 1 ;
+        for (User user : userPage.getRecords()) {
+            text.append(index).append("\t").append("<code>"+user.getTgId()+"</code>").append("\t").append("<a href=\"tg://user?id="+user.getTgId()+"\">"+removeEmpty(user.getTgName())+"</a>").append("\t").append("<b>"+user.getMoney()+"</b>").append("\n").append("\n");
+            index++ ;
+        }
+        text.append("共"+userPage.getCurrent()+"/"+userPage.getPages()+"页");
+        return  String.valueOf(text);
     }
 
 }

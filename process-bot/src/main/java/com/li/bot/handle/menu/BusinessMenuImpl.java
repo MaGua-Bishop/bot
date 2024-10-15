@@ -52,7 +52,7 @@ public class BusinessMenuImpl implements IBotMenu{
         if(user == null){
             user = new User();
             user.setTgId(tgId);
-            user.setTgName(message.getFrom().getLastName()+message.getFrom().getFirstName());
+            user.setTgName(message.getFrom().getFirstName()+message.getFrom().getLastName());
             userMapper.insert(user);
         }else {
             if(user.getIsAdmin()){

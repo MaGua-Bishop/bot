@@ -1,6 +1,7 @@
 package com.li.bot.handle.menu;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.google.common.collect.Lists;
 import com.li.bot.entity.database.Order;
 import com.li.bot.entity.database.User;
 import com.li.bot.entity.database.vo.UserAndOrderVo;
@@ -14,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +53,19 @@ public class UserInfoBotMenuImpl implements IBotMenu {
                 .collect(Collectors.groupingBy(UserAndOrderVo::getOrderStatus));
     }
 
+        private InlineKeyboardMarkup createInlineKeyboardButton(){
+        List<InlineKeyboardButton> buttonList = new ArrayList<>();
+        buttonList.add(InlineKeyboardButton.builder().text("查看用户信息").callbackData("adminSelectUserInfo:"+1).build());
+
+        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 5);
+
+
+        InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
+
+        return inlineKeyboardMarkup;
+    }
+
+
     private void startMessage(BotServiceImpl bot,Message message){
 
         //获取用户信息
@@ -62,7 +78,7 @@ public class UserInfoBotMenuImpl implements IBotMenu {
         if(user == null){
             user = new User();
             user.setTgId(tgId);
-            user.setTgName(message.getFrom().getLastName()+message.getFrom().getFirstName());
+            user.setTgName(message.getFrom().getFirstName()+message.getFrom().getLastName());
             userMapper.insert(user);
         }else {
             userOrderList = orderMapper.getUserAndOrderVoByTgId(tgId);
@@ -91,6 +107,9 @@ public class UserInfoBotMenuImpl implements IBotMenu {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId());
         sendMessage.setText(BotMessageUtils.getUserInfoMessage(user,userOrderList, surplusOrder, replyOrder));
+        if(user.getIsAdmin()){
+            sendMessage.setReplyMarkup(createInlineKeyboardButton());
+        }
         sendMessage.enableMarkdownV2(true);
         try {
             bot.execute(sendMessage);
