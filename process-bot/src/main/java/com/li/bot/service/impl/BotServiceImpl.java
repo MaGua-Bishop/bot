@@ -1,7 +1,10 @@
 package com.li.bot.service.impl;
 
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.google.common.collect.Lists;
 import com.li.bot.config.BotConfig;
+import com.li.bot.entity.database.User;
 import com.li.bot.handle.CallbackQueryHandle;
 import com.li.bot.handle.MessageHandle;
 import com.li.bot.handle.callback.AdminEditBusinessCallbackImpl;
@@ -19,14 +22,15 @@ import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
+import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChat;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatMember;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updates.SetWebhook;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
-import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMember;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.annotation.PostConstruct;
@@ -119,10 +123,10 @@ public class BotServiceImpl extends TelegramWebhookBot {
     private AdminEditSessionList adminEditSessionList;
 
     @Autowired
-    private FileService fileService ;
+    private FileService fileService;
 
     @Autowired
-    private ChannelMembersServiceImpl channelMembersService ;
+    private ChannelMembersServiceImpl channelMembersService;
 
 
     private Long getUserId(String text) {
@@ -139,14 +143,14 @@ public class BotServiceImpl extends TelegramWebhookBot {
         return null;
     }
 
-    private Boolean isAdminUpdateUserMoney(String text){
+    private Boolean isAdminUpdateUserMoney(String text) {
         String[] split = text.split(" ");
-        if(split.length != 2){
+        if (split.length != 2) {
             return false;
         }
         String id = split[0];
         Long userId = getUserId(id);
-        if(userId == null){
+        if (userId == null) {
             return false;
         }
         String money = split[1];
@@ -160,23 +164,50 @@ public class BotServiceImpl extends TelegramWebhookBot {
         }
     }
 
+    private InlineKeyboardMarkup createInlineKeyboardButton() {
+        String channelLink = fileService.getChannelLink();
+        List<InlineKeyboardButton> buttonList = new ArrayList<>();
+        buttonList.add(InlineKeyboardButton.builder().text("加入频道").url(channelLink).build());
+        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
+        InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
+        return inlineKeyboardMarkup;
+    }
+
+
+    private Long getChannelId() {
+        String channelLink = fileService.getChannelLink();
+        channelLink = channelLink.substring(channelLink.lastIndexOf("/") + 1);
+        GetChat getChat = new GetChat();
+        getChat.setChatId("@" + channelLink);
+        Chat execute = null;
+        try {
+            execute = execute(getChat);
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
+        }
+        return execute.getId();
+    }
+
+
     private Boolean addChannelMember(Message message) {
+        if (!message.getChat().getType().equals("private")) {
+            return true;
+        }
         Long tgId = message.getFrom().getId();
-        String chatId = fileService.getChannelId();
+        if (channelMembersService.isChannelMember(tgId)) {
+            return true;
+        }
+        Long chatId = getChannelId();
         try {
             ChatMember member = execute(GetChatMember.builder().chatId(chatId).userId(Long.valueOf(tgId)).build());
             if (!member.getStatus().equals("left")) {
-                if(channelMembersService.isChannelMember(tgId)){
-                    return true ;
-                }else {
-                    channelMembersService.addChannelMember(tgId);
-                    return true;
-                }
-            }else {
-                if(channelMembersService.isChannelMember(tgId)){
+                channelMembersService.addChannelMember(tgId);
+                return true;
+            } else {
+                if (channelMembersService.isChannelMember(tgId)) {
                     channelMembersService.removeChannelMember(tgId);
                 }
-                execute(SendMessage.builder().chatId(message.getChatId().toString()).text("您不是频道成员，无法使用本机器人").build());
+                execute(SendMessage.builder().chatId(message.getChatId().toString()).text("您不是频道成员，无法使用本机器人").replyMarkup(createInlineKeyboardButton()).build());
                 return false;
             }
         } catch (TelegramApiException e) {
@@ -184,82 +215,83 @@ public class BotServiceImpl extends TelegramWebhookBot {
         }
     }
 
-    private Boolean addChannelMember(CallbackQuery callbackQuery) {
-        Long tgId = callbackQuery.getFrom().getId();
-        String chatId = fileService.getChannelId();
+    private Boolean addChannelMember(Update update) {
+        Message message = (Message) update.getCallbackQuery().getMessage();
+        if (!message.getChat().getType().equals("private")) {
+            return true;
+        }
+        Long tgId = update.getCallbackQuery().getFrom().getId();
+        if (channelMembersService.isChannelMember(tgId)) {
+            return true;
+        }
+        Long chatId = getChannelId();
         try {
             ChatMember member = execute(GetChatMember.builder().chatId(chatId).userId(Long.valueOf(tgId)).build());
             if (!member.getStatus().equals("left")) {
-                if(channelMembersService.isChannelMember(tgId)){
-                    return true ;
-                }else {
-                    channelMembersService.addChannelMember(tgId);
-                    return true;
-                }
-            }else {
-                if(channelMembersService.isChannelMember(tgId)){
+                channelMembersService.addChannelMember(tgId);
+                return true;
+            } else {
+                if (channelMembersService.isChannelMember(tgId)) {
                     channelMembersService.removeChannelMember(tgId);
                 }
-                execute(SendMessage.builder().chatId(callbackQuery.getFrom().getId().toString()).text("您不是频道成员，无法使用本机器人").build());
+                execute(SendMessage.builder().chatId(tgId).text("您不是频道成员，无法使用本机器人").replyMarkup(createInlineKeyboardButton()).build());
                 return false;
             }
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
         }
     }
-
-
 
 
     @Override
     public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
         if (update.hasMessage()) {
             Boolean b = addChannelMember(update.getMessage());
-            if(!b){
+            if (!b) {
                 return null;
             }
             String text = "";
-            if(update.getMessage().getText() !=null){
+            if (update.getMessage().getText() != null) {
                 text = update.getMessage().getText();
-            }else if(update.getMessage().getCaption() !=null){
+            } else if (update.getMessage().getCaption() != null) {
                 text = update.getMessage().getCaption();
             }
-            if(!"".equals(text)){
-                if(text.indexOf("#回单 ") == 0){
+            if (!"".equals(text)) {
+                if (text.indexOf("#回单 ") == 0) {
                     IBotMenu menu = botMenuFactory.getMenu("回复订单");
-                    menu.execute(this,update.getMessage());
+                    menu.execute(this, update.getMessage());
                     return null;
                 }
                 Long userId = getUserId(text);
-                if(userId != null){
+                if (userId != null) {
                     IBotMenu menu = botMenuFactory.getMenu("查询用户余额");
-                    menu.execute(this,update.getMessage());
+                    menu.execute(this, update.getMessage());
                     return null;
                 }
-                if(isAdminUpdateUserMoney(text)){
+                if (isAdminUpdateUserMoney(text)) {
                     IBotMenu menu = botMenuFactory.getMenu("修改用户金额");
-                    menu.execute(this,update.getMessage());
+                    menu.execute(this, update.getMessage());
                     return null;
                 }
             }
-            if(update.getMessage().getChat().getType().equals("private")){
+            if (update.getMessage().getChat().getType().equals("private")) {
 
                 Long tgId = update.getMessage().getFrom().getId();
                 OrderSession orderSession = addOrderSessionList.getUserSession(tgId);
 
                 if (orderSession != null) {
                     AddOrder addOrder = new AddOrder(this, orderSession, update.getMessage(), addOrderSessionList, orderMapper, userMapper);
-                    addOrder.execute(botMenuFactory,botKeyFactory);
+                    addOrder.execute(botMenuFactory, botKeyFactory);
                     return null;
                 }
-                if(adminEditSessionList.getUserSession(tgId) != null){
-                    new AdminEdit(this,update.getMessage(), adminEditSessionList, businessMapper).execute(botMenuFactory,botKeyFactory);
+                if (adminEditSessionList.getUserSession(tgId) != null) {
+                    new AdminEdit(this, update.getMessage(), adminEditSessionList, businessMapper).execute(botMenuFactory, botKeyFactory);
                     return null;
                 }
 
                 BusinessSession businessSession = addBusinessSessionList.getUserSession(tgId);
                 if (businessSession != null) {
-                    new AddBusiness(this, businessSession, update.getMessage(), addBusinessSessionList, businessMapper).execute(botMenuFactory,botKeyFactory);
+                    new AddBusiness(this, businessSession, update.getMessage(), addBusinessSessionList, businessMapper).execute(botMenuFactory, botKeyFactory);
                     return null;
                 }
             }
@@ -277,8 +309,8 @@ public class BotServiceImpl extends TelegramWebhookBot {
         }
 
         if (update.hasCallbackQuery()) {
-            Boolean b = addChannelMember(update.getCallbackQuery());
-            if(!b){
+            Boolean b = addChannelMember(update);
+            if (!b) {
                 return null;
             }
             CallbackQuery callbackQuery = update.getCallbackQuery();

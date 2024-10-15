@@ -119,7 +119,7 @@ public class UpdateUserMoneyServiceMenuImpl implements IBotMenu {
                 }
                 return;
             }
-            selectUserId.setMoney(amount);
+            selectUserId.setMoney(selectUserId.getMoney().add(amount));
             userMapper.updateById(selectUserId);
             try {
                 bot.execute(SendMessage.builder().chatId(message.getChatId()).text("修改用户金额成功\n用户名:<a href=\"tg://user?id="+selectUserId.getTgId()+"\">"+selectUserId.getTgName()+"</a>\n用户id:"+selectUserId.getTgId()+"\n用户余额:"+selectUserId.getMoney() ).parseMode("html").build());

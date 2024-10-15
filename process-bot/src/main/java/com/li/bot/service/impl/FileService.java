@@ -34,12 +34,12 @@ public class FileService {
         }
     }
 
-    public String getChannelId() {
+    public String getChannelLink() {
         String channelFile = botConfig.getChannelFile();
         try {
             String string = FileUtils.readFileToString(new File(channelFile));
             JSONObject jsonObject = JSON.parseObject(string);
-            String s = jsonObject.getString("channel");
+            String s = jsonObject.getString("link");
             return s;
         } catch (IOException e) {
             throw new RuntimeException(e);

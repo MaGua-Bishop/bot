@@ -22,6 +22,7 @@ bot:
   token: 7478207741:AAHhv4pJ6oYnzThPGb_ZRk3BqENxcXk3hAQ # token
   host: 127.0.0.1 #ip
   port: 7890    #端口
+#  ${SERVER_HOST}
   url: ${SERVER_HOST}/tgbot/process_bot #ngrok地址
   groupFile: workgroup.json
   channelFile: channel.json
