@@ -38,23 +38,18 @@ public class UpdateUserMoneyServiceMenuImpl implements IBotMenu {
     private UserMapper userMapper ;
 
 
-    private String getUserId(String input) {
-        String regex = "#用户id\\s*(\\d+)";
+    private Long getUserId(String text) {
+        // 正则表达式模式，用于匹配固定十位数的ID
+        Pattern idPattern = Pattern.compile("^\\d{10}$");
+        Matcher idMatcher = idPattern.matcher(text);
 
-        // 编译正则表达式
-        Pattern pattern = Pattern.compile(regex);
-
-        // 创建匹配器
-        Matcher matcher = pattern.matcher(input);
-
-        // 查找匹配
-        if (matcher.find()) {
-            // 获取用户 ID
-            String userId = matcher.group(1);
-            return userId;
-        } else {
-            return null ;
+        // 检查整个文本是否完全匹配十位数字
+        if (idMatcher.matches()) {
+            // 如果匹配成功，将文本转换为 Long 并返回
+            return Long.parseLong(text);
         }
+        // 如果不匹配，返回 null
+        return null;
     }
 
         private BigDecimal isMoney(String money){
@@ -94,32 +89,28 @@ public class UpdateUserMoneyServiceMenuImpl implements IBotMenu {
 
         String text = message.getText();
 
-        // 示例字符串
-
-        // 定义正则表达式
-        String regex = "#修改用户金额\\s+用户id\\s+(\\d+)\\s+金额\\s+([\\d]+(\\.\\d{2}))";
-
-        // 编译正则表达式
-        Pattern pattern = Pattern.compile(regex);
-
-        // 创建匹配器
-        Matcher matcher = pattern.matcher(text);
-
-        // 查找匹配
-        if (matcher.find()) {
-            // 获取用户 ID 和金额
-            String userId = matcher.group(1);
-            String amount = matcher.group(2);
-            BigDecimal money = isMoney(amount);
-            if(money == null){
-                try {
-                    bot.execute(SendMessage.builder().chatId(message.getChatId()).text("请输入正确的金额").build());
-                } catch (TelegramApiException e) {
-                    throw new RuntimeException(e);
-                }
-                return;
+        String[] split = text.split(" ");
+        if(split.length != 2){
+            return;
+        }
+        Long userId = getUserId(split[0]);
+        if(userId == null){
+            return;
+        }
+        String money = split[1];
+        BigDecimal amount ;
+        try {
+            amount = new BigDecimal(money);
+            // 如果能成功转换为 BigDecimal，则返回 true
+        } catch (NumberFormatException e) {
+            try {
+                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("请输入正确的金额").build());
+            } catch (TelegramApiException t) {
+                throw new RuntimeException(t);
             }
-            User selectUserId = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, Long.valueOf(userId)));
+            return;
+        }
+            User selectUserId = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, userId));
             if(selectUserId == null){
                 try {
                     bot.execute(SendMessage.builder().chatId(message.getChatId()).text("用户不存在").build());
@@ -128,21 +119,13 @@ public class UpdateUserMoneyServiceMenuImpl implements IBotMenu {
                 }
                 return;
             }
-
-            selectUserId.setMoney(money);
+            selectUserId.setMoney(amount);
             userMapper.updateById(selectUserId);
             try {
-                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("用户名:<a href=\"tg://user?id="+selectUserId.getTgId()+"\">"+selectUserId.getTgName()+"</a>\n用户id:"+selectUserId.getTgId()+"\n用户余额:"+selectUserId.getMoney() ).parseMode("html").build());
+                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("修改用户金额成功\n用户名:<a href=\"tg://user?id="+selectUserId.getTgId()+"\">"+selectUserId.getTgName()+"</a>\n用户id:"+selectUserId.getTgId()+"\n用户余额:"+selectUserId.getMoney() ).parseMode("html").build());
 
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
-        } else {
-            try {
-                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("请输入正确的格式：#修改用户金额 用户id 输入用户的id 金额 输入要修改多少金额(必须保留两位小数)").build());
-            } catch (TelegramApiException e) {
-                throw new RuntimeException(e);
-            }
-        }
     }
 }

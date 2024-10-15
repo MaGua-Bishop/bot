@@ -23,6 +23,8 @@ public class BotConfig {
 
     private String groupFile ;
 
+    private String channelFile ;
+
 
 
     public DefaultBotOptions getDefaultBotOptions(){

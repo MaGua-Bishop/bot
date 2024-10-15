@@ -10,12 +10,16 @@ import com.li.bot.mapper.BusinessMapper;
 import com.li.bot.mapper.OrderMapper;
 import com.li.bot.mapper.UserMapper;
 import com.li.bot.service.impl.BotServiceImpl;
+import com.li.bot.service.impl.ChannelMembersServiceImpl;
+import com.li.bot.service.impl.FileService;
 import com.li.bot.utils.UserStartKeyUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatMember;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMember;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -48,8 +52,6 @@ public class StartKeyImpl implements IKeyboard {
 
     @Autowired
     private OrderMapper orderMapper;
-
-
     private void startKey(BotServiceImpl bot, Message message) {
         //查看数据库是否有该用户
         Long tgId = message.getFrom().getId();
@@ -82,6 +84,7 @@ public class StartKeyImpl implements IKeyboard {
         });
 
         ReplyKeyboardMarkup replyKeyboardMarkup = ReplyKeyboardMarkup.builder().keyboard(keyboardRows).build();
+        replyKeyboardMarkup.setResizeKeyboard(true);
         SendMessage executeMessage = SendMessage.builder().replyMarkup(replyKeyboardMarkup).text("请选择内置键盘").chatId(message.getChatId().toString()).build();
         try {
             bot.execute(executeMessage);

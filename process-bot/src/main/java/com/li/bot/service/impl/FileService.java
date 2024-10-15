@@ -1,5 +1,7 @@
 package com.li.bot.service.impl;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.li.bot.config.BotConfig;
 import com.li.bot.entity.Workgroup;
@@ -31,6 +33,20 @@ public class FileService {
             throw new RuntimeException(e);
         }
     }
+
+    public String getChannelId() {
+        String channelFile = botConfig.getChannelFile();
+        try {
+            String string = FileUtils.readFileToString(new File(channelFile));
+            JSONObject jsonObject = JSON.parseObject(string);
+            String s = jsonObject.getString("channel");
+            return s;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
 
     public void addGroupId(String newGroupId) {
         try {

@@ -19,13 +19,18 @@ import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
+import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatMember;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updates.SetWebhook;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMember;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.annotation.PostConstruct;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -39,6 +44,7 @@ public class BotServiceImpl extends TelegramWebhookBot {
 
 
     public BotServiceImpl(BotConfig botConfig) {
+        super(botConfig.getDefaultBotOptions());
         this.botConfig = botConfig;
     }
 
@@ -113,17 +119,70 @@ public class BotServiceImpl extends TelegramWebhookBot {
     @Autowired
     private AdminEditSessionList adminEditSessionList;
 
-    private Long getUserId(String text){
+    @Autowired
+    private FileService fileService ;
+
+    @Autowired
+    private ChannelMembersServiceImpl channelMembersService ;
+
+
+    private Long getUserId(String text) {
         // 正则表达式模式，用于匹配固定十位数的ID
-        Pattern idPattern = Pattern.compile("\\b\\d{10}\\b");
+        Pattern idPattern = Pattern.compile("^\\d{10}$");
         Matcher idMatcher = idPattern.matcher(text);
 
-        // 查找并打印所有匹配的ID
-        if (idMatcher.find()) {
-            String id = idMatcher.group(0);  // 提取ID
-            return Long.parseLong(id);
+        // 检查整个文本是否完全匹配十位数字
+        if (idMatcher.matches()) {
+            // 如果匹配成功，将文本转换为 Long 并返回
+            return Long.parseLong(text);
         }
+        // 如果不匹配，返回 null
         return null;
+    }
+
+    private Boolean isAdminUpdateUserMoney(String text){
+        String[] split = text.split(" ");
+        if(split.length != 2){
+            return false;
+        }
+        String id = split[0];
+        Long userId = getUserId(id);
+        if(userId == null){
+            return false;
+        }
+        String money = split[1];
+        try {
+            BigDecimal amount = new BigDecimal(money);
+            // 如果能成功转换为 BigDecimal，则返回 true
+            return true;
+        } catch (NumberFormatException e) {
+            // 如果转换失败，说明 money 不是有效的数字
+            return false;
+        }
+    }
+
+    private Boolean addChannelMember(Message message) {
+        Long tgId = message.getFrom().getId();
+        String chatId = fileService.getChannelId();
+        try {
+            ChatMember member = execute(GetChatMember.builder().chatId(chatId).userId(Long.valueOf(tgId)).build());
+            if (!member.getStatus().equals("left")) {
+                if(channelMembersService.isChannelMember(tgId)){
+                    return true ;
+                }else {
+                    channelMembersService.addChannelMember(tgId);
+                    return true;
+                }
+            }else {
+                if(channelMembersService.isChannelMember(tgId)){
+                    channelMembersService.removeChannelMember(tgId);
+                }
+                execute(SendMessage.builder().chatId(message.getChatId().toString()).text("您不是频道成员，无法使用本机器人").build());
+                return false;
+            }
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
@@ -132,8 +191,10 @@ public class BotServiceImpl extends TelegramWebhookBot {
     @Override
     public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
         if (update.hasMessage()) {
-
-
+            Boolean b = addChannelMember(update.getMessage());
+            if(!b){
+                return null;
+            }
             String text = "";
             if(update.getMessage().getText() !=null){
                 text = update.getMessage().getText();
@@ -152,15 +213,14 @@ public class BotServiceImpl extends TelegramWebhookBot {
                     menu.execute(this,update.getMessage());
                     return null;
                 }
-                if(text.indexOf("#修改用户金额") == 0){
+                if(isAdminUpdateUserMoney(text)){
                     IBotMenu menu = botMenuFactory.getMenu("修改用户金额");
                     menu.execute(this,update.getMessage());
                     return null;
                 }
             }
-
-
             if(update.getMessage().getChat().getType().equals("private")){
+
                 Long tgId = update.getMessage().getFrom().getId();
                 OrderSession orderSession = addOrderSessionList.getUserSession(tgId);
 
@@ -182,6 +242,7 @@ public class BotServiceImpl extends TelegramWebhookBot {
             }
 
             if (update.getMessage().hasText()) {
+
                 try {
                     new MessageHandle(botKeyFactory, botMenuFactory, this, update.getMessage()).handle();
                 } catch (TelegramApiException e) {
@@ -193,6 +254,10 @@ public class BotServiceImpl extends TelegramWebhookBot {
         }
 
         if (update.hasCallbackQuery()) {
+            Boolean b = addChannelMember(update.getMessage());
+            if(!b){
+                return null;
+            }
             CallbackQuery callbackQuery = update.getCallbackQuery();
             try {
                 new CallbackQueryHandle(this, callbackQuery, callbackFactory).executeCallbackQuery();
