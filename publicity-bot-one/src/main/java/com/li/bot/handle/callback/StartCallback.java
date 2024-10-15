@@ -105,11 +105,9 @@ public class StartCallback implements ICallback {
         rowList.add(buttonList.subList(0, 2));
         // 第三个按钮单独一行
         rowList.add(Arrays.asList(buttonList.get(2)));
-        // 第四个按钮单独一行
-        rowList.add(Arrays.asList(buttonList.get(3)));
 
         // 如果有管理员按钮，继续添加它们，每两个一组
-        for (int i = 4; i < buttonList.size(); i += 2) {
+        for (int i = 3; i < buttonList.size(); i += 2) {
             if (i + 1 < buttonList.size()) {
                 // 两个按钮在同一行
                 rowList.add(Arrays.asList(buttonList.get(i), buttonList.get(i + 1)));
@@ -151,14 +149,14 @@ public class StartCallback implements ICallback {
 
         com.li.bot.entity.database.User u = addUser(tgId, userName);
 
-        Long countByConvoys = convoysInviteMapper.getCountByConvoys();
+//        Long countByConvoys = convoysInviteMapper.getCountByConvoys();
 
 
         bot.execute(EditMessageText.builder()
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .parseMode("html")
-                .text(BotMessageUtils.getStartMessage(tgId,userName,botConfig.getBotname(),countByConvoys))
+                .text(BotMessageUtils.getStartMessage(tgId,userName,botConfig.getBotname(),0L))
                 .replyMarkup(createInlineKeyboardButton(u))
                 .build());
 

@@ -100,11 +100,9 @@ public class StartMessage implements IMessage{
         rowList.add(buttonList.subList(0, 2));
         // 第三个按钮单独一行
         rowList.add(Arrays.asList(buttonList.get(2)));
-        // 第四个按钮单独一行
-        rowList.add(Arrays.asList(buttonList.get(3)));
 
         // 如果有管理员按钮，继续添加它们，每两个一组
-        for (int i = 4; i < buttonList.size(); i += 2) {
+        for (int i = 3; i < buttonList.size(); i += 2) {
             if (i + 1 < buttonList.size()) {
                 // 两个按钮在同一行
                 rowList.add(Arrays.asList(buttonList.get(i), buttonList.get(i + 1)));
@@ -148,9 +146,9 @@ public class StartMessage implements IMessage{
 
         com.li.bot.entity.database.User u = addUser(tgId, userName);
 
-        Long countByConvoys = convoysInviteMapper.getCountByConvoys();
+//        Long countByConvoys = convoysInviteMapper.getCountByConvoys();
 
-        SendMessage send = SendMessage.builder().text(BotMessageUtils.getStartMessage(tgId,userName,botConfig.getBotname(),countByConvoys)).chatId(message.getChatId()).replyMarkup(createInlineKeyboardButton(u)).parseMode("html").build();
+        SendMessage send = SendMessage.builder().text(BotMessageUtils.getStartMessage(tgId,userName,botConfig.getBotname(),0L)).chatId(message.getChatId()).replyMarkup(createInlineKeyboardButton(u)).parseMode("html").build();
 
         bot.execute(send);
     }

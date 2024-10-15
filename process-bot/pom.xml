@@ -91,6 +91,7 @@
     </dependencyManagement>
 
     <build>
+        <finalName>process_bot</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

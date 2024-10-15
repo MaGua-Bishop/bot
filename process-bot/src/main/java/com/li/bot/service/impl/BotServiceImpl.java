@@ -44,7 +44,6 @@ public class BotServiceImpl extends TelegramWebhookBot {
 
 
     public BotServiceImpl(BotConfig botConfig) {
-        super(botConfig.getDefaultBotOptions());
         this.botConfig = botConfig;
     }
 
@@ -185,6 +184,30 @@ public class BotServiceImpl extends TelegramWebhookBot {
         }
     }
 
+    private Boolean addChannelMember(CallbackQuery callbackQuery) {
+        Long tgId = callbackQuery.getFrom().getId();
+        String chatId = fileService.getChannelId();
+        try {
+            ChatMember member = execute(GetChatMember.builder().chatId(chatId).userId(Long.valueOf(tgId)).build());
+            if (!member.getStatus().equals("left")) {
+                if(channelMembersService.isChannelMember(tgId)){
+                    return true ;
+                }else {
+                    channelMembersService.addChannelMember(tgId);
+                    return true;
+                }
+            }else {
+                if(channelMembersService.isChannelMember(tgId)){
+                    channelMembersService.removeChannelMember(tgId);
+                }
+                execute(SendMessage.builder().chatId(callbackQuery.getFrom().getId().toString()).text("您不是频道成员，无法使用本机器人").build());
+                return false;
+            }
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
 
 
@@ -254,7 +277,7 @@ public class BotServiceImpl extends TelegramWebhookBot {
         }
 
         if (update.hasCallbackQuery()) {
-            Boolean b = addChannelMember(update.getMessage());
+            Boolean b = addChannelMember(update.getCallbackQuery());
             if(!b){
                 return null;
             }

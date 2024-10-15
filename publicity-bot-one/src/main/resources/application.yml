@@ -6,6 +6,7 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driverClassName: org.postgresql.Driver
+#    ${DATABASE_BOT_HOST}:${DATABASE_BOT_PORT} ${DATABASE_BOT_USERNAME} ${DATABASE_BOT_PASSWORD}
     url: jdbc:postgresql://${DATABASE_BOT_HOST}:${DATABASE_BOT_PORT}/publicity_bot?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Shanghai
     username: ${DATABASE_BOT_USERNAME}
     password: ${DATABASE_BOT_PASSWORD}
@@ -22,6 +23,7 @@ bot:
   token: 7741939056:AAE8PmUjaKMwVGnyxkRHROgBkuZmf6lz0IU # token
   host: 127.0.0.1 #ip
   port: 7890    #端口
+#  ${SERVER_HOST}
   url: ${SERVER_HOST}/tgbot/publicity_bot_one #ngrok地址
   adminChannelFile: adminChannel.json
   textFile: text.txt
