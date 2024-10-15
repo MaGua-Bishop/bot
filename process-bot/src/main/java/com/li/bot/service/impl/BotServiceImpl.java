@@ -15,6 +15,7 @@ import com.li.bot.mapper.UserMapper;
 import com.li.bot.sessions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
@@ -38,7 +39,6 @@ public class BotServiceImpl extends TelegramWebhookBot {
 
 
     public BotServiceImpl(BotConfig botConfig) {
-        super(botConfig.getDefaultBotOptions());
         this.botConfig = botConfig;
     }
 

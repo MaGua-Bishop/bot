@@ -30,7 +30,7 @@ public class TelegramBotController {
         this.telegramBotService = telegramBotService;
     }
 
-    @PostMapping("/webhook")
+    @PostMapping("/process_bot")
     public ResponseEntity<?> handleUpdate(@RequestBody Update update) {
         try {
             // 调用你的Bot处理更新的方法

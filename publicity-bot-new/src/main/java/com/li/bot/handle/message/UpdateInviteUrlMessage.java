@@ -42,7 +42,7 @@ public class UpdateInviteUrlMessage implements IMessage{
 
         String text = message.getText();
 
-        String regex = "https://[\\w.-]+(?:\\/[\\w.-]*)*";
+        String regex = "https://[^\\s]*";
         // 创建 Pattern 对象
         Pattern pattern = Pattern.compile(regex);
         // 创建Matcher对象

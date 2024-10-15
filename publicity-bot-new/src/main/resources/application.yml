@@ -1,5 +1,5 @@
 server:
-  port: 8000
+  port: 8003
 
 # 数据源配置
 spring:
@@ -23,7 +23,7 @@ bot:
   token: 8083224393:AAGPPVevhZ6VQr5GrVniEswayjh_6H3glTY # token
   host: 127.0.0.1 #ip
   port: 7890    #端口
-  url: https://83d2-111-55-96-129.ngrok-free.app/tgbot/publicity_bot_new #ngrok地址
+  url: ${SERVER_HOST}/tgbot/publicity_bot_new #ngrok地址
   adminChannelFile: adminChannel.json
   textFile: text.txt
   textBottomFile: textBottom.txt

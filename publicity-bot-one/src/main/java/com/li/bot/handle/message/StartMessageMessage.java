@@ -2,6 +2,7 @@ package com.li.bot.handle.message;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
+import com.li.bot.config.BotConfig;
 import com.li.bot.entity.database.*;
 import com.li.bot.mapper.*;
 import com.li.bot.service.impl.BotServiceImpl;
@@ -55,6 +56,9 @@ public class StartMessageMessage implements IMessage{
     @Autowired
     private FileService fileService ;
 
+    @Autowired
+    private BotConfig botConfig ;
+
     private InlineKeyboardMarkup createInlineKeyboardButton(){
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
 
@@ -85,9 +89,12 @@ public class StartMessageMessage implements IMessage{
                 List<Invite> inviteList = inviteMapper.getInviteListByIds(convoysInviteList.stream().map(ConvoysInvite::getInviteId).collect(Collectors.toList()));
 
                 inviteList.forEach(invite -> {
-                    String text = fileService.getText()+"\n\n";
-                    text += BotMessageUtils.getConvoysMemberInfoList(inviteList);
-                    SendMessage sendMessage = SendMessage.builder().chatId(invite.getChatId()).text(text).parseMode("html").replyMarkup(createInlineKeyboardButton()).build();
+                    StringBuilder builder = new StringBuilder();
+                    builder.append("<a href=\"https://"+botConfig.getBotname()+"\">" +"\uD83D\uDE80来自"+convoys.getName()+"\uD83D\uDE80\n</a>" );
+                    builder.append(fileService.getText() + "\n" );
+                    builder.append(BotMessageUtils.getConvoysMemberInfoList(inviteList));
+                    builder.append("\n"+fileService.getButtonText());
+                    SendMessage sendMessage = SendMessage.builder().chatId(invite.getChatId()).text(String.valueOf(builder)).parseMode("html").replyMarkup(createInlineKeyboardButton()).disableWebPagePreview(true).build();
                     Message execute = null;
                     try {
                         execute = bot.execute(sendMessage);

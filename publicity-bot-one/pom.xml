@@ -80,6 +80,7 @@
     </dependencyManagement>
 
     <build>
+        <finalName>publicity_bot_one</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

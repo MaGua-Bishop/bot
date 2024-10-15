@@ -87,6 +87,10 @@ public class CallbackQueryHandle {
             callbackFactory.getCallback("adminDeleteConvoysMembers").execute(bot,callbackQuery);
             return;
         }
+        if(data.indexOf("deleteConvoysTime:") == 0){
+            callbackFactory.getCallback("deleteConvoysTime").execute(bot,callbackQuery);
+            return;
+        }
 
 
 

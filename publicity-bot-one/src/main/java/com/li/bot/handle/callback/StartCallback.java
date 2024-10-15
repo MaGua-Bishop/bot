@@ -53,11 +53,11 @@ public class StartCallback implements ICallback {
 
         // 添加前两个按钮
         buttonList.add(InlineKeyboardButton.builder()
-                .text("\uD83C\uDF38邀请进群聊")
+                .text("邀请进群聊")
                 .url("https://" + botConfig.getBotname() + "?startgroup")
                 .build());
         buttonList.add(InlineKeyboardButton.builder()
-                .text("\uD83C\uDF1E邀请进频道")
+                .text("邀请进频道")
                 .url("https://" + botConfig.getBotname() + "?startchannel=true")
                 .build());
 
@@ -86,15 +86,15 @@ public class StartCallback implements ICallback {
                     .callbackData("adminAddButton")
                     .build());
             buttonList.add(InlineKeyboardButton.builder()
-                    .text("\uD83D\uDDD1删除互推导航按钮")
+                    .text("删除互推导航按钮")
                     .callbackData("adminDeleteButton")
                     .build());
             buttonList.add(InlineKeyboardButton.builder()
-                    .text("\uD83D\uDDB9创建顶部文案")
+                    .text("创建顶部文案")
                     .callbackData("adminAddText")
                     .build());
             buttonList.add(InlineKeyboardButton.builder()
-                    .text("\uD83D\uDDB9创建底部文案")
+                    .text("创建底部文案")
                     .callbackData("adminAddBottomText")
                     .build());
         }
