@@ -12,7 +12,6 @@ import com.li.bot.mapper.ConvoysInviteMapper;
 import com.li.bot.mapper.ConvoysMapper;
 import com.li.bot.mapper.InviteMapper;
 import com.li.bot.mapper.UserMapper;
-import com.li.bot.service.impl.AdminGroupServiceImpl;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.service.impl.FileService;
 import com.li.bot.utils.UnitConversionUtils;
@@ -29,7 +28,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,8 +52,6 @@ public class channelRequestCallback implements ICallback{
     @Autowired
     private ConvoysInviteMapper convoysInviteMapper ;
 
-    @Autowired
-    private AdminGroupServiceImpl adminGroupService ;
 
 
     @Autowired
@@ -65,6 +61,9 @@ public class channelRequestCallback implements ICallback{
     private UserMapper userMapper ;
 
     private Long currentConvoysCapacity = 0L ;
+
+    @Autowired
+    private FileService fileService ;
 
 
     private void getConvoysCapacity(Long convoysId){
@@ -246,7 +245,7 @@ public class channelRequestCallback implements ICallback{
         //发送消息给频道管理员同意或拒绝加入
 
 
-        Long string = adminGroupService.getChatId();
+        Long string = fileService.getAddAdminGroup().getId();
 
         Integer status = convoysInvite.getStatus();
         String msg = "";

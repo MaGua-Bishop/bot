@@ -99,9 +99,6 @@ public class BotServiceImpl extends TelegramWebhookBot {
     private UpdateConvoysSessionList updateConvoysSessionList ;
 
     @Autowired
-    private AdminGroupServiceImpl adminGroupService ;
-
-    @Autowired
     private UserMapper userMapper ;
 
 
@@ -131,7 +128,7 @@ public class BotServiceImpl extends TelegramWebhookBot {
         if(update.hasMyChatMember()){
             ChatMemberUpdated myChatMember = update.getMyChatMember();
             try {
-                new ChatMemberUpdatedHandle(this,myChatMember, inviteMapper, convoysMapper, convoysInviteMapper, adminGroupService,userMapper).handle();
+                new ChatMemberUpdatedHandle(this,myChatMember, inviteMapper, convoysMapper, convoysInviteMapper,userMapper).handle();
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }

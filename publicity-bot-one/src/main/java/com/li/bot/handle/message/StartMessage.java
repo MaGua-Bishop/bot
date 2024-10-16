@@ -62,15 +62,15 @@ public class StartMessage implements IMessage{
                 .callbackData("selectConvoysList")
                 .build());
 
-        // 获取并添加第四个按钮，单独一行
-        String url  = fileService.getGroupUrl();
-        buttonList.add(InlineKeyboardButton.builder()
-                .text("审核群聊")
-                .url(url)
-                .build());
 
         // 如果用户是管理员，添加额外的按钮
         if (user.getIsAdmin()) {
+            // 获取并添加第四个按钮，单独一行
+            String url  = fileService.getAddAdminGroup().getLink();
+            buttonList.add(InlineKeyboardButton.builder()
+                    .text("审核群聊")
+                    .url(url)
+                    .build());
             buttonList.add(InlineKeyboardButton.builder()
                     .text("\uD83D\uDE97创建车队")
                     .callbackData("adminAddConvoys")

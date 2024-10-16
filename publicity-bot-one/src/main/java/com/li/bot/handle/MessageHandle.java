@@ -33,6 +33,11 @@ public class MessageHandle {
     public void handle() throws TelegramApiException {
         String text = message.getText();
 
+        if(text.equals("设置工作群") && message.getChat().getType().equals("group") || message.getChat().getType().equals("supergroup")){
+            messageFactory.getMessage("adminSetGroup").execute(bot,message);
+            return ;
+        }
+
         UpdateConvoysSession userSession = updateConvoysSessionList.getUserSession(message.getFrom().getId());
         if(userSession != null && userSession.getType() == 0){
             messageFactory.getMessage("updateConvoysTime").execute(bot,message);

@@ -1,44 +1,31 @@
 package com.li.bot.handle;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.google.common.collect.Lists;
 import com.li.bot.entity.ConvoysExitMembers;
 import com.li.bot.entity.database.*;
 import com.li.bot.enums.InviteType;
-import com.li.bot.handle.callback.SelectConvoysListCallback;
 import com.li.bot.mapper.ConvoysInviteMapper;
 import com.li.bot.mapper.ConvoysMapper;
 import com.li.bot.mapper.InviteMapper;
 import com.li.bot.mapper.UserMapper;
-import com.li.bot.service.impl.AdminGroupServiceImpl;
 import com.li.bot.service.impl.BotServiceImpl;
-import com.li.bot.service.impl.FileService;
 import com.li.bot.utils.BotMessageUtils;
 import com.li.bot.utils.ConvoysPageUtils;
-import com.li.bot.utils.UnitConversionUtils;
-import org.springframework.beans.BeanUtils;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.ExportChatInviteLink;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatMemberCount;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.LeaveChat;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.ChatMemberUpdated;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMember;
 import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMemberAdministrator;
 import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMemberBanned;
 import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMemberLeft;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @Author: li
@@ -57,18 +44,15 @@ public class ChatMemberUpdatedHandle {
     private ConvoysInviteMapper convoysInviteMapper ;
 
 
-    private AdminGroupServiceImpl adminGroupService ;
-
     private UserMapper userMapper ;
 
 
-    public ChatMemberUpdatedHandle(BotServiceImpl bot, ChatMemberUpdated myChatMember, InviteMapper inviteMapper, ConvoysMapper convoysMapper, ConvoysInviteMapper convoysInviteMapper, AdminGroupServiceImpl adminGroupService,UserMapper userMapper) {
+    public ChatMemberUpdatedHandle(BotServiceImpl bot, ChatMemberUpdated myChatMember, InviteMapper inviteMapper, ConvoysMapper convoysMapper, ConvoysInviteMapper convoysInviteMapper,UserMapper userMapper) {
         this.bot = bot;
         this.myChatMember = myChatMember;
         this.inviteMapper = inviteMapper;
         this.convoysMapper = convoysMapper;
         this.convoysInviteMapper = convoysInviteMapper;
-        this.adminGroupService = adminGroupService;
         this.userMapper = userMapper;
     }
 
