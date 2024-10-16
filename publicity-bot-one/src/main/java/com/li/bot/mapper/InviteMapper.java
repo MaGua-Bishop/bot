@@ -1,6 +1,7 @@
 package com.li.bot.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.li.bot.entity.ConvoysExitMembers;
 import com.li.bot.entity.database.Invite;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -31,6 +32,10 @@ public interface InviteMapper extends BaseMapper<Invite> {
 
     @Update("UPDATE tg_invite SET message_id = #{messageId} WHERE invite_id = #{inviteId}")
     int updateMessageIdById(@Param("messageId") Integer messageId, @Param("inviteId") Long inviteId);
+
+    @Select("select i.invite_id invite_id, c.convoys_id convoy_id,c.name convoy_name,i.name invite_name from tg_invite i left join tg_convoys_invite ci ON i.invite_id = ci.invite_id LEFT JOIN tg_convoys c on c.convoys_id = ci.convoys_id\n" +
+            "WHERE i.invite_id =#{inviteId}")
+    ConvoysExitMembers getConvoysExitMembersByInviteId(@Param("inviteId") Long inviteId);
 
 
 

@@ -12,6 +12,7 @@ import com.li.bot.mapper.ConvoysInviteMapper;
 import com.li.bot.mapper.ConvoysMapper;
 import com.li.bot.mapper.InviteMapper;
 import com.li.bot.mapper.UserMapper;
+import com.li.bot.service.impl.AdminGroupServiceImpl;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.service.impl.FileService;
 import com.li.bot.utils.UnitConversionUtils;
@@ -54,7 +55,7 @@ public class channelRequestCallback implements ICallback{
     private ConvoysInviteMapper convoysInviteMapper ;
 
     @Autowired
-    private FileService fileService ;
+    private AdminGroupServiceImpl adminGroupService ;
 
 
     @Autowired
@@ -243,9 +244,9 @@ public class channelRequestCallback implements ICallback{
         bot.execute(editMessageReplyMarkup);
 
         //发送消息给频道管理员同意或拒绝加入
-        Map<String,String> adminChannelList = fileService.getAdminChannelList();
 
-        String string = adminChannelList.get("id");
+
+        Long string = adminGroupService.getChatId();
 
         Integer status = convoysInvite.getStatus();
         String msg = "";

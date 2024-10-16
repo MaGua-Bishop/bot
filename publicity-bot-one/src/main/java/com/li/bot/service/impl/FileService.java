@@ -1,5 +1,6 @@
 package com.li.bot.service.impl;
 
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.li.bot.config.BotConfig;
@@ -37,11 +38,37 @@ public class FileService {
         }
     }
 
-    public Map<String,String> getAdminChannelList() {
-        String string = readFileContent();
-        Map<String,String> adminChannelFile = JSONObject.parseObject(string, Map.class);
-        return adminChannelFile;
+//    public Map<String,String> getAdminChannelList() {
+//        String string = readFileContent();
+//        Map<String,String> adminChannelFile = JSONObject.parseObject(string, Map.class);
+//        return adminChannelFile;
+//    }
+
+    public String getGroupUrl() {
+        String channelFile = botConfig.getAdminChannelFile();
+        try {
+            String string = FileUtils.readFileToString(new File(channelFile));
+            JSONObject jsonObject = JSON.parseObject(string);
+            String s = jsonObject.getString("url");
+            return s;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
+
+    public String getGroupChatId() {
+        String channelFile = botConfig.getAdminChannelFile();
+        try {
+            String string = FileUtils.readFileToString(new File(channelFile));
+            JSONObject jsonObject = JSON.parseObject(string);
+            String s = jsonObject.getString("id");
+            return s;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
 
     public void addText(String text){
         try (FileWriter fileWriter = new FileWriter(new File(botConfig.getTextFile()))) {

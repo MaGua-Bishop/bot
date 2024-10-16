@@ -5,15 +5,15 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.collect.Lists;
-import com.li.bot.entity.database.Convoys;
-import com.li.bot.entity.database.ConvoysInfoListVo;
-import com.li.bot.entity.database.ConvoysInvite;
-import com.li.bot.entity.database.Invite;
+import com.li.bot.entity.ConvoysExitMembers;
+import com.li.bot.entity.database.*;
 import com.li.bot.enums.InviteType;
 import com.li.bot.handle.callback.SelectConvoysListCallback;
 import com.li.bot.mapper.ConvoysInviteMapper;
 import com.li.bot.mapper.ConvoysMapper;
 import com.li.bot.mapper.InviteMapper;
+import com.li.bot.mapper.UserMapper;
+import com.li.bot.service.impl.AdminGroupServiceImpl;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.service.impl.FileService;
 import com.li.bot.utils.BotMessageUtils;
@@ -28,7 +28,6 @@ import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageTe
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.ChatMemberUpdated;
 import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMember;
 import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMemberAdministrator;
 import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMemberBanned;
@@ -57,15 +56,20 @@ public class ChatMemberUpdatedHandle {
     private ConvoysMapper convoysMapper ;
     private ConvoysInviteMapper convoysInviteMapper ;
 
-    private FileService fileService ;
 
-    public ChatMemberUpdatedHandle(BotServiceImpl bot, ChatMemberUpdated myChatMember, InviteMapper inviteMapper, ConvoysMapper convoysMapper, ConvoysInviteMapper convoysInviteMapper, FileService fileService) {
+    private AdminGroupServiceImpl adminGroupService ;
+
+    private UserMapper userMapper ;
+
+
+    public ChatMemberUpdatedHandle(BotServiceImpl bot, ChatMemberUpdated myChatMember, InviteMapper inviteMapper, ConvoysMapper convoysMapper, ConvoysInviteMapper convoysInviteMapper, AdminGroupServiceImpl adminGroupService,UserMapper userMapper) {
         this.bot = bot;
         this.myChatMember = myChatMember;
         this.inviteMapper = inviteMapper;
         this.convoysMapper = convoysMapper;
         this.convoysInviteMapper = convoysInviteMapper;
-        this.fileService = fileService;
+        this.adminGroupService = adminGroupService;
+        this.userMapper = userMapper;
     }
 
     private boolean permissions(ChatMemberAdministrator admin){
@@ -183,13 +187,21 @@ public class ChatMemberUpdatedHandle {
                 SendMessage send = SendMessage.builder().chatId(invite.getTgId()).text("《"+invite.getName()+"》\n检测到机器人发不了消息,机器人已自动退出").parseMode("html").build();
                 bot.execute(send);
                 Invite invite1 = inviteMapper.selectOne(new LambdaQueryWrapper<Invite>().eq(Invite::getChatId, id));
+                ConvoysExitMembers convoysExitMembersByInviteId = inviteMapper.getConvoysExitMembersByInviteId(invite1.getInviteId());
                 inviteMapper.delete(new LambdaQueryWrapper<Invite>().eq(Invite::getChatId, id));
                 convoysInviteMapper.delete(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, invite1.getInviteId()));
                 LeaveChat leaveChat = new LeaveChat(String.valueOf(id));
                 bot.execute(leaveChat);
-
-                bot.execute(SendMessage.builder().chatId(fileService.getAdminChannelList().get("id")).text("《"+invite.getName()+"》\n检测到机器人发不了消息,机器人已自动退出车队").parseMode("html").build());
-
+                List<User> adminList = userMapper.selectList(new LambdaQueryWrapper<User>().eq(User::getIsAdmin, true));
+                if(!adminList.isEmpty()){
+                    adminList.forEach(user -> {
+                        try {
+                            bot.execute(SendMessage.builder().chatId(user.getTgId()).text("<b>车队:"+convoysExitMembersByInviteId.getConvoyName()+"</b>\n<b>频道:《"+convoysExitMembersByInviteId.getInviteName()+"》</b>\n检测到机器人发不了消息,机器人已自动退出车队").parseMode("html").build());
+                        } catch (TelegramApiException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    });
+                }
                 return;
             }
             invite.setLink(link);
@@ -211,12 +223,21 @@ public class ChatMemberUpdatedHandle {
                 SendMessage send = SendMessage.builder().chatId(invite.getTgId()).text("《"+invite.getName()+"》\n检测到机器人发不了消息,机器人已自动退出").parseMode("html").build();
                 bot.execute(send);
                 Invite invite1 = inviteMapper.selectOne(new LambdaQueryWrapper<Invite>().eq(Invite::getChatId, id));
+                ConvoysExitMembers convoysExitMembersByInviteId = inviteMapper.getConvoysExitMembersByInviteId(invite1.getInviteId());
                 inviteMapper.deleteById(invite1);
                 convoysInviteMapper.delete(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, invite1.getInviteId()));
                 LeaveChat leaveChat = new LeaveChat(String.valueOf(id));
                 bot.execute(leaveChat);
-                bot.execute(SendMessage.builder().chatId(fileService.getAdminChannelList().get("id")).text("《"+invite.getName()+"》\n检测到机器人发不了消息,机器人已自动退出车队").parseMode("html").build());
-            }
+                List<User> adminList = userMapper.selectList(new LambdaQueryWrapper<User>().eq(User::getIsAdmin, true));
+                if(!adminList.isEmpty()){
+                    adminList.forEach(user -> {
+                        try {
+                            bot.execute(SendMessage.builder().chatId(user.getTgId()).text("<b>车队:"+convoysExitMembersByInviteId.getConvoyName()+"</b>\n<b>频道:《"+convoysExitMembersByInviteId.getInviteName()+"》</b>\n检测到机器人发不了消息,机器人已自动退出车队").parseMode("html").build());
+                        } catch (TelegramApiException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    });
+                }}
             if(permissions){
                 Page<Convoys> page = new Page<>(1, ConvoysPageUtils.PAGESIZE);
                 IPage<ConvoysInfoListVo> convoysList = convoysMapper.selectConvoysList(page);

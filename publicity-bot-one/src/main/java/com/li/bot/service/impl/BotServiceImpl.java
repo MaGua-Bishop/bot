@@ -7,10 +7,7 @@ import com.li.bot.handle.ChatMemberUpdatedHandle;
 import com.li.bot.handle.MessageHandle;
 import com.li.bot.handle.callback.CallbackFactory;
 import com.li.bot.handle.message.MessageFactory;
-import com.li.bot.mapper.ButtonMapper;
-import com.li.bot.mapper.ConvoysInviteMapper;
-import com.li.bot.mapper.ConvoysMapper;
-import com.li.bot.mapper.InviteMapper;
+import com.li.bot.mapper.*;
 import com.li.bot.sessions.UpdateConvoysSessionList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -102,10 +99,10 @@ public class BotServiceImpl extends TelegramWebhookBot {
     private UpdateConvoysSessionList updateConvoysSessionList ;
 
     @Autowired
-    private FileService fileService ;
+    private AdminGroupServiceImpl adminGroupService ;
 
     @Autowired
-    private ButtonMapper buttonMapper ;
+    private UserMapper userMapper ;
 
 
 
@@ -134,7 +131,7 @@ public class BotServiceImpl extends TelegramWebhookBot {
         if(update.hasMyChatMember()){
             ChatMemberUpdated myChatMember = update.getMyChatMember();
             try {
-                new ChatMemberUpdatedHandle(this,myChatMember, inviteMapper, convoysMapper, convoysInviteMapper, fileService).handle();
+                new ChatMemberUpdatedHandle(this,myChatMember, inviteMapper, convoysMapper, convoysInviteMapper, adminGroupService,userMapper).handle();
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
