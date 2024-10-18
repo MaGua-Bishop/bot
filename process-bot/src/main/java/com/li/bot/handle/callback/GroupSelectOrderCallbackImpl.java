@@ -50,6 +50,7 @@ public class GroupSelectOrderCallbackImpl implements ICallback {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         buttonList.add(InlineKeyboardButton.builder().text("接单").callbackData("receive:order:"+orderId).build());
         buttonList.add(InlineKeyboardButton.builder().text("返回").callbackData("waiver:order:"+orderId).build());
+        buttonList.add(InlineKeyboardButton.builder().text("取消订单").callbackData("admin:cancel:order:"+orderId).build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
         return inlineKeyboardMarkup;
@@ -65,7 +66,7 @@ public class GroupSelectOrderCallbackImpl implements ICallback {
         Order order = orderMapper.getOrderByIdAndStatus(uuid,OrderStatus.PENDING.getCode());
         if (order == null) {
             try {
-                bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("该订单已被领取").build());
+                bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("该订单已被领取或已取消").build());
                 return;
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);

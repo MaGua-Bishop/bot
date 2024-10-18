@@ -40,4 +40,8 @@ public interface OrderMapper extends BaseMapper<Order> {
 
     List<UserAndOrderVo> getUserAndOrderVoByTgId(Long tgId);
 
+    @Select("select * from tg_order where business_id = #{businessId} and status = 1")
+    List<Order> getOrderByBusinessId(Long businessId);
+
+
 }

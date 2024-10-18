@@ -8,6 +8,7 @@ public enum OrderStatus {
 
 //    -1 审核失败 0 待审核 1待处理 2处理中 3已完成
 
+    Cancel(-2,"已取消"),
 
     Review_FAILED(-1,"审核失败"),
 

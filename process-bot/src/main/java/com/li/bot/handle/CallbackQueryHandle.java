@@ -54,8 +54,16 @@ public class CallbackQueryHandle {
             callbackFactory.getCallback("receiveOrder").execute(bot,callbackQuery);
             return;
         }
+        if(data.indexOf("list:order:receive:") == 0){
+            callbackFactory.getCallback("receiveOrderList").execute(bot,callbackQuery);
+            return;
+        }
         if(data.indexOf("waiver:order:") == 0){
             callbackFactory.getCallback("waiverOrder").execute(bot,callbackQuery);
+            return;
+        }
+        if(data.indexOf("admin:cancel:order:") == 0){
+            callbackFactory.getCallback("adminCancelOrder").execute(bot,callbackQuery);
             return;
         }
 

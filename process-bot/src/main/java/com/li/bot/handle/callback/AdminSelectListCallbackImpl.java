@@ -5,11 +5,9 @@ import com.li.bot.entity.OrderVo;
 import com.li.bot.entity.database.Business;
 import com.li.bot.entity.database.Order;
 import com.li.bot.entity.database.Reply;
-import com.li.bot.entity.database.User;
 import com.li.bot.enums.OrderStatus;
 import com.li.bot.mapper.*;
 import com.li.bot.service.impl.BotServiceImpl;
-import com.li.bot.sessions.AddBusinessSessionList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChat;
@@ -19,6 +17,7 @@ import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -56,11 +55,11 @@ public class AdminSelectListCallbackImpl implements ICallback{
         }
     }
 
-    private String getOrderInfo(String orderId,Long name,BotServiceImpl bot){
-        Reply reply = replyMapper.selectOne(new LambdaQueryWrapper<Reply>().eq(Reply::getOrderId,orderId));
-        Business business = businessMapper.selectOne(new LambdaQueryWrapper<Business>().eq(Business::getBusinessId, name));
+    private String getOrderInfo(Order order,BotServiceImpl bot){
+        Reply reply = replyMapper.selectOne(new LambdaQueryWrapper<Reply>().eq(Reply::getOrderId,order.getOrderId()));
+        Business business = businessMapper.selectOne(new LambdaQueryWrapper<Business>().eq(Business::getBusinessId, order.getBusinessId()));
         String url = "<a href=\"tg://user?id="+reply.getTgId()+"\">"+getChatInfo(reply.getTgId(),bot)+"</a>" ;
-        return url + " "+ business.getName() ;
+        return business.getName() +"\t<b>"+order.getMessageText() + "</b>\t"+reply.getTgId()+"\t"+ url ;
     }
 
 
@@ -129,9 +128,12 @@ public class AdminSelectListCallbackImpl implements ICallback{
            text.append("未回复订单列表:\n");
            text.append("-----------------------------------\n");
            text.append("未回复订单总数: "+ orderList.size()+"\n");
+           AtomicInteger index = new AtomicInteger(1);
+           text.append("<b>业务名\t报单内容\t接单人id\t接单人</b>\n");
            orderList.forEach(order -> {
-               String orderInfo = getOrderInfo(order.getOrderId(), order.getBusinessId(),bot);
-               text.append(orderInfo+"\n");
+               String orderInfo = getOrderInfo(order,bot);
+               text.append(index+"."+orderInfo+"\n");
+               index.getAndIncrement();
            });
            SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getFrom().getId()).text(String.valueOf(text)).parseMode("html").build();
            bot.execute(sendMessage);

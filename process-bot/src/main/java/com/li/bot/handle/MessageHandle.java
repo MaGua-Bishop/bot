@@ -44,6 +44,8 @@ public class MessageHandle {
             }
         }else if((type.equals("group") || type.equals("supergroup")) && message.getText().equals("设置工作群")){
             botMenuFactory.getMenu("设置工作群").execute(bot, message);
+        }else if((type.equals("group") || type.equals("supergroup")) && message.getText().indexOf("#提取业务") == 0){
+            botMenuFactory.getMenu("提取业务").execute(bot, message);
         }
     }
 

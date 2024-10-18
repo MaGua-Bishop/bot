@@ -96,22 +96,31 @@ public class ChatMemberUpdatedHandle {
                 if(convoysInvite != null){
                     convoysInviteMapper.deleteById(convoysInvite);
                 }
-
                 SendMessage sendMessage = new SendMessage();
                 sendMessage.setChatId(selectOne.getTgId());
                 sendMessage.setText("机器人离开了"+"<b>《"+title+"》</b>");
                 sendMessage.setParseMode("html");
                 bot.execute(sendMessage);
                 inviteMapper.deleteById(selectOne);
-
+                return ;
             }
-
-            // 获取群成员数
-            GetChatMemberCount count = new GetChatMemberCount(String.valueOf(id));
-            //获取群邀请连接
-            ExportChatInviteLink exportChatInviteLink = new ExportChatInviteLink(String.valueOf(id));
-            String link = bot.execute(exportChatInviteLink);
-            Integer memberCount  = bot.execute(count);
+            String link = "";
+            Integer memberCount =null ;
+            try {
+                // 获取群成员数
+                GetChatMemberCount count = new GetChatMemberCount(String.valueOf(id));
+                //获取群邀请连接
+                ExportChatInviteLink exportChatInviteLink = new ExportChatInviteLink(String.valueOf(id));
+                link = bot.execute(exportChatInviteLink);
+                memberCount = bot.execute(count);
+            }catch (Exception e){
+                SendMessage send = SendMessage.builder().chatId(id).text("《"+title+"》\n检测到机器人发不了消息,机器人已自动退出").parseMode("html").build();
+                bot.execute(send);
+                Invite invite1 = inviteMapper.selectOne(new LambdaQueryWrapper<Invite>().eq(Invite::getChatId, id));
+                inviteMapper.delete(new LambdaQueryWrapper<Invite>().eq(Invite::getChatId, id));
+                convoysInviteMapper.delete(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, invite1.getInviteId()));
+                return;
+            }
 
             Invite invite = new Invite();
             invite.setTgId(myChatMember.getFrom().getId());

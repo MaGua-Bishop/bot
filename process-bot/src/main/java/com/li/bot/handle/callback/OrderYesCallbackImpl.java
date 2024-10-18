@@ -52,6 +52,7 @@ public class OrderYesCallbackImpl implements ICallback{
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         buttonList.add(InlineKeyboardButton.builder().text("领取").callbackData("receive:order:"+orderId).build());
         buttonList.add(InlineKeyboardButton.builder().text("放弃").callbackData("waiver:order:"+orderId).build());
+        buttonList.add(InlineKeyboardButton.builder().text("取消订单").callbackData("admin:cancel:order:"+orderId).build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 5);
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
         return inlineKeyboardMarkup;

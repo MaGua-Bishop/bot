@@ -62,7 +62,7 @@ public class ReceiveOrderCallbackImpl implements ICallback{
         Order order = orderMapper.getOrderByIdAndStatus(UUID.fromString(orderId), OrderStatus.PENDING.getCode());
         if(order == null){
             try {
-                bot.execute(SendMessage.builder().chatId(callbackQuery.getFrom().getId()).text("该订单已被领取").parseMode("MarkdownV2").build());
+                bot.execute(SendMessage.builder().chatId(callbackQuery.getFrom().getId()).text("该订单已被领取或已取消").parseMode("MarkdownV2").build());
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
