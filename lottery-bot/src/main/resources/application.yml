@@ -1,12 +1,12 @@
 server:
-  port: 8001
+  port: 8004
 
 # 数据源配置
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://${DATABASE_BOT_HOST}:${DATABASE_BOT_PORT}/process_bot?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+    url: jdbc:postgresql://${DATABASE_BOT_HOST}:${DATABASE_BOT_PORT}/lottery_bot?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Shanghai
     username: ${DATABASE_BOT_USERNAME}
     password: ${DATABASE_BOT_PASSWORD}
 
@@ -18,13 +18,8 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 bot:
-#  botname: t.me/cha_info_china_bot # 机器人名称
-#  token: 7478207741:AAHhv4pJ6oYnzThPGb_ZRk3BqENxcXk3hAQ # token
   botname: t.me/lidemobot # 机器人名称
   token: 8030696965:AAFY6eZti5yIg7J0p-mXIHSH9fLsmrvHBFE # token
   host: 127.0.0.1 #ip
   port: 7890    #端口
-#  ${SERVER_HOST}
-  url: ${SERVER_HOST}/tgbot/process_bot #ngrok地址
-  groupFile: workgroup.json
-  channelFile: channel.json
+  url: ${SERVER_HOST}/tgbot/lottery_bot #ngrok地址]
