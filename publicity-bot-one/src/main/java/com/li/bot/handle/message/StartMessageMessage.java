@@ -90,7 +90,7 @@ public class StartMessageMessage implements IMessage{
 
                 inviteList.forEach(invite -> {
                     StringBuilder builder = new StringBuilder();
-                    builder.append("<a href=\"https://"+botConfig.getBotname()+"\">" +"\uD83D\uDE80来自"+convoys.getName()+"\uD83D\uDE80\n</a>" );
+                    builder.append("<a href=\"https://"+botConfig.getBotname()+"\">" +"来自"+convoys.getName()+"\n</a>" );
                     builder.append(fileService.getText() + "\n" );
                     builder.append(BotMessageUtils.getConvoysMemberInfoList(inviteList));
                     builder.append("\n"+fileService.getButtonText());
