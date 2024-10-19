@@ -16,8 +16,10 @@ import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.service.impl.PrizePoolService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChat;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
+import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -76,6 +78,12 @@ public class StartMessage implements IMessage{
             userMapper.insert(user);
         }
         return user;
+    }
+
+    private String getChatUrl(String name) {
+        name = name.replace("@","");
+//        String url = "<a href=\"tg://user?id="+lotteryInfo.getTgId()+"\">"+getChatInfo(lotteryInfo.getTgId(),bot)+"</a>" ;
+        return "<a  href=\"https://t.me/"+name+"\">@"+name+"</a>";
     }
 
     @Override
@@ -166,6 +174,12 @@ public class StartMessage implements IMessage{
         if(index == 1 && index1 == 1){
             SendMessage sendMessage = SendMessage.builder().chatId(message.getChatId()).text("Congratulations, you got it <b>" + prizePool.getMoney() + "</b>!\n" + "save lottery id:\n<code>" + lotteryInfo.getLotteryInfoId()+"</code>").parseMode("html").build();
             bot.execute(sendMessage);
+            String chatUrl = getChatUrl("@Nana_77nggame");
+
+            String str = "Congratulations, you've won! \uD83C\uDF89\n" +
+                    "Please contact our online customer service and send your lottery ID to claim your reward.\nCustomer service link: "+chatUrl;
+            SendMessage message1 = SendMessage.builder().chatId(message.getChatId()).text(str).parseMode("html").build();
+            bot.execute(message1);
         }
 
 

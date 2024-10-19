@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.li.bot.entity.database.Business;
 import com.li.bot.entity.database.Order;
 import com.li.bot.entity.database.User;
+import com.li.bot.entity.database.vo.BusinessListVo;
 import com.li.bot.enums.OrderStatus;
 import com.li.bot.mapper.BusinessMapper;
 import com.li.bot.mapper.OrderMapper;
@@ -91,23 +92,21 @@ public class StartKeyImpl implements IKeyboard {
 
     private InlineKeyboardMarkup createInlineKeyboardButton(Long tgId){
         //查出全部业务只要名称和主键
-        LambdaQueryWrapper<Business> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(Business::getBusinessId,Business::getName,Business::getIsShelving);
-        wrapper.eq(Business::getIsShelving,true);
-        List<Business> businesses = businessMapper.selectList(wrapper);
-
+        List<BusinessListVo> businessListVos = businessMapper.selectBusinessList();
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
-        User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, tgId));
-        if(user != null && user.getIsAdmin() ){
-            for (Business business : businesses) {
-                List<Order> orders = orderMapper.selectList(new LambdaQueryWrapper<Order>().eq(Order::getBusinessId, business.getBusinessId()).eq(Order::getStatus, OrderStatus.PENDING.getCode()));
-                buttonList.add(InlineKeyboardButton.builder().text(business.getName()+"("+orders.size()+")").callbackData("select:businessId:"+String.valueOf(business.getBusinessId())).build());
+        if(!businessListVos.isEmpty()){
+            User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, tgId));
+            if(user != null && user.getIsAdmin() ){
+                for (BusinessListVo business : businessListVos) {
+                    buttonList.add(InlineKeyboardButton.builder().text("("+business.getSize()+")"+business.getName()).callbackData("select:businessId:"+String.valueOf(business.getBusinessId())).build());
+                }
+            }else {
+                for (BusinessListVo business : businessListVos) {
+                    buttonList.add(InlineKeyboardButton.builder().text("("+business.getSize()+")"+business.getName()).callbackData("select:businessId:"+String.valueOf(business.getBusinessId())).build());
+                }
             }
         }else {
-            for (Business business : businesses) {
-                List<Order> orders = orderMapper.selectList(new LambdaQueryWrapper<Order>().eq(Order::getBusinessId, business.getBusinessId()).eq(Order::getStatus, OrderStatus.PENDING.getCode()));
-                buttonList.add(InlineKeyboardButton.builder().text(business.getName()+"("+orders.size()+")").callbackData("select:businessId:"+String.valueOf(business.getBusinessId())).build());
-            }
+            buttonList.add(InlineKeyboardButton.builder().text("暂无未领取的业务").callbackData("null").build());
         }
         buttonList.add(InlineKeyboardButton.builder().text("接单记录").callbackData("select:reply:records:").build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);

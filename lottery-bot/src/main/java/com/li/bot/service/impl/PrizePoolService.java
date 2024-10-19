@@ -66,7 +66,7 @@ public class PrizePoolService {
     private InlineKeyboardMarkup createInlineKeyboardButton(){
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         buttonList.add(InlineKeyboardButton.builder().text("ended").callbackData("null").build());
-
+        buttonList.add(InlineKeyboardButton.builder().text("ended").callbackData("null").build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
         return inlineKeyboardMarkup;
@@ -87,13 +87,6 @@ public class PrizePoolService {
             lottery.setStatus(LotteryStatus.END.getCode());
             lottery.setUpdateTime(LocalDateTime.now());
             lotteryMapper.updateById(lottery);
-            //更新消息状态
-            EditMessageReplyMarkup editMessageReplyMarkup = EditMessageReplyMarkup.builder().chatId(lottery.getChatId()).messageId(Integer.valueOf(String.valueOf(lottery.getMessageId()))).replyMarkup(createInlineKeyboardButton()).build();
-            try {
-                bot.execute(editMessageReplyMarkup);
-            } catch (TelegramApiException e) {
-                throw new RuntimeException(e);
-            }
             return null;
         }
         List<String> prizePoolIds = moneyList.stream().map(PrizePoolVO::getPrizePoolId).collect(Collectors.toList());

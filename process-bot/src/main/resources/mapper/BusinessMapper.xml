@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.li.bot.mapper.BusinessMapper">
+
+    <resultMap type="BusinessListVo" id="getBusinessList">
+        <result property="businessId"    column="businessId"    />
+        <result property="name"    column="name"    />
+        <result property="size"    column="size"    />
+    </resultMap>
+
+    <select id="selectBusinessList" resultMap="getBusinessList">
+        select b.business_id businessId,b."name"name ,count(o.order_id) size from tg_business b
+        left join tg_order o on b.business_id = o.business_id
+        where b.is_shelving = TRUE and o.status = 1
+        GROUP BY b.business_id ;
+    </select>
+
+
+
+</mapper>

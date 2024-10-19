@@ -35,46 +35,6 @@ public class CustomerServiceMenuImpl implements IBotMenu{
     @Autowired
     private BusinessMapper businessMapper ;
 
-
-//    private InlineKeyboardMarkup createInlineKeyboardButton(Message message){
-//
-//
-//        //查出全部业务只要名称和主键
-//        LambdaQueryWrapper<Business> wrapper = new LambdaQueryWrapper<>();
-//        wrapper.select(Business::getBusinessId,Business::getName);
-//        List<Business> businesses = businessMapper.selectList(wrapper);
-//
-//        List<InlineKeyboardButton> buttonList = new ArrayList<>();
-//        for (Business business : businesses) {
-//            buttonList.add(InlineKeyboardButton.builder().text(business.getName()).callbackData("businessId:"+String.valueOf(business.getBusinessId())).build());
-//        }
-//        //判断用户是否管理员
-//        Long tgId = message.getFrom().getId();
-//        LambdaQueryWrapper<User> UserWrapper = new LambdaQueryWrapper<>();
-//        UserWrapper.eq(User::getTgId,tgId);
-//        User user = userMapper.selectOne(UserWrapper);
-//
-//        if(user == null){
-//            user = new User();
-//            user.setTgId(tgId);
-//            user.setTgName(message.getFrom().getLastName()+message.getFrom().getFirstName());
-//            userMapper.insert(user);
-//        }else {
-//            if(user.getIsAdmin()){
-//                buttonList.add(InlineKeyboardButton.builder().text("添加业务").callbackData("adminAddBusiness").build());
-//            }
-//        }
-//
-//
-//
-//        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 5);
-//
-//
-//        InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
-//
-//        return inlineKeyboardMarkup;
-//    }
-
     @Override
     public void execute(BotServiceImpl bot, Message message) {
 //        InlineKeyboardMarkup inlineKeyboardButton = createInlineKeyboardButton(message);

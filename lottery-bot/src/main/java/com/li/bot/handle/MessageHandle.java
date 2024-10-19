@@ -52,7 +52,7 @@ public class MessageHandle {
             messageFactory.getMessage("adminExchange").execute(bot,message);
             return;
         }
-        if((message.getChat().getType().equals("group") || message.getChat().getType().equals("supergroup")) &&message.getText().startsWith("gift")){
+        if((message.getText().startsWith("gift"))){
             messageFactory.getMessage("GroupAdminLotteryMessage").execute(bot,message);
             return;
         }

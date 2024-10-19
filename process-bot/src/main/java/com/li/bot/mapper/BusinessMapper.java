@@ -3,6 +3,7 @@ package com.li.bot.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.li.bot.entity.database.Business;
 import com.li.bot.entity.database.User;
+import com.li.bot.entity.database.vo.BusinessListVo;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -24,6 +25,9 @@ public interface BusinessMapper extends BaseMapper<Business> {
             "</foreach>" +
             "</script>")
     List<Business> selectAllBusiness(@Param("ids")List<Long> ids);
+
+    List<BusinessListVo> selectBusinessList();
+
 
 
 }

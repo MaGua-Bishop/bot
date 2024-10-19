@@ -36,7 +36,6 @@ public class SelectBusinessTypeCallbackImpl implements ICallback {
     private UserMapper userMapper ;
 
     private InlineKeyboardMarkup createInlineKeyboardButton(Long tgId,Integer type){
-
         //查出全部业务只要名称和主键
         LambdaQueryWrapper<Business> wrapper = new LambdaQueryWrapper<>();
         wrapper.select(Business::getBusinessId,Business::getName,Business::getIsShelving);
@@ -48,9 +47,9 @@ public class SelectBusinessTypeCallbackImpl implements ICallback {
         if(user != null && user.getIsAdmin() ){
             for (Business business : businesses) {
                 if(business.getIsShelving()){
-                    buttonList.add(InlineKeyboardButton.builder().text(business.getName()+"("+"上架中"+")").callbackData("businessId:"+String.valueOf(business.getBusinessId())).build());
+                    buttonList.add(InlineKeyboardButton.builder().text("("+"上架中"+")"+business.getName()).callbackData("businessId:"+String.valueOf(business.getBusinessId())).build());
                 }else {
-                    buttonList.add(InlineKeyboardButton.builder().text(business.getName()+"("+"下架中"+")").callbackData("businessId:"+String.valueOf(business.getBusinessId())).build());
+                    buttonList.add(InlineKeyboardButton.builder().text("("+"下架中"+")"+business.getName()).callbackData("businessId:"+String.valueOf(business.getBusinessId())).build());
                 }
             }
         }else {
