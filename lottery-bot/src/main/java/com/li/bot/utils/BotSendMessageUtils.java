@@ -19,38 +19,36 @@ import static java.math.BigDecimal.ZERO;
 public class BotSendMessageUtils {
 
     public static String createLotteryMessage(BigDecimal amount,Integer number,String uuid){
-        return "\uD83C\uDF81Start Lottery\uD83C\uDF81\n" +
-                "\n\uD83C\uDF81<b>Amount:"+ amount + "</b>\n" +
-                "\uD83C\uDF81<b>Number:"+ number + "</b>\n\n"+
-                "\uD83D\uDCCC<b>Lottery ID:</b>\n" +
-                "<code>"+uuid+"</code>\n" +
-                "\uD83D\uDC47Click button Lottery";
-    }
-
-    private static String getChatInfo(long userId, BotServiceImpl bot) {
-        GetChat getChat = new GetChat();
-        getChat.setChatId(String.valueOf(userId));
-
-        try {
-            Chat execute = bot.execute(getChat);
-            return execute.getUserName();
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-            return null;
-        }
+        return "\uD83C\uDF89 The 77NG Lottery Has Begun! \uD83C\uDF89\n" +
+                "Click below to enter the draw and claim your cash prize! \uD83D\uDCB0\n" +
+                "\n" +
+                "Don’t miss out—join now for your chance to win big!\n" +
+                "\n" +
+                "\uD83D\uDD14 Follow the Official 77NG Channel for Exclusive Rewards!\n" +
+                "Stay tuned for random giveaways and special bonuses—don’t miss out on these exciting perks! \uD83C\uDF81\n"+
+                "<code>"+uuid+"</code>";
     }
 
     public static String adminQueryMessage(Lottery lottery, List<LotteryInfo> lotteryInfoList,BigDecimal bigDecimal,BotServiceImpl bot){
         StringBuilder str = new StringBuilder();
-        str.append("description:winningnumber\tuserid\tusername\tmoney\tstate\n\n");
+        str.append("description:rankings\tmoney\tusername\n\n");
         int i = 1 ;
+        String code = "\uD83E\uDDE7";
         if(lotteryInfoList.isEmpty()){
             str.append("nobody\n");
         }else {
             for (LotteryInfo lotteryInfo : lotteryInfoList) {
-                String url = "<a href=\"tg://user?id="+lotteryInfo.getTgId()+"\">"+getChatInfo(lotteryInfo.getTgId(),bot)+"</a>" ;
-                String string = lotteryInfo.getStatus() == 0 ? "no" : "yes";
-                String t = i+".<code>"+lotteryInfo.getLotteryInfoId() + "</code>\t<b>" + lotteryInfo.getTgId() + "</b>\t" +url+ "\t<b>" + lotteryInfo.getMoney() + "</b>\t<b>"+string+"</b>\n\n";
+                if(i == 1){
+                    code = "🥇";
+                }else if(i == 2){
+                    code = "🥈";
+                }else if(i == 3){
+                    code = "🥉";
+                }else {
+                    code = "\uD83E\uDDE7";
+                }
+                String url = "<a href=\"tg://user?id="+lotteryInfo.getTgId()+"\">"+lotteryInfo.getTgName()+"</a>" ;
+                String t = code+"\t" +lotteryInfo.getMoney()+ "\t<b>" + url + "</b>\n";
                 str.append(t);
                 i++ ;
             }

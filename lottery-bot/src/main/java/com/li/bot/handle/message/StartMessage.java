@@ -115,6 +115,7 @@ public class StartMessage implements IMessage{
             lotteryInfo.setTgId(user.getTgId());
             String uuid = IdUtil.randomUUID();
             lotteryInfo.setStatus(-1);
+            lotteryInfo.setTgName(user.getTgName());
             lotteryInfo.setLotteryInfoId(uuid);
             lotteryInfoMapper.insert(lotteryInfo);
             bot.execute(SendMessage.builder().chatId(message.getChatId()).text("unfortunately, you did not win the prize").build());
@@ -154,6 +155,7 @@ public class StartMessage implements IMessage{
             lotteryInfo.setLotteryId(lotteryId);
             lotteryInfo.setTgId(user.getTgId());
             String uuid = IdUtil.randomUUID();
+            lotteryInfo.setTgName(user.getTgName());
             lotteryInfo.setStatus(-1);
             lotteryInfo.setLotteryInfoId(uuid);
             lotteryInfoMapper.insert(lotteryInfo);
@@ -166,6 +168,7 @@ public class StartMessage implements IMessage{
         lotteryInfo.setTgId(user.getTgId());
         lotteryInfo.setPrizePoolId(prizePool.getPrizePoolId());
         lotteryInfo.setMoney(prizePool.getMoney());
+        lotteryInfo.setTgName(user.getTgName());
         String uuid = IdUtil.randomUUID();
         lotteryInfo.setLotteryInfoId(uuid);
         int index = lotteryInfoMapper.insert(lotteryInfo);
@@ -178,7 +181,7 @@ public class StartMessage implements IMessage{
 
             String str = "Congratulations, you've won! \uD83C\uDF89\n" +
                     "Please contact our online customer service and send your lottery ID to claim your reward.\nCustomer service link: "+chatUrl;
-            SendMessage message1 = SendMessage.builder().chatId(message.getChatId()).text(str).parseMode("html").build();
+            SendMessage message1 = SendMessage.builder().chatId(message.getChatId()).text(str).parseMode("html").disableWebPagePreview(true).build();
             bot.execute(message1);
         }
 

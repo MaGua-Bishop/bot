@@ -25,6 +25,8 @@ public class LotteryInfo {
     private String prizePoolId;
     @TableField("tg_id")
     private Long tgId;
+    @TableField("tg_name")
+    private String tgName;
     @TableField("money")
     private BigDecimal money ;
     @TableField("status")

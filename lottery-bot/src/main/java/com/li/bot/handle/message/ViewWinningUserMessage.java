@@ -99,6 +99,7 @@ public class ViewWinningUserMessage implements IMessage{
                 if(!lotteryInfoList.isEmpty()){
                     bigDecimal = lotteryInfoList.stream().map(LotteryInfo::getMoney).reduce(BigDecimal::add).get();
                 }
+                lotteryInfoList.sort((o1, o2) -> o2.getMoney().compareTo(o1.getMoney()));
                 totalMoney = totalMoney.subtract(bigDecimal);
                 SendMessage sendMessage = SendMessage.builder().chatId(message.getChatId()).text(BotSendMessageUtils.adminQueryMessage(lottery, lotteryInfoList, totalMoney, bot)).parseMode("html").build();
                 try {
