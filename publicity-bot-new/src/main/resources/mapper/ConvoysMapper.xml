@@ -19,6 +19,7 @@
         FROM tg_convoys c
         LEFT JOIN tg_convoys_invite i ON c.convoys_id = i.convoys_id
         GROUP BY c.convoys_id
+        ORDER BY c.subscription DESC,c.name ASC
     </select>
 
 
