@@ -48,7 +48,6 @@ public class BotServiceImpl extends TelegramWebhookBot {
 
 
     public BotServiceImpl(BotConfig botConfig) {
-        super(botConfig.getDefaultBotOptions());
         this.botConfig = botConfig;
     }
 

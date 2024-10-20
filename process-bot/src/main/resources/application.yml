@@ -6,9 +6,9 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://5.45.72.79:5400/process_bot?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Shanghai
-    username: user_HHC7zR
-    password: password_PpfikBkasdwqkcoq
+    url: jdbc:postgresql://${DATABASE_BOT_HOST}:${DATABASE_BOT_PORT}/process_bot?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+    username: ${DATABASE_BOT_USERNAME}
+    password: ${DATABASE_BOT_PASSWORD}
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/*.xml
@@ -18,13 +18,11 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 bot:
-#  botname: t.me/cha_info_china_bot # 机器人名称
-#  token: 7478207741:AAHhv4pJ6oYnzThPGb_ZRk3BqENxcXk3hAQ # token
-  botname: t.me/lidemobot # 机器人名称
-  token: 8030696965:AAFY6eZti5yIg7J0p-mXIHSH9fLsmrvHBFE # token
+  botname: t.me/cha_info_china_bot # 机器人名称
+  token: 7478207741:AAHhv4pJ6oYnzThPGb_ZRk3BqENxcXk3hAQ # token
   host: 127.0.0.1 #ip
   port: 7890    #端口
 #  ${SERVER_HOST}
-  url: https://d87a-111-55-96-176.ngrok-free.app/tgbot/process_bot #ngrok地址
+  url: ${SERVER_HOST}/tgbot/process_bot #ngrok地址
   groupFile: workgroup.json
   channelFile: channel.json
