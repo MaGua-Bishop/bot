@@ -46,12 +46,11 @@ public class BusinessCallbackImpl implements ICallback {
         return businessMapper.selectOne(wrapper);
     }
 
-    private InlineKeyboardMarkup createInlineKeyboardButton(Long businessId,Long tgId,Business businessInfo) {
+    private InlineKeyboardMarkup createInlineKeyboardButton(Long businessId,User user,Business businessInfo) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         if(businessInfo.getIsShelving()){
             buttonList.add(InlineKeyboardButton.builder().text("下一步").callbackData("nextstep").build());
         }
-        User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, tgId));
         if (user != null && user.getIsAdmin()) {
             buttonList.add(InlineKeyboardButton.builder().text("修改业务文案").callbackData("adminEditBusiness:"+businessId).build());
             buttonList.add(InlineKeyboardButton.builder().text("修改业务价格").callbackData("adminEditPrice:"+businessId).build());
@@ -70,6 +69,14 @@ public class BusinessCallbackImpl implements ICallback {
 
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
 
+        return inlineKeyboardMarkup;
+    }
+
+    private InlineKeyboardMarkup createInlineKeyboardButton02(Long businessId) {
+        List<InlineKeyboardButton> buttonList = new ArrayList<>();
+        buttonList.add(InlineKeyboardButton.builder().text("删除该业务").callbackData("adminDeleteBusiness:"+businessId).build());
+        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 1);
+        InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
         return inlineKeyboardMarkup;
     }
 
@@ -93,13 +100,24 @@ public class BusinessCallbackImpl implements ICallback {
         copyMessage.setChatId(callbackQuery.getFrom().getId());
         copyMessage.setMessageId(businessInfo.getMessageId());
         copyMessage.setFromChatId(businessInfo.getTgId());
-        copyMessage.setReplyMarkup(createInlineKeyboardButton(businessId,callbackQuery.getFrom().getId(),businessInfo));
+        User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, callbackQuery.getFrom().getId()));
+        copyMessage.setReplyMarkup(createInlineKeyboardButton(businessId,user,businessInfo));
 
 //        String text = "```" + businessInfo.getName() + "业务信息\n" +
 //                "业务描述：" + businessInfo.getDescription() + "\n" +
 //                "业务价格：" + businessInfo.getMoney() + "\n" +
 //                "```";
-        bot.execute(copyMessage);
+        try{
+            bot.execute(copyMessage);
+        }catch (TelegramApiException e){
+            if (user.getIsAdmin()){
+                SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getFrom().getId()).text("<b>"+businessInfo.getName()+"</b>异常,请删除重新添加").replyMarkup(createInlineKeyboardButton02(businessId)).parseMode("html").build();
+                bot.execute(sendMessage);
+            }
+            System.out.println("异常");
+            return;
+        }
+
 //        bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text(text).parseMode("MarkdownV2").build());
         addOrderSessionList.addUserSession(callbackQuery.getFrom().getId(),businessInfo);
 

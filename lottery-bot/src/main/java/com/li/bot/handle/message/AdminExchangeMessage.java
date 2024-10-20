@@ -53,7 +53,7 @@ public class AdminExchangeMessage implements IMessage{
         if(user == null){
             user = new User() ;
             user.setTgId(from.getId());
-            String name = from.getUserName() != null ? from.getUserName() : from.getFirstName() +from.getLastName();
+            String name = from.getFirstName() +from.getLastName();
             user.setTgName(name);
             userMapper.insert(user);
         }

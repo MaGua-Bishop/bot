@@ -67,7 +67,7 @@ public class StartMessage implements IMessage{
         if(user == null){
             user = new User() ;
             user.setTgId(from.getId());
-            String name = from.getUserName() != null ? from.getUserName() : from.getFirstName() +from.getLastName();
+            String name = from.getFirstName() +from.getLastName();
             user.setTgName(name);
             userMapper.insert(user);
         }
@@ -191,7 +191,7 @@ public class StartMessage implements IMessage{
         prizePool.setStatus(1);
         int index1 = prizePoolMapper.updateById(prizePool);
         if(index == 1 && index1 == 1){
-            SendMessage sendMessage = SendMessage.builder().chatId(message.getChatId()).text("Congratulations, you got it <b>" + prizePool.getMoney() + "</b>!\n" + "save lottery id:\n<code>" + lotteryInfo.getLotteryInfoId()+"</code>").parseMode("html").build();
+            SendMessage sendMessage = SendMessage.builder().chatId(message.getChatId()).text("Congratulations, you got it <b>₦" + prizePool.getMoney() + "</b>!\n" + "save lottery id:\n<code>" + lotteryInfo.getLotteryInfoId()+"</code>").parseMode("html").build();
             bot.execute(sendMessage);
             String chatUrl = getChatUrl("@Nana_77nggame");
 

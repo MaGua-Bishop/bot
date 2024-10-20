@@ -69,7 +69,7 @@ public class GroupAdminLotteryMessage implements IMessage {
             user = new User();
             org.telegram.telegrambots.meta.api.objects.User from = message.getFrom();
             user.setTgId(from.getId());
-            String name = from.getUserName() != null ? from.getUserName() : from.getFirstName() + from.getLastName();
+            String name = from.getFirstName() + from.getLastName();
             user.setTgName(name);
             userMapper.insert(user);
             return;

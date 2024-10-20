@@ -31,11 +31,10 @@ public class BotSendMessageUtils {
 
     public static String adminQueryMessage(Lottery lottery, List<LotteryInfo> lotteryInfoList,BigDecimal bigDecimal,BotServiceImpl bot){
         StringBuilder str = new StringBuilder();
-        str.append("description:rankings\tmoney\tusername\n\n");
         int i = 1 ;
         String code = "\uD83E\uDDE7";
         if(lotteryInfoList.isEmpty()){
-            str.append("nobody\n");
+            str.append("no one's involved yet\n");
         }else {
             for (LotteryInfo lotteryInfo : lotteryInfoList) {
                 if(i == 1){
@@ -48,24 +47,29 @@ public class BotSendMessageUtils {
                     code = "\uD83E\uDDE7";
                 }
                 String url = "<a href=\"tg://user?id="+lotteryInfo.getTgId()+"\">"+lotteryInfo.getTgName()+"</a>" ;
-                String t = code+"\t" +lotteryInfo.getMoney()+ "\t<b>" + url + "</b>\n";
+                String t = code+"\t₦" +lotteryInfo.getMoney()+ "\t<b>" + url + "</b>\n";
                 str.append(t);
                 i++ ;
             }
         }
-        String money = "";
-        if(bigDecimal.compareTo(ZERO)==0){
-            money = "Draw Ended";
-        }else {
-            money =  "remaining:<b>"+bigDecimal+"</b>";
-        }
-
-        return "\uD83C\uDF81"+lottery.getLotteryId()+"\uD83C\uDF81\n" +
-                "\n\uD83C\uDF81<b>Amount:"+ lottery.getMoney() + "</b>\n" +
-                "\uD83C\uDF81<b>Number:"+ lottery.getNumber() + "</b>\n\n"+
-                "\uD83D\uDCCC<b>Winning user:</b>\n"+
-                str+"\n"+money;
-
+        return "Thank you all for your enthusiastic participation in this event! After an exciting draw, we are pleased to announce the list of lucky winners below. Winners, please take note:\n" +
+                "\n" +
+                "Contact our online customer service within the designated time to claim your prize.\n" +
+                "Provide the required verification, and your winnings will be credited to your account promptly.\n" +
+                "If you have any questions, feel free to reach out to our customer service team.\n" +
+                "Once again, thank you for your participation! We will be hosting more exciting events in the future, and we look forward to your continued support and involvement!\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "\uD83C\uDF81"+lottery.getLotteryId()+"\uD83C\uDF81\n" +
+                "\n" +
+                "\uD83C\uDF81Amount:"+lottery.getMoney()+"\n" +
+                "\uD83C\uDF81Number:"+lottery.getNumber()+"\n" +
+                "\n" +
+                "\uD83D\uDCCCWinning user:\n" +
+                "description:rankings money username\n" +
+                "\n" +
+                str;
     }
 
 }
