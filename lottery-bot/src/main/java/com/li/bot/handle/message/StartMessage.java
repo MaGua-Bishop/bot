@@ -14,6 +14,7 @@ import com.li.bot.mapper.PrizePoolMapper;
 import com.li.bot.mapper.UserMapper;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.service.impl.PrizePoolService;
+import com.li.bot.utils.UserStartKeyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChat;
@@ -22,7 +23,10 @@ import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageRe
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.math.BigDecimal;
@@ -58,16 +62,6 @@ public class StartMessage implements IMessage{
     public String getMessageName() {
         return "start";
     }
-
-    private InlineKeyboardMarkup createInlineKeyboardButton(){
-        List<InlineKeyboardButton> buttonList = new ArrayList<>();
-        buttonList.add(InlineKeyboardButton.builder().text("ended").callbackData("null").build());
-
-        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
-        InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
-        return inlineKeyboardMarkup;
-    }
-
     private User getUser(org.telegram.telegrambots.meta.api.objects.User from){
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, from.getId()));
         if(user == null){
@@ -91,6 +85,28 @@ public class StartMessage implements IMessage{
         String text = message.getText();
         if(text.equals("/start")){
             getUser(message.getFrom());
+
+            List<String> userStartKey = UserStartKeyUtils.userStartKeyList;
+            List<KeyboardButton> keyList = new ArrayList<>();
+            userStartKey.forEach(key -> {
+                KeyboardButton button = KeyboardButton.builder().text(key).build();
+                keyList.add(button);
+            });
+            List<List<KeyboardButton>> partition = Lists.partition(keyList, 2);
+
+            List<KeyboardRow> keyboardRows = new ArrayList<>();
+            partition.forEach(p -> {
+                KeyboardRow row = new KeyboardRow(p);
+                keyboardRows.add(row);
+            });
+            ReplyKeyboardMarkup replyKeyboardMarkup = ReplyKeyboardMarkup.builder().keyboard(keyboardRows).build();
+            replyKeyboardMarkup.setResizeKeyboard(true);
+            SendMessage executeMessage = SendMessage.builder().replyMarkup(replyKeyboardMarkup).text("hello").chatId(message.getChatId().toString()).build();
+            try {
+                bot.execute(executeMessage);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
             return;
         }
         String lotteryId = text.replace("/start ","");

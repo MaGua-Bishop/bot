@@ -2,10 +2,15 @@ package com.li.bot.handle;
 
 import com.li.bot.handle.message.IMessage;
 import com.li.bot.handle.message.MessageFactory;
+import com.li.bot.meun.BotMenuFactory;
+import com.li.bot.meun.IBotMenu;
 import com.li.bot.service.impl.BotServiceImpl;
+import com.li.bot.utils.UserStartKeyUtils;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.MessageEntity;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+
+import java.util.Objects;
 
 /**
  * @Author: li
@@ -21,16 +26,28 @@ public class MessageHandle {
 
     private MessageFactory messageFactory ;
 
-    public MessageHandle( BotServiceImpl bot, Message message, MessageFactory messageFactory) {
+    private BotMenuFactory botMenuFactory ;
+
+    public MessageHandle( BotServiceImpl bot, Message message, MessageFactory messageFactory, BotMenuFactory botMenuFactory) {
         this.bot = bot;
         this.message = message;
         this.messageFactory = messageFactory;
+        this.botMenuFactory = botMenuFactory;
     }
 
     public void handle() throws TelegramApiException {
         String text = message.getText();
         System.out.println("用户输入的:"+text);
-//        IMessage m = messageFactory.getMessage(text);
+        String type = message.getChat().getType();
+        if (type.equals("private")) {
+            if(UserStartKeyUtils.userStartKeyList.contains(message.getText())){
+                IBotMenu menu = botMenuFactory.getMenu(message.getText());
+                if (Objects.nonNull(menu)) {
+                    menu.execute(bot, message);
+                    return;
+                }
+            }
+        }
         if(text.startsWith("/start")&& message.getChat().getType().equals("private")){
             messageFactory.getMessage("start").execute(bot,message);
             return;

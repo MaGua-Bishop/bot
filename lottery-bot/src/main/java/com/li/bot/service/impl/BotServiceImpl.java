@@ -6,6 +6,7 @@ import com.li.bot.handle.CallbackQueryHandle;
 import com.li.bot.handle.MessageHandle;
 import com.li.bot.handle.callback.CallbackFactory;
 import com.li.bot.handle.message.MessageFactory;
+import com.li.bot.meun.BotMenuFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
@@ -29,7 +30,6 @@ public class BotServiceImpl extends TelegramWebhookBot {
 
 
     public BotServiceImpl(BotConfig botConfig) {
-        super(botConfig.getDefaultBotOptions());
         this.botConfig = botConfig;
     }
 
@@ -87,7 +87,8 @@ public class BotServiceImpl extends TelegramWebhookBot {
     @Autowired
     private MessageFactory messageFactory ;
 
-
+    @Autowired
+    private BotMenuFactory botMenuFactory ;
 
 
     @Override
@@ -95,7 +96,7 @@ public class BotServiceImpl extends TelegramWebhookBot {
         if (update.hasMessage()) {
             if (update.getMessage().hasText()) {
                 try {
-                    new MessageHandle(this, update.getMessage(), messageFactory).handle();
+                    new MessageHandle(this, update.getMessage(), messageFactory,botMenuFactory).handle();
                 } catch (TelegramApiException e) {
                     throw new RuntimeException(e);
                 }
