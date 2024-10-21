@@ -1,0 +1,26 @@
+server:
+  port: 8004
+
+# 数据源配置
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://${DATABASE_BOT_HOST}:${DATABASE_BOT_PORT}/lottery_bot?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+    username: ${DATABASE_BOT_USERNAME}
+    password: ${DATABASE_BOT_PASSWORD}
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/*.xml
+  type-aliases-package: com.li.bot.entity.database
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+bot:
+  botname: t.me/Official77NGbot # 机器人名称
+  token: 8020476004:AAG69VRgGACulx5Y6nemof_3lqj595YYAsQ # token
+  host: 127.0.0.1 #ip
+  port: 7890    #端口
+#  ${SERVER_HOST}
+  url: ${SERVER_HOST}/tgbot/lottery_bot #ngrok地址]

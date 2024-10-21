@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.li.bot.mapper.PrizePoolMapper">
+
+    <insert id="batchSavePrizePool" parameterType="java.util.List">
+        INSERT INTO tg_prize_pool(prize_pool_id, lottery_id, money)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.prizePoolId},#{item.lotteryId},#{item.money})
+        </foreach>
+    </insert>
+
+
+</mapper>
