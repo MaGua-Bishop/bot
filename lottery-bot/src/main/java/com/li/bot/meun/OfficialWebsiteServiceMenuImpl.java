@@ -14,7 +14,7 @@ public class OfficialWebsiteServiceMenuImpl implements IBotMenu{
 
     @Override
     public String getMenuName() {
-        return "77NG网址/Official website";
+        return "Official website";
     }
 
 
@@ -22,7 +22,8 @@ public class OfficialWebsiteServiceMenuImpl implements IBotMenu{
     public void execute(BotServiceImpl bot, Message message) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId());
-        sendMessage.setText("click:<a  href=\"https://77ng.com\">Official website</a>");
+        sendMessage.setText("<a  href=\"https://77ng.com\">77ng.com</a>");
+        sendMessage.setDisableWebPagePreview(true);
         sendMessage.setParseMode("html");
         try {
             bot.execute(sendMessage);

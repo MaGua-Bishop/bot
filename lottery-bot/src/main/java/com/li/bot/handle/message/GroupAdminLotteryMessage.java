@@ -53,17 +53,34 @@ public class GroupAdminLotteryMessage implements IMessage {
     private InlineKeyboardMarkup createInlineKeyboardButton(String uid) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         buttonList.add(InlineKeyboardButton.builder().text("click lottery").url("https://" + botConfig.getBotname() + "?start=" + uid.toString()).build());
+        buttonList.add(InlineKeyboardButton.builder().text("Online service").url("https://t.me/NANA_77NGGAME").build());
+        buttonList.add(InlineKeyboardButton.builder().text("Official website").url("77ng.com").build());
+        buttonList.add(InlineKeyboardButton.builder().text("77NG Official channel").url("https://t.me/vip78NG").build());
+        buttonList.add(InlineKeyboardButton.builder().text("Facebook").url("https://www.facebook.com/profile.php?id=61566528757173").build());
+        buttonList.add(InlineKeyboardButton.builder().text("Instagram").url("https://www.instagram.com/77ngofficial1/").build());
+        List<InlineKeyboardButton> firstRow = new ArrayList<>();
+        firstRow.add(buttonList.get(0));
 
-        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
-        InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
-        return inlineKeyboardMarkup;
+        // 将剩余的按钮按每两个一组分组
+        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+        rowList.add(firstRow); // 添加第一个按钮所在的行
+
+        for (int i = 1; i < buttonList.size(); i += 2) {
+            List<InlineKeyboardButton> row = new ArrayList<>();
+            row.add(buttonList.get(i));
+            if (i + 1 < buttonList.size()) {
+                row.add(buttonList.get(i + 1));
+            }
+            rowList.add(row);
+        }
+        return InlineKeyboardMarkup.builder().keyboard(rowList).build();
     }
 
 
     @Override
     public void execute(BotServiceImpl bot, Message message) throws TelegramApiException {
         String text = message.getText();
-        System.out.println("用户输入的:" + text);
+        System.out.println(message.getFrom().getFirstName()+message.getFrom().getLastName()+"输入的:" + text);
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, message.getFrom().getId()));
         if(user == null){
             user = new User();
@@ -101,7 +118,7 @@ public class GroupAdminLotteryMessage implements IMessage {
                 int index = lotteryMapper.insert(lottery);
                 if (index == 1) {
                     prizePoolService.add(uuid, money, count);
-                    Message execute = bot.execute(SendMessage.builder().chatId(message.getChatId()).text(BotSendMessageUtils.createLotteryMessage(money, count, uuid)).parseMode("html").replyMarkup(createInlineKeyboardButton(lottery.getLotteryId())).build());
+                    Message execute = bot.execute(SendMessage.builder().chatId(message.getChatId()).text(BotSendMessageUtils.createLotteryMessage(money, count, uuid)).parseMode("html").disableWebPagePreview(true).replyMarkup(createInlineKeyboardButton(lottery.getLotteryId())).build());
                     Integer messageId = execute.getMessageId();
                     lottery.setMessageId(Long.valueOf(messageId));
                     lotteryMapper.updateById(lottery);

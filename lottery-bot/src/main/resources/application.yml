@@ -22,4 +22,5 @@ bot:
   token: 8020476004:AAG69VRgGACulx5Y6nemof_3lqj595YYAsQ # token
   host: 127.0.0.1 #ip
   port: 7890    #端口
+#  ${SERVER_HOST}
   url: ${SERVER_HOST}/tgbot/lottery_bot #ngrok地址]

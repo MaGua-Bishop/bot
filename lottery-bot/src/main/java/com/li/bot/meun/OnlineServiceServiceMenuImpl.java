@@ -8,6 +8,9 @@ import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @Author: li
  * @CreateTime: 2024-09-30
@@ -17,7 +20,7 @@ public class OnlineServiceServiceMenuImpl implements IBotMenu{
 
     @Override
     public String getMenuName() {
-        return "在线客服/Online service";
+        return "Online service";
     }
 
     private String getUrlByUserName(String userName){
@@ -25,13 +28,24 @@ public class OnlineServiceServiceMenuImpl implements IBotMenu{
         return "https://t.me/"+userName;
     }
 
+    private String randomList(){
+        List<String> list = new ArrayList();
+        list.add("https://t.me/Emma77ng");
+        list.add("https://t.me/Smith77NG");
+        list.add("https://t.me/Jasmine77ng");
+        list.add("https://t.me/Kylie77ng");
+        //随机返回一个
+        return list.get((int)(Math.random()*list.size()));
+    }
+
 
     @Override
     public void execute(BotServiceImpl bot, Message message) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId());
-        String name = "@NANA_77NGGAME";
-        sendMessage.setText("click:<a  href=\""+getUrlByUserName(name)+"\">"+name+"</a>");
+        String url = randomList();
+        String name ="@"+ url.substring(url.lastIndexOf("/")+1);
+        sendMessage.setText("<a  href=\""+url+"\">"+name+"</a>");
         sendMessage.setParseMode("html");
         try {
             bot.execute(sendMessage);

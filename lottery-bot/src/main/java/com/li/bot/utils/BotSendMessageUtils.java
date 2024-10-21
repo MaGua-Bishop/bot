@@ -46,8 +46,7 @@ public class BotSendMessageUtils {
                 }else {
                     code = "\uD83E\uDDE7";
                 }
-                String url = "<a href=\"tg://user?id="+lotteryInfo.getTgId()+"\">"+lotteryInfo.getTgName()+"</a>" ;
-                String t = code+"\t₦" +lotteryInfo.getMoney()+ "\t<b>" + url + "</b>\n";
+                String t = code+"\t₦" +lotteryInfo.getMoney()+ "\t<b>" + lotteryInfo.getTgName() + "</b>\n";
                 str.append(t);
                 i++ ;
             }
@@ -62,9 +61,6 @@ public class BotSendMessageUtils {
                 "\n" +
                 "\n" +
                 "\uD83C\uDF81"+lottery.getLotteryId()+"\uD83C\uDF81\n" +
-                "\n" +
-                "\uD83C\uDF81Amount:"+lottery.getMoney()+"\n" +
-                "\uD83C\uDF81Number:"+lottery.getNumber()+"\n" +
                 "\n" +
                 "\uD83D\uDCCCWinning user:\n" +
                 "description:rankings money username\n" +

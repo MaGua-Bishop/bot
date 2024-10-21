@@ -14,7 +14,7 @@ public class OfficialChannelServiceMenuImpl implements IBotMenu{
 
     @Override
     public String getMenuName() {
-        return "77NG Official channel";
+        return "Official channel";
     }
 
 
@@ -22,7 +22,8 @@ public class OfficialChannelServiceMenuImpl implements IBotMenu{
     public void execute(BotServiceImpl bot, Message message) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId());
-        sendMessage.setText("click:<a  href=\"https://t.me/vip78NG\">Official channel</a>");
+        sendMessage.setText("<a  href=\"https://t.me/vip78NG\">https://t.me/vip78NG</a>");
+        sendMessage.setDisableWebPagePreview(true);
         sendMessage.setParseMode("html");
         try {
             bot.execute(sendMessage);

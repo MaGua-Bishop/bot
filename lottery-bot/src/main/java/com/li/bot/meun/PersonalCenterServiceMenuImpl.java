@@ -17,7 +17,7 @@ public class PersonalCenterServiceMenuImpl implements IBotMenu{
 
     @Override
     public String getMenuName() {
-        return "个人中心/Personal Center";
+        return "Personal Center";
     }
 
 
@@ -30,7 +30,7 @@ public class PersonalCenterServiceMenuImpl implements IBotMenu{
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId());
         String balancePoints = "0";
-        sendMessage.setText("用户名:<a href=\"tg://user?id="+id+"\">"+username+"</a>\nID:<code>"+id+"</code>\n余额积分:"+balancePoints+"");
+        sendMessage.setText("Personal Center\nusername:<a href=\"tg://user?id="+id+"\">"+username+"</a>\nID:<code>"+id+"</code>\nBalance:"+balancePoints+"");
         sendMessage.setParseMode("html");
         try {
             bot.execute(sendMessage);

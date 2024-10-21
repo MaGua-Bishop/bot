@@ -12,10 +12,10 @@ public class UserStartKeyUtils {
     public static List<String> userStartKeyList= new ArrayList();
 
     static {
-        userStartKeyList.add("个人中心/Personal Center");
-        userStartKeyList.add("在线客服/Online service");
-        userStartKeyList.add("77NG网址/Official website");
-        userStartKeyList.add("77NG Official channel");
+        userStartKeyList.add("Personal Center");
+        userStartKeyList.add("Online service");
+        userStartKeyList.add("Official website");
+        userStartKeyList.add("Official channel");
     }
 
 }
