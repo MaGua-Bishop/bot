@@ -80,7 +80,6 @@ public class GroupAdminLotteryMessage implements IMessage {
     @Override
     public void execute(BotServiceImpl bot, Message message) throws TelegramApiException {
         String text = message.getText();
-        System.out.println(message.getFrom().getFirstName()+message.getFrom().getLastName()+"输入的:" + text);
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, message.getFrom().getId()));
         if(user == null){
             user = new User();
@@ -88,6 +87,7 @@ public class GroupAdminLotteryMessage implements IMessage {
             user.setTgId(from.getId());
             String name = from.getFirstName() + from.getLastName();
             user.setTgName(name);
+            user.setTgUserName(from.getUserName());
             userMapper.insert(user);
             return;
         }
@@ -103,7 +103,7 @@ public class GroupAdminLotteryMessage implements IMessage {
                 BigDecimal money = new BigDecimal(matcher.group(1));
                 int count = Integer.parseInt(matcher.group(2));
                 if (count <= 0 || money.compareTo(BigDecimal.ZERO) <= 0) {
-                    bot.execute(SendMessage.builder().chatId(message.getChatId()).text("incorrect amount input or Incorrect number input error").build());
+                    bot.execute(SendMessage.builder().chatId(message.getChatId()).text("金额输入错误或数字输入错误").build());
                     return;
                 }
                 // 插入数据库
@@ -123,13 +123,13 @@ public class GroupAdminLotteryMessage implements IMessage {
                     lottery.setMessageId(Long.valueOf(messageId));
                     lotteryMapper.updateById(lottery);
                 } else {
-                    bot.execute(SendMessage.builder().chatId(message.getChatId()).text("create lottery failed please recreate").build());
+                    bot.execute(SendMessage.builder().chatId(message.getChatId()).text("创建抽奖失败，请重新创建").build());
                 }
             } catch (NumberFormatException e) {
-                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("incorrect amount input").build());
+                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("输入的金额不正确").build());
             }
         } else {
-            bot.execute(SendMessage.builder().chatId(message.getChatId()).text("incorrect input format\nformat:CreateLuckyDraw amount number").parseMode("html").build());
+            bot.execute(SendMessage.builder().chatId(message.getChatId()).text("输入格式不正确\n格式:gift 金额 个数").parseMode("html").build());
         }
 
     }

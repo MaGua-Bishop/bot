@@ -129,7 +129,7 @@ public class GroupAdminLotteryMessage implements IMessage {
                 bot.execute(SendMessage.builder().chatId(message.getChatId()).text("incorrect amount input").build());
             }
         } else {
-            bot.execute(SendMessage.builder().chatId(message.getChatId()).text("incorrect input format\nformat:CreateLuckyDraw amount number").parseMode("html").build());
+            bot.execute(SendMessage.builder().chatId(message.getChatId()).text("incorrect input format\nformat:gift amount number").parseMode("html").build());
         }
 
     }

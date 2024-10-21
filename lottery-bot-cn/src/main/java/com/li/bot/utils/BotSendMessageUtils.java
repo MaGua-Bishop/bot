@@ -19,13 +19,13 @@ import static java.math.BigDecimal.ZERO;
 public class BotSendMessageUtils {
 
     public static String createLotteryMessage(BigDecimal amount,Integer number,String uuid){
-        return "\uD83C\uDF89 The 77NG Lottery Has Begun! \uD83C\uDF89\n" +
-                "Click below to enter the draw and claim your cash prize! \uD83D\uDCB0\n" +
+        return "\uD83C\uDF89 {name}抽奖开始了！ \uD83C\uDF89\n" +
+                "点击下面的链接参与抽奖并领取现金奖！\uD83D\uDCB0\n" +
                 "\n" +
-                "Don’t miss out—join now for your chance to win big!\n" +
+                "不要错过机会，现在就加入，赢取大奖！\n" +
                 "\n" +
-                "\uD83D\uDD14 Follow the Official 77NG Channel for Exclusive Rewards!\n" +
-                "Stay tuned for random giveaways and special bonuses—don’t miss out on these exciting perks! \uD83C\uDF81\n"+
+                "\uD83D\uDD14 关注{name}频道获取独家奖励!\n" +
+                "敬请关注随机赠品和特殊奖金-不要错过这些令人兴奋的福利! \uD83C\uDF81\n"+
                 "<code>"+uuid+"</code>";
     }
 
@@ -34,7 +34,7 @@ public class BotSendMessageUtils {
         int i = 1 ;
         String code = "\uD83E\uDDE7";
         if(lotteryInfoList.isEmpty()){
-            str.append("no one's involved yet\n");
+            str.append("还没有人参与\n");
         }else {
             for (LotteryInfo lotteryInfo : lotteryInfoList) {
                 if(i == 1){
@@ -51,19 +51,19 @@ public class BotSendMessageUtils {
                 i++ ;
             }
         }
-        return "Thank you all for your enthusiastic participation in this event! After an exciting draw, we are pleased to announce the list of lucky winners below. Winners, please take note:\n" +
+        return "感谢大家对本次活动的热情参与!在激动人心的抽奖之后，我们很高兴地宣布下面的幸运获奖者名单。获奖者，请注意:\n" +
                 "\n" +
-                "Contact our online customer service within the designated time to claim your prize.\n" +
-                "Provide the required verification, and your winnings will be credited to your account promptly.\n" +
-                "If you have any questions, feel free to reach out to our customer service team.\n" +
-                "Once again, thank you for your participation! We will be hosting more exciting events in the future, and we look forward to your continued support and involvement!\n" +
+                "在指定时间内联系我们的在线客户服务以领取您的奖品。\n" +
+                "提供所需的验证，您的奖金将立即记入您的帐户。\n" +
+                "如果您有任何问题，请随时联系我们的客户服务团队。\n" +
+                "再次感谢您的参与!我们将在未来举办更精彩的活动，我们期待您的继续支持和参与!\n" +
                 "\n" +
                 "\n" +
                 "\n" +
                 "\uD83C\uDF81"+lottery.getLotteryId()+"\uD83C\uDF81\n" +
                 "\n" +
-                "\uD83D\uDCCCWinning user:\n" +
-                "description:rankings money username\n" +
+                "\uD83D\uDCCC获奖用户:\n" +
+                "描述: 排名钱用户名\n" +
                 "\n" +
                 str;
     }

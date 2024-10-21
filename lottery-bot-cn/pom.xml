@@ -93,7 +93,7 @@
     </dependencyManagement>
 
     <build>
-        <finalName>lottery_bot</finalName>
+        <finalName>lottery_bot_cn</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -55,6 +55,7 @@ public class AdminExchangeMessage implements IMessage{
             user.setTgId(from.getId());
             String name = from.getFirstName() +from.getLastName();
             user.setTgName(name);
+            user.setTgUserName(from.getUserName());
             userMapper.insert(user);
         }
         return user;
@@ -94,7 +95,7 @@ public class AdminExchangeMessage implements IMessage{
             LotteryInfo lotteryInfo = lotteryInfoMapper.selectOne(new LambdaQueryWrapper<LotteryInfo>().eq(LotteryInfo::getLotteryInfoId, String.valueOf(uuid)));
             if(lotteryInfo == null){
                 try {
-                    bot.execute(SendMessage.builder().chatId(message.getChatId()).text("incorrect uid input error").build());
+                    bot.execute(SendMessage.builder().chatId(message.getChatId()).text("不正确的uid输入错误").build());
                 } catch (TelegramApiException e) {
                     throw new RuntimeException(e);
                 }
@@ -109,14 +110,14 @@ public class AdminExchangeMessage implements IMessage{
                     String t = "userid:"+lotteryInfo.getTgId()+"\n"+
                             "username:"+url+"\n"+
                             "money:<b>"+lotteryInfo.getMoney()+"</b>"+"\n\n"+
-                            "lucky draw successful";
+                            "抽奖成功";
                     bot.execute(SendMessage.builder().chatId(message.getChatId()).text(t).parseMode("html").build());
                 } catch (TelegramApiException e) {
                     throw new RuntimeException(e);
                 }
             }else {
                 try {
-                    bot.execute(SendMessage.builder().chatId(message.getChatId()).text("has been exchanged").build());
+                    bot.execute(SendMessage.builder().chatId(message.getChatId()).text("已被兑换").build());
                 } catch (TelegramApiException e) {
                     throw new RuntimeException(e);
                 }

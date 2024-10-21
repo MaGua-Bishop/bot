@@ -69,6 +69,7 @@ public class StartMessage implements IMessage{
             user.setTgId(from.getId());
             String name = from.getFirstName() +from.getLastName();
             user.setTgName(name);
+            user.setTgUserName(from.getUserName());
             userMapper.insert(user);
         }
         return user;
