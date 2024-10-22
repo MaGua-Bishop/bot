@@ -20,7 +20,7 @@ public class OnlineServiceServiceMenuImpl implements IBotMenu{
 
     @Override
     public String getMenuName() {
-        return "Online service";
+        return "茶社大群";
     }
 
     private String getUrlByUserName(String userName){
@@ -29,13 +29,7 @@ public class OnlineServiceServiceMenuImpl implements IBotMenu{
     }
 
     private String randomList(){
-        List<String> list = new ArrayList();
-        list.add("https://t.me/Emma77ng");
-        list.add("https://t.me/Smith77NG");
-        list.add("https://t.me/Jasmine77ng");
-        list.add("https://t.me/Kylie77ng");
-        //随机返回一个
-        return list.get((int)(Math.random()*list.size()));
+        return "https://t.me/chashe666666";
     }
 
 

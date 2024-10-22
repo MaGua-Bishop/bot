@@ -10,11 +10,11 @@ import org.telegram.telegrambots.meta.api.objects.Message;
  * @CreateTime: 2024-09-30
  */
 @Component
-public class OfficialWebsiteServiceMenuImpl implements IBotMenu{
+public class OfficialChannel03ServiceMenuImpl implements IBotMenu{
 
     @Override
     public String getMenuName() {
-        return "Official website";
+        return "TRX兑换";
     }
 
 
@@ -22,8 +22,7 @@ public class OfficialWebsiteServiceMenuImpl implements IBotMenu{
     public void execute(BotServiceImpl bot, Message message) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId());
-        sendMessage.setText("<a  href=\"https://77ng.com\">77ng.com</a>");
-        sendMessage.setDisableWebPagePreview(true);
+        sendMessage.setText("<a  href=\"https://t.me/AutoTronTRXbot\">@AutoTronTRXbot</a>");
         sendMessage.setParseMode("html");
         try {
             bot.execute(sendMessage);

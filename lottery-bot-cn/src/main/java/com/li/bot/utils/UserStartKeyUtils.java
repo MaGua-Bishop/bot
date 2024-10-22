@@ -12,10 +12,11 @@ public class UserStartKeyUtils {
     public static List<String> userStartKeyList= new ArrayList();
 
     static {
-        userStartKeyList.add("Personal Center");
-        userStartKeyList.add("Online service");
-        userStartKeyList.add("Official website");
-        userStartKeyList.add("Official channel");
+        userStartKeyList.add("茶社大群");
+        userStartKeyList.add("供需发布");
+        userStartKeyList.add("供需频道");
+        userStartKeyList.add("TRX兑换");
+        userStartKeyList.add("个人中心");
     }
 
 }

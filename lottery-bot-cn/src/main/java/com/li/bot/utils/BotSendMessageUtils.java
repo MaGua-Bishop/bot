@@ -19,12 +19,12 @@ import static java.math.BigDecimal.ZERO;
 public class BotSendMessageUtils {
 
     public static String createLotteryMessage(BigDecimal amount,Integer number,String uuid){
-        return "\uD83C\uDF89 {name}抽奖开始了！ \uD83C\uDF89\n" +
+        return "\uD83C\uDF89 茶社抽奖开始了！ \uD83C\uDF89\n" +
                 "点击下面的链接参与抽奖并领取现金奖！\uD83D\uDCB0\n" +
                 "\n" +
                 "不要错过机会，现在就加入，赢取大奖！\n" +
                 "\n" +
-                "\uD83D\uDD14 关注{name}频道获取独家奖励!\n" +
+                "\uD83D\uDD14 关注茶社频道获取独家奖励!\n" +
                 "敬请关注随机赠品和特殊奖金-不要错过这些令人兴奋的福利! \uD83C\uDF81\n"+
                 "<code>"+uuid+"</code>";
     }
@@ -46,7 +46,7 @@ public class BotSendMessageUtils {
                 }else {
                     code = "\uD83E\uDDE7";
                 }
-                String t = code+"\t₦" +lotteryInfo.getMoney()+ "\t<b>" + lotteryInfo.getTgName() + "</b>\n";
+                String t = code+"\t" +lotteryInfo.getMoney()+ "\t<b>" + lotteryInfo.getTgName() + "</b>\n";
                 str.append(t);
                 i++ ;
             }

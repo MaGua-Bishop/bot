@@ -35,10 +35,10 @@ public class BotServiceImpl extends TelegramWebhookBot {
 
     public void registerCommands() {
         List<BotCommand> commands = new ArrayList<>();
-        commands.add(new BotCommand("/start", "Start the bot"));
-        commands.add(new BotCommand("/view", "bring the lottery id"));
-        commands.add(new BotCommand("/exchange", "admin exchange"));
-        commands.add(new BotCommand("/help", "help"));
+        commands.add(new BotCommand("/start", "启动机器人"));
+        commands.add(new BotCommand("/view", "管理员查看中奖"));
+        commands.add(new BotCommand("/exchange", "管理员兑换奖励"));
+        commands.add(new BotCommand("/help", "帮助"));
         SetMyCommands setMyCommands = new SetMyCommands();
         setMyCommands.setCommands(commands);
         try {

@@ -61,14 +61,14 @@ public class HelpMessage implements IMessage {
             return;
         }
         try {
-            String text = "\uD83E\uDD16Welcome to the project Bot, please enter the following command\n" +
-                    "/start uid - Start the lottery\n" +
-                    "/view uid - view winning users\n\n" +
-                    "/exchange uid - admin exchange\n\n" +
-                    "function:\n" +
-                    "1. admin send in group chat <b>gift money number</b> create project\n" +
-                    "2. group members click the button to start the lottery\n" +
-                    "3. admin private chat bot send <b>/view uid</b> view winning users";
+            String text = "\uD83E\uDD16欢迎使用Bot，请输入以下命令\n" +
+                    "/start uid-开始抽奖\n" +
+                    "/view uid-查看获奖用户\n\n" +
+                    "/exchange uid - 管理员兑换奖励\n\n" +
+                    "功能:\n" +
+                    "1. 管理员在群聊中发送 <b>gift money number</b> 创建抽奖\n" +
+                    "2. 群组成员点击按钮开始抽奖\n" +
+                    "3. 管理员私人聊天机器人发送 <b>/view uid</b>查看获奖用户";
             bot.execute(SendMessage.builder().chatId(message.getChatId()).text(text).parseMode("html").build());
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);

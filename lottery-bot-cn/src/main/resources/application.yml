@@ -6,7 +6,7 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:${DATABASE_BOT_PORT}/lottery_bot_cn?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+    url: jdbc:postgresql://${DATABASE_BOT_HOST}:${DATABASE_BOT_PORT}/lottery_bot_cn?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Shanghai
     username: ${DATABASE_BOT_USERNAME}
     password: ${DATABASE_BOT_PASSWORD}
 
@@ -18,9 +18,9 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 bot:
-  botname: t.me/lidemobot
-  token: 8030696965:AAFY6eZti5yIg7J0p-mXIHSH9fLsmrvHBFE
+  botname: t.me/CSDB0_bot
+  token: 7546072718:AAG6FYBEKHscrIObDSx1DFDvCAolxOKd2HE
   host: 127.0.0.1 #ip
   port: 7890    #端口
 #  ${SERVER_HOST}
-  url: https://1f8a-111-55-96-176.ngrok-free.app/tgbot/lottery_bot #ngrok地址]
+  url: ${SERVER_HOST}/tgbot/lottery_bot_cn #ngrok地址]

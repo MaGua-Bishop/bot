@@ -110,14 +110,14 @@ public class ViewWinningUserMessage implements IMessage{
                 }
             }else {
                 try {
-                    bot.execute(SendMessage.builder().chatId(message.getChatId()).text("incorrect uid input error").build());
+                    bot.execute(SendMessage.builder().chatId(message.getChatId()).text("不正确的uid输入错误").build());
                 } catch (TelegramApiException e) {
                     throw new RuntimeException(e);
                 }
             }
         }else {
             try {
-                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("incorrect uid input error").build());
+                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("不正确的uid输入错误").build());
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }

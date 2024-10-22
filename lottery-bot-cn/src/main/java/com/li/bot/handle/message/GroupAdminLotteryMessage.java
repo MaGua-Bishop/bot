@@ -2,7 +2,6 @@ package com.li.bot.handle.message;
 
 import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.google.common.collect.Lists;
 import com.li.bot.config.BotConfig;
 import com.li.bot.entity.database.Lottery;
 import com.li.bot.entity.database.User;
@@ -52,12 +51,11 @@ public class GroupAdminLotteryMessage implements IMessage {
 
     private InlineKeyboardMarkup createInlineKeyboardButton(String uid) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
-        buttonList.add(InlineKeyboardButton.builder().text("click lottery").url("https://" + botConfig.getBotname() + "?start=" + uid.toString()).build());
-        buttonList.add(InlineKeyboardButton.builder().text("Online service").url("https://t.me/NANA_77NGGAME").build());
-        buttonList.add(InlineKeyboardButton.builder().text("Official website").url("77ng.com").build());
-        buttonList.add(InlineKeyboardButton.builder().text("77NG Official channel").url("https://t.me/vip78NG").build());
-        buttonList.add(InlineKeyboardButton.builder().text("Facebook").url("https://www.facebook.com/profile.php?id=61566528757173").build());
-        buttonList.add(InlineKeyboardButton.builder().text("Instagram").url("https://www.instagram.com/77ngofficial1/").build());
+        buttonList.add(InlineKeyboardButton.builder().text("点击抽奖").url("https://" + botConfig.getBotname() + "?start=" + uid.toString()).build());
+        buttonList.add(InlineKeyboardButton.builder().text("茶社大群").url("https://t.me/chashe666666").build());
+        buttonList.add(InlineKeyboardButton.builder().text("供需发布").url("https://t.me/chashe1_Bot").build());
+        buttonList.add(InlineKeyboardButton.builder().text("供需频道").url("https://t.me/chashe0").build());
+        buttonList.add(InlineKeyboardButton.builder().text("TRX兑换").url("https://t.me/AutoTronTRXbot").build());
         List<InlineKeyboardButton> firstRow = new ArrayList<>();
         firstRow.add(buttonList.get(0));
 

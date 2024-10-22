@@ -99,6 +99,13 @@ public class StartMessage implements IMessage{
         return replyKeyboardMarkup;
     }
 
+    private InlineKeyboardMarkup createInlineKeyboardButton() {
+        List<InlineKeyboardButton> buttonList = new ArrayList<>();
+        buttonList.add(InlineKeyboardButton.builder().text("ended").callbackData("null").build());
+        List<List<InlineKeyboardButton>> list = Lists.partition(buttonList, 2);
+        return InlineKeyboardMarkup.builder().keyboard(list).build();
+    }
+
     @Override
     public synchronized void execute(BotServiceImpl bot, Message message) throws TelegramApiException {
         String text = message.getText();
@@ -140,30 +147,22 @@ public class StartMessage implements IMessage{
             bot.execute(SendMessage.builder().chatId(message.getChatId()).text("unfortunately, you did not win the prize").replyMarkup(createReplyKeyboardMarkup()).build());
             return;
         }
-
-//        //判断抽奖是否结束（结束）
-//        boolean b = prizePoolService.containsKey(lotteryId);
-//        if(!b){
-//            bot.execute(SendMessage.builder().chatId(message.getChatId()).text("The lottery has ended or does not exist").build());
-//            //更新状态
-//            Lottery lottery = lotteryMapper.selectOne(new LambdaQueryWrapper<Lottery>().eq(Lottery::getLotteryId, lotteryId));
-//            lottery.setStatus(LotteryStatus.END.getCode());
-//            lottery.setUpdateTime(LocalDateTime.now());
-//            lotteryMapper.updateById(lottery);
-//            //更新消息状态
-//            EditMessageReplyMarkup editMessageReplyMarkup = EditMessageReplyMarkup.builder().chatId(lottery.getChatId()).messageId(Integer.valueOf(String.valueOf(lottery.getMessageId()))).replyMarkup(createInlineKeyboardButton()).build();
-//            try {
-//                bot.execute(editMessageReplyMarkup);
-//            } catch (TelegramApiException e) {
-//                throw new RuntimeException(e);
-//            }
-//            return;
-//        }
-
         //判断奖池是否有剩余金额（没有）
         String randomId = prizePoolService.getRandomMoney(lotteryId);
         if(randomId == null){
             bot.execute(SendMessage.builder().chatId(message.getChatId()).replyMarkup(createReplyKeyboardMarkup()).text("The lottery has ended or does not exist").build());
+            //更新状态
+            Lottery lottery = lotteryMapper.selectOne(new LambdaQueryWrapper<Lottery>().eq(Lottery::getLotteryId, lotteryId));
+            lottery.setStatus(LotteryStatus.END.getCode());
+            lottery.setUpdateTime(LocalDateTime.now());
+            lotteryMapper.updateById(lottery);
+            //更新消息状态
+            EditMessageReplyMarkup editMessageReplyMarkup = EditMessageReplyMarkup.builder().chatId(lottery.getChatId()).messageId(Integer.valueOf(String.valueOf(lottery.getMessageId()))).replyMarkup(createInlineKeyboardButton()).build();
+            try {
+                bot.execute(editMessageReplyMarkup);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
             return;
         }
         PrizePool prizePool = prizePoolMapper.selectOne(new LambdaQueryWrapper<PrizePool>().eq(PrizePool::getPrizePoolId, randomId).eq(PrizePool::getStatus, 0));

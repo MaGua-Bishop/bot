@@ -81,6 +81,13 @@ public class StartMessage implements IMessage{
         return "<a  href=\"https://t.me/"+name+"\">@"+name+"</a>";
     }
 
+    private InlineKeyboardMarkup createInlineKeyboardButton() {
+        List<InlineKeyboardButton> buttonList = new ArrayList<>();
+        buttonList.add(InlineKeyboardButton.builder().text("已结束").callbackData("null").build());
+        List<List<InlineKeyboardButton>> list = Lists.partition(buttonList, 2);
+        return InlineKeyboardMarkup.builder().keyboard(list).build();
+    }
+
     private ReplyKeyboardMarkup createReplyKeyboardMarkup(){
         List<String> userStartKey = UserStartKeyUtils.userStartKeyList;
         List<KeyboardButton> keyList = new ArrayList<>();
@@ -123,7 +130,7 @@ public class StartMessage implements IMessage{
         //判断用户是否抽过该奖（抽过）
         LotteryInfo lotteryInfo = lotteryInfoMapper.selectOne(new LambdaQueryWrapper<LotteryInfo>().eq(LotteryInfo::getTgId, user.getTgId()).eq(LotteryInfo::getLotteryId, lotteryId));
         if(lotteryInfo != null){
-            bot.execute(SendMessage.builder().chatId(message.getChatId()).replyMarkup(createReplyKeyboardMarkup()).text("You have already participated in this lottery").build());
+            bot.execute(SendMessage.builder().chatId(message.getChatId()).replyMarkup(createReplyKeyboardMarkup()).text("你已经参加了这个抽奖").build());
             return;
         }
 
@@ -138,33 +145,25 @@ public class StartMessage implements IMessage{
             lotteryInfo.setTgName(user.getTgName());
             lotteryInfo.setLotteryInfoId(uuid);
             lotteryInfoMapper.insert(lotteryInfo);
-            bot.execute(SendMessage.builder().chatId(message.getChatId()).text("unfortunately, you did not win the prize").replyMarkup(createReplyKeyboardMarkup()).build());
+            bot.execute(SendMessage.builder().chatId(message.getChatId()).text("不幸的是，你没有获奖").replyMarkup(createReplyKeyboardMarkup()).build());
             return;
         }
-
-//        //判断抽奖是否结束（结束）
-//        boolean b = prizePoolService.containsKey(lotteryId);
-//        if(!b){
-//            bot.execute(SendMessage.builder().chatId(message.getChatId()).text("The lottery has ended or does not exist").build());
-//            //更新状态
-//            Lottery lottery = lotteryMapper.selectOne(new LambdaQueryWrapper<Lottery>().eq(Lottery::getLotteryId, lotteryId));
-//            lottery.setStatus(LotteryStatus.END.getCode());
-//            lottery.setUpdateTime(LocalDateTime.now());
-//            lotteryMapper.updateById(lottery);
-//            //更新消息状态
-//            EditMessageReplyMarkup editMessageReplyMarkup = EditMessageReplyMarkup.builder().chatId(lottery.getChatId()).messageId(Integer.valueOf(String.valueOf(lottery.getMessageId()))).replyMarkup(createInlineKeyboardButton()).build();
-//            try {
-//                bot.execute(editMessageReplyMarkup);
-//            } catch (TelegramApiException e) {
-//                throw new RuntimeException(e);
-//            }
-//            return;
-//        }
-
         //判断奖池是否有剩余金额（没有）
         String randomId = prizePoolService.getRandomMoney(lotteryId);
         if(randomId == null){
-            bot.execute(SendMessage.builder().chatId(message.getChatId()).replyMarkup(createReplyKeyboardMarkup()).text("The lottery has ended or does not exist").build());
+            bot.execute(SendMessage.builder().chatId(message.getChatId()).replyMarkup(createReplyKeyboardMarkup()).text("抽奖已结束或不存在").build());
+            //更新状态
+            Lottery lottery = lotteryMapper.selectOne(new LambdaQueryWrapper<Lottery>().eq(Lottery::getLotteryId, lotteryId));
+            lottery.setStatus(LotteryStatus.END.getCode());
+            lottery.setUpdateTime(LocalDateTime.now());
+            lotteryMapper.updateById(lottery);
+            //更新消息状态
+            EditMessageReplyMarkup editMessageReplyMarkup = EditMessageReplyMarkup.builder().chatId(lottery.getChatId()).messageId(Integer.valueOf(String.valueOf(lottery.getMessageId()))).replyMarkup(createInlineKeyboardButton()).build();
+            try {
+                bot.execute(editMessageReplyMarkup);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
             return;
         }
         PrizePool prizePool = prizePoolMapper.selectOne(new LambdaQueryWrapper<PrizePool>().eq(PrizePool::getPrizePoolId, randomId).eq(PrizePool::getStatus, 0));
@@ -177,7 +176,7 @@ public class StartMessage implements IMessage{
             lotteryInfo.setStatus(-1);
             lotteryInfo.setLotteryInfoId(uuid);
             lotteryInfoMapper.insert(lotteryInfo);
-            bot.execute(SendMessage.builder().chatId(message.getChatId()).replyMarkup(createReplyKeyboardMarkup()).text("unfortunately, you did not win the prize").build());
+            bot.execute(SendMessage.builder().chatId(message.getChatId()).replyMarkup(createReplyKeyboardMarkup()).text("不幸的是，你没有获奖").build());
             return;
         }
 
@@ -193,11 +192,11 @@ public class StartMessage implements IMessage{
         prizePool.setStatus(1);
         int index1 = prizePoolMapper.updateById(prizePool);
         if(index == 1 && index1 == 1){
-            SendMessage sendMessage = SendMessage.builder().chatId(message.getChatId()).replyMarkup(createReplyKeyboardMarkup()).text("Congratulations, you got it <b>₦" + prizePool.getMoney() + "</b>!\n" + "save lottery id:\n<code>" + lotteryInfo.getLotteryInfoId()+"</code>").parseMode("html").build();
+            SendMessage sendMessage = SendMessage.builder().chatId(message.getChatId()).replyMarkup(createReplyKeyboardMarkup()).text("恭喜你，你得到了 <b>" + prizePool.getMoney() + "</b>!\n" + "保存抽奖 id:\n<code>" + lotteryInfo.getLotteryInfoId()+"</code>").parseMode("html").build();
             bot.execute(sendMessage);
 //            String chatUrl = getChatUrl("@Nana_77nggame");
-            String str = "Congratulations, you've won! \uD83C\uDF89\n" +
-                    "Please contact our online customer service and send your lottery ID to claim your reward.";
+            String str = "恭喜你，你中了! \uD83C\uDF89\n" +
+                    "请联系我们的在线客户服务并发送您的中奖ID以索取奖励。";
             SendMessage message1 = SendMessage.builder().chatId(message.getChatId()).text(str).parseMode("html").replyMarkup(createReplyKeyboardMarkup()).disableWebPagePreview(true).build();
             bot.execute(message1);
         }
