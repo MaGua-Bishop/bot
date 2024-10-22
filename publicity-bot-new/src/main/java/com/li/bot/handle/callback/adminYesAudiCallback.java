@@ -97,7 +97,7 @@ public class adminYesAudiCallback implements ICallback {
 
 
     @Override
-    public void execute(BotServiceImpl bot, CallbackQuery callbackQuery) throws TelegramApiException {
+    public synchronized void execute(BotServiceImpl bot, CallbackQuery callbackQuery) throws TelegramApiException {
 
         String data = callbackQuery.getData();
         String id = data.substring(data.lastIndexOf(":") + 1);
@@ -115,22 +115,31 @@ public class adminYesAudiCallback implements ICallback {
         convoysInvite.setIsReview(true);
         convoysInvite.setReviewTgId(callbackQuery.getFrom().getId());
         convoysInvite.setStatus(ConvoysInviteStatus.BOARDED.getCode());
-        convoysInviteMapper.updateById(convoysInvite);
+
 
         Long inviteId = convoysInvite.getInviteId();
 
         Invite invite = inviteMapper.selectOne(new LambdaQueryWrapper<Invite>().eq(Invite::getInviteId, inviteId));
         invite.setIsReview(true);
-        inviteMapper.updateById(invite);
+
         if (invite != null) {
             Convoys convoys = convoysMapper.selectOne(new LambdaQueryWrapper<Convoys>().eq(Convoys::getConvoysId, convoysInvite.getConvoysId()));
             getConvoysCapacity(convoys.getConvoysId());
+            boolean isCapacity = false ;
+            if(currentConvoysCapacity >= convoys.getCapacity()){
+                convoysInvite.setStatus(ConvoysInviteStatus.IDLE.getCode());
+                convoysInvite.setIsReview(false);
+                invite.setIsReview(false);
+                isCapacity = true ;
+            }
+            convoysInviteMapper.updateById(convoysInvite);
+            inviteMapper.updateById(invite);
             Integer status = convoysInvite.getStatus();
             String msg = "";
             String code ="";
             if(status.equals(ConvoysInviteStatus.IDLE.getCode())){
                 code = "\uD83D\uDFE2";
-                msg = "空闲";
+                msg = "车队已满，请重新申请其他车队";
             }else if(status.equals(ConvoysInviteStatus.REVIEW.getCode())){
                 code = "\uD83D\uDFE1";
                 msg = "待审核";
@@ -156,7 +165,11 @@ public class adminYesAudiCallback implements ICallback {
                     "申请状态:"+ code+msg;
             SendMessage sendMessage = SendMessage.builder().chatId(invite.getTgId()).text(x).parseMode("html").build();
             bot.execute(sendMessage);
-
+            if(isCapacity){
+                EditMessageText editMessageText = EditMessageText.builder().messageId(callbackQuery.getMessage().getMessageId()).chatId(callbackQuery.getMessage().getChatId().toString()).text(x).replyMarkup(createButton("车队已满")).parseMode("html").build();
+                bot.execute(editMessageText);
+                return;
+            }
             EditMessageText editMessageText = EditMessageText.builder().messageId(callbackQuery.getMessage().getMessageId()).chatId(callbackQuery.getMessage().getChatId().toString()).text(x).replyMarkup(createButton("已同意")).parseMode("html").build();
             bot.execute(editMessageText);
 

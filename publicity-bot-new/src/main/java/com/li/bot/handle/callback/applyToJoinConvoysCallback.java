@@ -90,7 +90,7 @@ public class applyToJoinConvoysCallback implements ICallback{
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, tgId));
 
-        if (capacity.equals(currentConvoysCapacity)) {
+        if (currentConvoysCapacity >= capacity) {
             buttonList.add(InlineKeyboardButton.builder().text("车队已满").callbackData("null").build());
         } else if (user.getIsAdmin()) {
             List<Invite> invites = inviteMapper.selectList(new LambdaQueryWrapper<Invite>().eq(Invite::getTgId, tgId));
