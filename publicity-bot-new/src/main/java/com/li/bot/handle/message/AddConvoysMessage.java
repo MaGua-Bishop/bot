@@ -77,6 +77,7 @@ public class AddConvoysMessage implements IMessage{
             convoys.setCapacity(fleetCapacity);
             convoys.setSubscription(minSubscribers);
             convoys.setRead(read);
+            convoys.setIntervalMinutes(15);
             convoys.setTgId(message.getFrom().getId());
 
             fleetService.addNewConvoy(convoys);
