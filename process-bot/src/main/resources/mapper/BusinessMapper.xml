@@ -13,7 +13,7 @@
     <select id="selectBusinessList" resultMap="getBusinessList">
         select b.business_id businessId,b."name"name ,count(o.order_id) size from tg_business b
         left join tg_order o on b.business_id = o.business_id
-        where b.is_shelving = TRUE and o.status = 1
+        where b.is_shelving = TRUE and o.status = 1 and b.type = #{type}
         GROUP BY b.business_id ;
     </select>
 

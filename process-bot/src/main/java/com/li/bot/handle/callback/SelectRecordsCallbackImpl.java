@@ -46,6 +46,14 @@ public class SelectRecordsCallbackImpl implements ICallback {
     @Autowired
     private BusinessMapper businessMapper ;
 
+    private InlineKeyboardMarkup createInlineKeyboardButton(String orderId){
+        List<InlineKeyboardButton> buttonList = new ArrayList<>();
+        buttonList.add(InlineKeyboardButton.builder().text("取消订单").callbackData("admin:cancel:order:"+orderId).build());
+        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 5);
+        InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
+        return inlineKeyboardMarkup;
+    }
+
 
 
     @Override
@@ -80,19 +88,24 @@ public class SelectRecordsCallbackImpl implements ICallback {
             String orderId = reply.getOrderId();
             UUID uuid = UUID.fromString(orderId);
             Order order = orderMapper.getOrderByOrderId(uuid);
-
+            if(order == null){
+                continue;
+            }
             Long businessId = order.getBusinessId();
             Business business = businessMapper.selectOne(new LambdaQueryWrapper<Business>().eq(Business::getBusinessId, businessId));
+            if(business == null){
+                continue;
+            }
             String name = business.getName();
 
-//            CopyMessage copyMessage = new CopyMessage();
-//            copyMessage.setChatId(callbackQuery.getMessage().getChatId());
-//            copyMessage.setMessageId(order.getMessageId());
-//            copyMessage.setFromChatId(order.getTgId());
             SendMessage message = SendMessage.builder().text(BotMessageUtils.getUserReplyMessage(reply,order.getMessageText(),name)).parseMode("html").chatId(callbackQuery.getMessage().getChatId()).build();
             try {
-//                bot.execute(copyMessage);
-                bot.execute(message);
+                if(status == 1){
+                    bot.execute(message);
+                }else {
+                    SendMessage messages = SendMessage.builder().text(BotMessageUtils.getUserReplyMessage(reply,order.getMessageText(),name)).parseMode("html").chatId(callbackQuery.getMessage().getChatId()).replyMarkup(createInlineKeyboardButton(order.getOrderId())).build();
+                    bot.execute(messages);
+                }
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }

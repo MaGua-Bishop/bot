@@ -42,9 +42,11 @@ public class MessageHandle {
                     menu.execute(bot, message);
                 }
             }
-        }else if((type.equals("group") || type.equals("supergroup")) && message.getText().equals("设置工作群")){
-            botMenuFactory.getMenu("设置工作群").execute(bot, message);
-        }else if((type.equals("group") || type.equals("supergroup")) && message.getText().indexOf("#提取业务") == 0){
+        }else if((type.equals("group") || type.equals("supergroup")) && message.getText().equals("设置机主后台")){
+            botMenuFactory.getMenu("设置机主后台").execute(bot, message);
+        }else if((type.equals("group") || type.equals("supergroup")) && message.getText().equals("设置杂单后台")){
+            botMenuFactory.getMenu("设置杂单后台").execute(bot, message);
+        } else if((type.equals("group") || type.equals("supergroup")) && message.getText().indexOf("#提取业务") == 0){
             botMenuFactory.getMenu("提取业务").execute(bot, message);
         }
     }

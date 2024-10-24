@@ -46,10 +46,26 @@ public class GroupBusinessMenuImpl implements IBotMenu{
 
     @Autowired
     private OrderMapper orderMapper ;
+    @Autowired
+    private FileService fileService ;
+
+    private Integer getChatType(String chatId){
+        String string = fileService.readFileContent();
+        Workgroup workgroup = JSONObject.parseObject(string, Workgroup.class);
+        String string02 = fileService.readFileContent02();
+        Workgroup workgroup02 = JSONObject.parseObject(string02, Workgroup.class);
+        Integer type = null;
+        if(workgroup.getGroupList().contains(chatId)){
+            type = 0 ;
+        }else if(workgroup02.getGroupList().contains(chatId)){
+            type = 1 ;
+        }
+        return type ;
+    }
     private InlineKeyboardMarkup createInlineKeyboardButton(Long businessId){
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         buttonList.add(InlineKeyboardButton.builder().text("一键领取").callbackData("list:order:receive:"+businessId).build());
-        buttonList.add(InlineKeyboardButton.builder().text("放弃").callbackData("waiver:order:1").build());
+        buttonList.add(InlineKeyboardButton.builder().text("取消").callbackData("waiver:order:1").build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 5);
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
         return inlineKeyboardMarkup;
@@ -71,11 +87,14 @@ public class GroupBusinessMenuImpl implements IBotMenu{
         if (matcher.find()) {
             // 提取匹配的第一组
             String businessName = matcher.group(1);
-
-            Business business = businessMapper.selectOne(new LambdaQueryWrapper<Business>().eq(Business::getName, businessName));
+            Integer chatType = getChatType(message.getChatId().toString());
+            if(chatType ==null ){
+                return;
+            }
+            Business business = businessMapper.selectOne(new LambdaQueryWrapper<Business>().eq(Business::getName, businessName).eq(Business::getType, chatType));
             if(business == null){
                 try {
-                    bot.execute(SendMessage.builder().chatId(message.getChatId()).text("业务名错误").build());
+                    bot.execute(SendMessage.builder().chatId(message.getChatId()).text("业务错误").build());
                 } catch (TelegramApiException e) {
                     throw new RuntimeException(e);
                 }

@@ -19,6 +19,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -79,16 +80,15 @@ public class ReplyOrderServiceMenuImpl implements IBotMenu {
         }
 
         UUID uId = UUID.fromString(uuid);
-        Reply reply = replyMapper.selectOne(new LambdaQueryWrapper<Reply>().eq(Reply::getOrderId, uuid).eq(Reply::getTgId, message.getFrom().getId()));
-        if (reply == null) {
+        List<Reply> replieList = replyMapper.selectList(new LambdaQueryWrapper<Reply>().eq(Reply::getOrderId, uuid));
+        if (replieList.isEmpty()) {
             try {
-                bot.execute(SendMessage.builder().chatId(message.getChatId().toString()).text("未找到该订单或该订单不是您的").build());
+                bot.execute(SendMessage.builder().chatId(message.getChatId().toString()).text("未找到该订单").build());
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
             return;
         }
-
 
         Order order = orderMapper.selectOne(new LambdaQueryWrapper<Order>().eq(Order::getOrderId, uId));
         if (order == null) {
@@ -105,17 +105,30 @@ public class ReplyOrderServiceMenuImpl implements IBotMenu {
             orderMapper.updateOrderStatusById(OrderStatus.COMPLETED.getCode(), uId, LocalDateTime.now());
         }
 
-
-        reply.setOrderId(uuid);
-        Long[] chatId = {message.getChatId()};
-        Long[] messageId = {Long.valueOf(message.getMessageId())};
-        String[] messageType = {message.getChat().getType()};
-        reply.setMessageChatId(chatId);
-        reply.setMessageId(messageId);
-        reply.setMessageType(messageType);
-        reply.setStatus(ReplyStatus.PENDING.getCode());
+        Reply reply = replyMapper.selectOne(new LambdaQueryWrapper<Reply>().eq(Reply::getOrderId, uuid).eq(Reply::getTgId, message.getFrom().getId()));
+        if(reply != null){
+            reply.setOrderId(uuid);
+            Long[] chatId = {message.getChatId()};
+            Long[] messageId = {Long.valueOf(message.getMessageId())};
+            String[] messageType = {message.getChat().getType()};
+            reply.setMessageChatId(chatId);
+            reply.setMessageId(messageId);
+            reply.setMessageType(messageType);
+            reply.setStatus(ReplyStatus.PENDING.getCode());
+        }else {
+            int insert = replyMapper.insertReply(UUID.fromString(uuid),message.getFrom().getId());
+            reply = replyMapper.selectOne(new LambdaQueryWrapper<Reply>().eq(Reply::getOrderId, uuid).eq(Reply::getTgId, message.getFrom().getId()));
+            Long[] chatId = {message.getChatId()};
+            Long[] messageId = {Long.valueOf(message.getMessageId())};
+            String[] messageType = {message.getChat().getType()};
+            reply.setMessageChatId(chatId);
+            reply.setMessageId(messageId);
+            reply.setMessageType(messageType);
+            reply.setStatus(ReplyStatus.PENDING.getCode());
+        }
         int index = replyMapper.updateReply(reply);
-        if (index == 1) {
+        replyMapper.updateStatusByOrderId(uuid);
+        if (index >= 1) {
             try {
                 bot.execute(SendMessage.builder().chatId(message.getChatId()).text("回复订单成功\n" +
                         "订单id:\n" +
@@ -134,7 +147,6 @@ public class ReplyOrderServiceMenuImpl implements IBotMenu {
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
-
         }
 
 

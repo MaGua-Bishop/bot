@@ -2,9 +2,7 @@ package com.li.bot.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.li.bot.entity.database.Reply;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,6 +22,9 @@ public interface ReplyMapper extends BaseMapper<Reply> {
     @Select("select * from tg_reply where tg_id = #{arg0} and status = #{arg1}")
     List<Reply> getReplyListByStuta(Long tgId,Integer status);
 
+    @Update("update tg_reply set status = 1 where order_id = #{orderId}")
+    int updateStatusByOrderId(@Param("orderId") String orderId);
 
-
+    @Update("update tg_reply set status = -2 where order_id = #{orderId}")
+    int updateStatusByOrderId02(@Param("orderId") String orderId);
 }

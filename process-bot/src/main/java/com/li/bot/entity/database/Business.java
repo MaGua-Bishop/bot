@@ -33,6 +33,8 @@ public class Business {
 
     @TableField("status")
     private Integer status;
+    @TableField("type")
+    private Integer type ;
     @TableField("is_shelving")
     private Boolean isShelving;
 

@@ -41,6 +41,7 @@ public class SelectBusinessTypeCallbackImpl implements ICallback {
         wrapper.select(Business::getBusinessId,Business::getName,Business::getIsShelving);
         wrapper.eq(Business::getStatus,type);
         List<Business> businesses = businessMapper.selectList(wrapper);
+        businesses.sort((o1, o2) -> o1.getBusinessId().compareTo(o2.getBusinessId()));
 
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, tgId));

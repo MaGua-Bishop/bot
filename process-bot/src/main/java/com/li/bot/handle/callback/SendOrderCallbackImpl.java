@@ -57,7 +57,8 @@ public class SendOrderCallbackImpl implements ICallback {
 
     private InlineKeyboardMarkup createInlineKeyboardButton(String orderId) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
-        buttonList.add(InlineKeyboardButton.builder().text("通过").callbackData("order:yes:" + orderId).build());
+        buttonList.add(InlineKeyboardButton.builder().text("机主后台").callbackData("order:yes:" + orderId+":type:"+0).build());
+        buttonList.add(InlineKeyboardButton.builder().text("杂单后台").callbackData("order:yes:" + orderId+":type:"+1).build());
         buttonList.add(InlineKeyboardButton.builder().text("不通过").callbackData("order:no:" + orderId).build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
@@ -68,8 +69,15 @@ public class SendOrderCallbackImpl implements ICallback {
 
         List<User> useList = userMapper.selectList(new LambdaQueryWrapper<User>().eq(User::getIsAdmin, true));
 
+        Integer type = business.getType();
         useList.forEach(u -> {
-            SendMessage sendMessage = SendMessage.builder().chatId(u.getTgId()).text(BotMessageUtils.getOrderInfoMessage(new Date(), order.getMessageText(), business.getName(), order.getOrderId())).replyMarkup(createInlineKeyboardButton(order.getOrderId())).parseMode("html").build();
+            String desc = "";
+            if(type == 0){
+                desc = "机主后台";
+            }else {
+                desc = "杂单后台";
+            }
+            SendMessage sendMessage = SendMessage.builder().chatId(u.getTgId()).text(BotMessageUtils.getOrderInfoMessage(new Date(), order.getMessageText(), business.getName(), order.getOrderId())+"\n注意属于:<b>"+desc+"</b>").replyMarkup(createInlineKeyboardButton(order.getOrderId())).parseMode("html").build();
             try {
                 bot.execute(sendMessage);
             } catch (TelegramApiException e) {

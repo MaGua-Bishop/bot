@@ -1,5 +1,6 @@
 package com.li.bot.sessions;
 
+import com.google.common.collect.Lists;
 import com.li.bot.entity.database.Business;
 import com.li.bot.handle.key.BotKeyFactory;
 import com.li.bot.handle.key.IKeyboard;
@@ -10,10 +11,14 @@ import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.sessions.enums.BusinessSessionState;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -155,6 +160,15 @@ public class AddBusiness {
 
     }
 
+    private InlineKeyboardMarkup createInlineKeyboardButton(Long businessId ) {
+        List<InlineKeyboardButton> buttonList = new ArrayList<>();
+        buttonList.add(InlineKeyboardButton.builder().text("机主").callbackData("business:type:" +"0"+":businessId:"+businessId).build());
+        buttonList.add(InlineKeyboardButton.builder().text("杂单").callbackData("business:type:" +"1"+":businessId:"+businessId).build());
+        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
+        InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
+        return inlineKeyboardMarkup;
+    }
+
     private void handleMoneyInput(Message message) {
         String businessMoney = message.getText();
         BigDecimal bigDecimal = parseBusinessPrice(businessMoney);
@@ -174,7 +188,7 @@ public class AddBusiness {
         business.setMoney(bigDecimal);
         business.setTgId(message.getFrom().getId());
         //解析名字 判断是否是
-        int insert = businessMapper.insert(business);
+        int insert = businessMapper.insertBusiness(business);
         if(insert<=0){
             try {
                 bot.execute(SendMessage.builder().chatId(message.getChatId()).text("添加失败").build());
@@ -185,7 +199,7 @@ public class AddBusiness {
         }
         addBusinessSessionList.getUserSession(message.getFrom().getId()).getBusiness().setMoney(bigDecimal);
         try {
-            bot.execute(SendMessage.builder().chatId(message.getChatId()).text("添加成功").build());
+            bot.execute(SendMessage.builder().chatId(message.getChatId()).text("添加成功\n请选择业务分类").replyMarkup(createInlineKeyboardButton(business.getBusinessId())).build());
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
         }

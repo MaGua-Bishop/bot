@@ -23,6 +23,8 @@ public class BotConfig {
 
     private String groupFile ;
 
+    private String groupFile02 ;
+
     private String channelFile ;
 
 

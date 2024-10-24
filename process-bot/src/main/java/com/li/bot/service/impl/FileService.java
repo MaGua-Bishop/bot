@@ -34,6 +34,16 @@ public class FileService {
         }
     }
 
+    public String readFileContent02() {
+        String groupFilePath = botConfig.getGroupFile02();
+        try {
+            String string = FileUtils.readFileToString(new File(groupFilePath));
+            return string;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public String getChannelLink() {
         String channelFile = botConfig.getChannelFile();
         try {
@@ -62,6 +72,25 @@ public class FileService {
 
             // 将更新后的对象写回文件
             new ObjectMapper().writeValue(new File(botConfig.getGroupFile()), workgroup);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addGroupId02(String newGroupId) {
+        try {
+            // 读取JSON文件
+            Workgroup workgroup = new ObjectMapper().readValue(readFileContent02(), Workgroup.class);
+
+            // 添加新的ID
+            if (workgroup.getGroupList() == null) {
+                workgroup.setGroupList(Arrays.asList(newGroupId));
+            } else {
+                workgroup.getGroupList().add(newGroupId);
+            }
+
+            // 将更新后的对象写回文件
+            new ObjectMapper().writeValue(new File(botConfig.getGroupFile02()), workgroup);
         } catch (IOException e) {
             e.printStackTrace();
         }

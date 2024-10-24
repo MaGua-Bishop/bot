@@ -14,6 +14,7 @@ import com.li.bot.handle.menu.BotMenuFactory;
 import com.li.bot.handle.menu.IBotMenu;
 import com.li.bot.mapper.BusinessMapper;
 import com.li.bot.mapper.OrderMapper;
+import com.li.bot.mapper.ReplyMapper;
 import com.li.bot.mapper.UserMapper;
 import com.li.bot.sessions.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -127,6 +128,12 @@ public class BotServiceImpl extends TelegramWebhookBot {
 
     @Autowired
     private ChannelMembersServiceImpl channelMembersService;
+
+    @Autowired
+    private CancelOrderSessionList cancelOrderSessionList ;
+
+    @Autowired
+    private ReplyMapper replyMapper ;
 
 
     private Long getUserId(String text) {
@@ -262,6 +269,11 @@ public class BotServiceImpl extends TelegramWebhookBot {
                     menu.execute(this, update.getMessage());
                     return null;
                 }
+                if (text.indexOf("#减少余额 ") == 0) {
+                    IBotMenu menu = botMenuFactory.getMenu("减少余额");
+                    menu.execute(this, update.getMessage());
+                    return null;
+                }
                 Long userId = getUserId(text);
                 if (userId != null) {
                     IBotMenu menu = botMenuFactory.getMenu("查询用户余额");
@@ -294,8 +306,13 @@ public class BotServiceImpl extends TelegramWebhookBot {
                     new AddBusiness(this, businessSession, update.getMessage(), addBusinessSessionList, businessMapper).execute(botMenuFactory, botKeyFactory);
                     return null;
                 }
+            }else{
+                Long tgId = update.getMessage().getFrom().getId();
+                if(cancelOrderSessionList.getCancelOrderSession(tgId) !=null){
+                    new CancelOrder(this, update.getMessage(), cancelOrderSessionList, orderMapper, businessMapper, userMapper,replyMapper).execute(botMenuFactory, botKeyFactory);
+                    return null;
+                }
             }
-
             if (update.getMessage().hasText()) {
 
                 try {

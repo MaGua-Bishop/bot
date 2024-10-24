@@ -25,4 +25,5 @@ bot:
 #  ${SERVER_HOST}
   url: ${SERVER_HOST}/tgbot/process_bot #ngrok地址
   groupFile: workgroup.json
+  groupFile02: workgroup02.json
   channelFile: channel.json

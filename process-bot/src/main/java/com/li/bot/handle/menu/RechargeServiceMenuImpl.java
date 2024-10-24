@@ -62,8 +62,12 @@ public class RechargeServiceMenuImpl implements IBotMenu{
 
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId());
-        sendMessage.setText("TGID:"+user.getTgId()+"\n"+"用户名:"+user.getTgName()+"\n"+"用户余额:"+user.getMoney()+"\n请选择充值的金额:");
+        sendMessage.setText("TGID:"+user.getTgId()+"\n"+"用户名:"+user.getTgName()+"\n"+"用户余额:"+user.getMoney()+"\n请选择充值的金额:\n\n<b>100 500 1000</b> 该档位+百分之10代收费\n\n" +
+                "<b>2000 3000 5000</b> 该档位免收代收费\n\n" +
+                "<b>10000  20000</b> 该档位免代收费并加送百分之10充值余额\n\n⚠\uFE0F充值人民币联系人工客服<a href=\"https://t.me/Ppcd0\">@Ppcd0</a>\n\n充值USDT直接点击下方充值（充值免代收费,超过500USDT加送百分之10充值余额）");
         sendMessage.setReplyMarkup(inlineKeyboardButton);
+        sendMessage.setDisableWebPagePreview(true);
+        sendMessage.setParseMode("html");
         try {
             bot.execute(sendMessage);
         } catch (Exception e) {

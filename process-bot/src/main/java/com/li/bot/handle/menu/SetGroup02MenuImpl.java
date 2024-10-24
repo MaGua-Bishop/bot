@@ -18,11 +18,11 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
  * @CreateTime: 2024-09-30
  */
 @Component
-public class SetGroupMenuImpl implements IBotMenu{
+public class SetGroup02MenuImpl implements IBotMenu{
 
     @Override
     public String getMenuName() {
-        return "设置机主后台";
+        return "设置杂单后台";
     }
 
     @Autowired
@@ -58,7 +58,7 @@ public class SetGroupMenuImpl implements IBotMenu{
             return ;
         }
 
-        String string = fileService.readFileContent();
+        String string = fileService.readFileContent02();
         Workgroup workgroup = JSONObject.parseObject(string, Workgroup.class);
         boolean b = workgroup.getGroupList().contains(message.getChatId().toString());
         if(b){
@@ -69,7 +69,7 @@ public class SetGroupMenuImpl implements IBotMenu{
             }
             return ;
         }
-        fileService.addGroupId(message.getChatId().toString());
+        fileService.addGroupId02(message.getChatId().toString());
         try {
             bot.execute(SendMessage.builder().chatId(message.getChatId()).text("设置成功").build());
         } catch (TelegramApiException e) {

@@ -54,6 +54,7 @@ public class BusinessCallbackImpl implements ICallback {
         if (user != null && user.getIsAdmin()) {
             buttonList.add(InlineKeyboardButton.builder().text("修改业务文案").callbackData("adminEditBusiness:"+businessId).build());
             buttonList.add(InlineKeyboardButton.builder().text("修改业务价格").callbackData("adminEditPrice:"+businessId).build());
+            buttonList.add(InlineKeyboardButton.builder().text("修改业务分类").callbackData("adminEditType:"+businessId).build());
             if(businessInfo.getIsShelving()){
                 buttonList.add(InlineKeyboardButton.builder().text("下架该业务(点击按钮直接下架)").callbackData("adminShelving:"+businessId).build());
             }else {

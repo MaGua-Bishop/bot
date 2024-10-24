@@ -46,6 +46,10 @@ public class CallbackQueryHandle {
             callbackFactory.getCallback("adminEditPrice").execute(bot,callbackQuery);
             return;
         }
+        if(data.indexOf("adminEditType:") == 0){
+            callbackFactory.getCallback("adminEditType").execute(bot,callbackQuery);
+            return;
+        }
         if(data.indexOf("user:recharge:") == 0){
             callbackFactory.getCallback("userRecharge").execute(bot,callbackQuery);
             return;
@@ -110,6 +114,10 @@ public class CallbackQueryHandle {
         }
         if(data.indexOf("select:business:type:") == 0){
             callbackFactory.getCallback("select:business:type").execute(bot,callbackQuery);
+            return;
+        }
+        if(data.indexOf("business:type:") == 0){
+            callbackFactory.getCallback("business:type").execute(bot,callbackQuery);
             return;
         }
         if(data.indexOf("adminDeleteBusiness:") == 0){

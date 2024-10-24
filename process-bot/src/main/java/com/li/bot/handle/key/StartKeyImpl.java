@@ -1,7 +1,9 @@
 package com.li.bot.handle.key;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
+import com.li.bot.entity.Workgroup;
 import com.li.bot.entity.database.Business;
 import com.li.bot.entity.database.Order;
 import com.li.bot.entity.database.User;
@@ -11,6 +13,7 @@ import com.li.bot.mapper.BusinessMapper;
 import com.li.bot.mapper.OrderMapper;
 import com.li.bot.mapper.UserMapper;
 import com.li.bot.service.impl.BotServiceImpl;
+import com.li.bot.service.impl.FileService;
 import com.li.bot.utils.UserStartKeyUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +52,26 @@ public class StartKeyImpl implements IKeyboard {
 
     @Autowired
     private OrderMapper orderMapper;
+
+    @Autowired
+    private FileService fileService ;
+
+    private Integer getChatType(String chatId){
+        String string = fileService.readFileContent();
+        Workgroup workgroup = JSONObject.parseObject(string, Workgroup.class);
+        String string02 = fileService.readFileContent02();
+        Workgroup workgroup02 = JSONObject.parseObject(string02, Workgroup.class);
+        Integer type = null;
+        if(workgroup.getGroupList().contains(chatId)){
+            type = 0 ;
+        }else if(workgroup02.getGroupList().contains(chatId)){
+            type = 1 ;
+        }else {
+            type = 0 ;
+        }
+        return type ;
+    }
+
     private void startKey(BotServiceImpl bot, Message message) {
         //查看数据库是否有该用户
         Long tgId = message.getFrom().getId();
@@ -90,9 +113,9 @@ public class StartKeyImpl implements IKeyboard {
         }
     }
 
-    private InlineKeyboardMarkup createInlineKeyboardButton(Long tgId){
+    private InlineKeyboardMarkup createInlineKeyboardButton(Long tgId,Integer type){
         //查出全部业务只要名称和主键
-        List<BusinessListVo> businessListVos = businessMapper.selectBusinessList();
+        List<BusinessListVo> businessListVos = businessMapper.selectBusinessList(type);
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         if(!businessListVos.isEmpty()){
             User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, tgId));
@@ -122,10 +145,11 @@ public class StartKeyImpl implements IKeyboard {
         if (type.equals("private")) {
             startKey(bot, message);
         } else if (type.equals("group") || type.equals("supergroup")) {
-            InlineKeyboardMarkup inlineKeyboardButton = createInlineKeyboardButton(message.getFrom().getId());
+            Integer chatType = getChatType(message.getChatId().toString());
+            InlineKeyboardMarkup inlineKeyboardButton = createInlineKeyboardButton(message.getFrom().getId(),chatType);
             String userName = message.getFrom().getLastName() + message.getFrom().getFirstName();
-            SendMessage msg = SendMessage.builder().chatId(message.getChatId().toString()).text("[@" + userName + "](tg://user?id=" + message.getFrom().getId() + ")" +
-                    "请点击业务").replyMarkup(inlineKeyboardButton).parseMode("MarkdownV2").build();
+            SendMessage msg = SendMessage.builder().chatId(message.getChatId().toString()).text("<a href=\"tg://user?id="+message.getFrom().getId()+"\">"+userName+"</a>" +
+                    "请点击业务").replyMarkup(inlineKeyboardButton).parseMode("html").build();
             try {
                 bot.execute(msg);
             } catch (TelegramApiException e) {

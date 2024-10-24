@@ -41,8 +41,8 @@ public class CustomerServiceMenuImpl implements IBotMenu{
 
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId());
-        sendMessage.setText("待开发");
-        sendMessage.enableMarkdownV2(true);
+        sendMessage.setText("<a href=\"https://t.me/Ppcd0\">@Ppcd0</a>");
+        sendMessage.setParseMode("html");
 //        sendMessage.setReplyMarkup(inlineKeyboardButton);
         try {
             bot.execute(sendMessage);
