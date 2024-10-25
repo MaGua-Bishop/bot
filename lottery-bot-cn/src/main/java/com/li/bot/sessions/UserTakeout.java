@@ -104,13 +104,14 @@ public class UserTakeout {
         String text = message.getText();
 
         BigDecimal money = isMoney(text);
-        if(money == null){
+        if(money == null || money.compareTo(BigDecimal.ZERO) <= 0){
             SendMessage sendMessage = SendMessage.builder().chatId(message.getChatId()).text("输入的积分不正确").build();
             try {
                 bot.execute(sendMessage);
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
+            userTakeoutSessionList.removeUserSession(message.getChatId());
             return;
         }
 
@@ -125,6 +126,7 @@ public class UserTakeout {
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
+            userTakeoutSessionList.removeUserSession(message.getChatId());
             return;
         }
 
