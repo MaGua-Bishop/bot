@@ -2,6 +2,7 @@ package com.li.bot.handle.message;
 
 import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.google.common.collect.Lists;
 import com.li.bot.config.BotConfig;
 import com.li.bot.entity.database.Lottery;
 import com.li.bot.entity.database.User;
@@ -10,6 +11,7 @@ import com.li.bot.mapper.LotteryMapper;
 import com.li.bot.mapper.UserMapper;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.service.impl.PrizePoolService;
+import com.li.bot.sessions.UserCreateLotterySessionList;
 import com.li.bot.utils.BotSendMessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -30,11 +32,11 @@ import java.util.regex.Pattern;
  * @CreateTime: 2024-10-18
  */
 @Component
-public class GroupAdminLotteryMessage implements IMessage {
+public class CreateLotteryMessage implements IMessage {
 
     @Override
     public String getMessageName() {
-        return "GroupAdminLotteryMessage";
+        return "CreateLotteryMessage";
     }
 
     @Autowired
@@ -49,29 +51,17 @@ public class GroupAdminLotteryMessage implements IMessage {
     @Autowired
     private PrizePoolService prizePoolService;
 
-    private InlineKeyboardMarkup createInlineKeyboardButton(String uid) {
+    @Autowired
+    private UserCreateLotterySessionList userCreateLotterySessionList ;
+
+
+        private InlineKeyboardMarkup createInlineKeyboardButton() {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
-        buttonList.add(InlineKeyboardButton.builder().text("点击抽奖").url("https://" + botConfig.getBotname() + "?start=" + uid.toString()).build());
-        buttonList.add(InlineKeyboardButton.builder().text("茶社大群").url("https://t.me/chashe666666").build());
-        buttonList.add(InlineKeyboardButton.builder().text("供需发布").url("https://t.me/chashe1_Bot").build());
-        buttonList.add(InlineKeyboardButton.builder().text("供需频道").url("https://t.me/chashe0").build());
-        buttonList.add(InlineKeyboardButton.builder().text("TRX兑换").url("https://t.me/AutoTronTRXbot").build());
-        List<InlineKeyboardButton> firstRow = new ArrayList<>();
-        firstRow.add(buttonList.get(0));
-
-        // 将剩余的按钮按每两个一组分组
-        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
-        rowList.add(firstRow); // 添加第一个按钮所在的行
-
-        for (int i = 1; i < buttonList.size(); i += 2) {
-            List<InlineKeyboardButton> row = new ArrayList<>();
-            row.add(buttonList.get(i));
-            if (i + 1 < buttonList.size()) {
-                row.add(buttonList.get(i + 1));
-            }
-            rowList.add(row);
-        }
-        return InlineKeyboardMarkup.builder().keyboard(rowList).build();
+        buttonList.add(InlineKeyboardButton.builder().text("无需条件").callbackData("set:lottery:condition:type:0").build());
+        buttonList.add(InlineKeyboardButton.builder().text("加入群聊").callbackData("set:lottery:condition:type:1").build());
+        buttonList.add(InlineKeyboardButton.builder().text("订阅频道").callbackData("set:lottery:condition:type:2").build());
+        List<List<InlineKeyboardButton>> list = Lists.partition(buttonList, 1);
+        return InlineKeyboardMarkup.builder().keyboard(list).build();
     }
 
 
@@ -89,9 +79,6 @@ public class GroupAdminLotteryMessage implements IMessage {
             userMapper.insert(user);
             return;
         }
-        if (!user.getIsAdmin()) {
-            return;
-        }
         Pattern pattern = Pattern.compile("gift\\s+([0-9]+(?:\\.\\d+)?)\\s+(\\d+)");
         Matcher matcher = pattern.matcher(text);
 
@@ -101,33 +88,39 @@ public class GroupAdminLotteryMessage implements IMessage {
                 BigDecimal money = new BigDecimal(matcher.group(1));
                 int count = Integer.parseInt(matcher.group(2));
                 if (count <= 0 || money.compareTo(BigDecimal.ZERO) <= 0) {
-                    bot.execute(SendMessage.builder().chatId(message.getChatId()).text("金额输入错误或数字输入错误").build());
+                    bot.execute(SendMessage.builder().chatId(message.getChatId()).text("积分输入错误或个数输入错误").build());
                     return;
                 }
+
+                if (user.getMoney().compareTo(BigDecimal.ZERO) <= 0 || user.getMoney().subtract(money).compareTo(BigDecimal.ZERO) <0) {
+                    bot.execute(SendMessage.builder().chatId(message.getChatId()).text("创建抽奖失败\n您当前积分:<b>"+user.getMoney()+"</b>\n积分不足\n请充值后使用").parseMode("html").build());
+                    return;
+                }
+
                 // 插入数据库
                 Lottery lottery = new Lottery();
                 String uuid = IdUtil.randomUUID();
                 lottery.setLotteryId(uuid);
                 lottery.setTgId(message.getFrom().getId());
+                lottery.setTgName(message.getFrom().getFirstName() + message.getFrom().getLastName());
                 lottery.setChatId(message.getChatId());
                 lottery.setMoney(money);
                 lottery.setNumber(count);
                 lottery.setStatus(LotteryStatus.START.getCode());
                 int index = lotteryMapper.insert(lottery);
                 if (index == 1) {
-                    prizePoolService.add(uuid, money, count);
-                    Message execute = bot.execute(SendMessage.builder().chatId(message.getChatId()).text(BotSendMessageUtils.createLotteryMessage(money, count, uuid)).parseMode("html").disableWebPagePreview(true).replyMarkup(createInlineKeyboardButton(lottery.getLotteryId())).build());
-                    Integer messageId = execute.getMessageId();
-                    lottery.setMessageId(Long.valueOf(messageId));
-                    lotteryMapper.updateById(lottery);
+                    SendMessage sendMessage = SendMessage.builder().chatId(message.getChatId()).text("请选择需要设置抢红包的条件").parseMode("html").build();
+                    sendMessage.setReplyMarkup(createInlineKeyboardButton());
+                    bot.execute(sendMessage);
+                    userCreateLotterySessionList.addUserSession(message.getFrom().getId(), uuid, -1);
                 } else {
                     bot.execute(SendMessage.builder().chatId(message.getChatId()).text("创建抽奖失败，请重新创建").build());
                 }
             } catch (NumberFormatException e) {
-                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("输入的金额不正确").build());
+                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("输入的积分不正确").build());
             }
         } else {
-            bot.execute(SendMessage.builder().chatId(message.getChatId()).text("输入格式不正确\n格式:gift 金额 个数").parseMode("html").build());
+            bot.execute(SendMessage.builder().chatId(message.getChatId()).text("输入格式不正确\n格式:gift 积分 个数").parseMode("html").build());
         }
 
     }

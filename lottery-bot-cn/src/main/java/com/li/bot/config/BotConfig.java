@@ -21,7 +21,7 @@ public class BotConfig {
 
     private String url ;
 
-    private String groupFile ;
+    private String reviewgroup ;
 
 
 

@@ -56,21 +56,24 @@ public class MessageHandle {
             messageFactory.getMessage("/help").execute(bot,message);
             return;
         }
-
-//        if(m !=null){
-//            m.execute(bot,message);
-//            return ;
-//        }
         if(text.startsWith("/view")&& message.getChat().getType().equals("private")){
             messageFactory.getMessage("viewWinningUser").execute(bot,message);
             return;
         }
         if(text.startsWith("/exchange")&& message.getChat().getType().equals("private")){
-            messageFactory.getMessage("adminExchange").execute(bot,message);
+            messageFactory.getMessage("exchange").execute(bot,message);
             return;
         }
-        if((message.getText().startsWith("gift"))){
-            messageFactory.getMessage("GroupAdminLotteryMessage").execute(bot,message);
+        if((message.getText().startsWith("gift")) && message.getChat().getType().equals("private")){
+            messageFactory.getMessage("CreateLotteryMessage").execute(bot,message);
+            return;
+        }
+        if((message.getText().startsWith("adminGift")) && message.getChat().getType().equals("private")){
+            messageFactory.getMessage("adminCreateLotteryMessage").execute(bot,message);
+            return;
+        }
+        if((type.equals("group") || type.equals("supergroup")) && message.getText().equals("设置工作群")){
+            messageFactory.getMessage("setReviewGroup").execute(bot,message);
             return;
         }
     }

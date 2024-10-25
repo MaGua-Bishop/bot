@@ -6,7 +6,11 @@ import com.li.bot.handle.CallbackQueryHandle;
 import com.li.bot.handle.MessageHandle;
 import com.li.bot.handle.callback.CallbackFactory;
 import com.li.bot.handle.message.MessageFactory;
+import com.li.bot.mapper.LotteryMapper;
+import com.li.bot.mapper.TakeoutMapper;
+import com.li.bot.mapper.UserMapper;
 import com.li.bot.meun.BotMenuFactory;
+import com.li.bot.sessions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
@@ -36,9 +40,9 @@ public class BotServiceImpl extends TelegramWebhookBot {
     public void registerCommands() {
         List<BotCommand> commands = new ArrayList<>();
         commands.add(new BotCommand("/start", "启动机器人"));
-        commands.add(new BotCommand("/view", "管理员查看中奖"));
-        commands.add(new BotCommand("/exchange", "管理员兑换奖励"));
-        commands.add(new BotCommand("/help", "帮助"));
+        commands.add(new BotCommand("/view", "创建抽奖者查看中奖用户"));
+        commands.add(new BotCommand("/exchange", "创建抽奖者核销中奖者奖励"));
+        commands.add(new BotCommand("/help", "帮助|使用说明"));
         SetMyCommands setMyCommands = new SetMyCommands();
         setMyCommands.setCommands(commands);
         try {
@@ -90,10 +94,40 @@ public class BotServiceImpl extends TelegramWebhookBot {
     @Autowired
     private BotMenuFactory botMenuFactory ;
 
+    @Autowired
+    private UserTakeoutSessionList userTakeoutSessionList;
+    @Autowired
+    private UserCreateLotterySessionList userCreateLotterySessionList ;
+
+    @Autowired
+    private UserMapper userMapper;
+    @Autowired
+    private TakeoutMapper takeoutMapper;
+    @Autowired
+    private FileService fileService ;
+    @Autowired
+    private LotteryMapper lotteryMapper ;
+    @Autowired
+    private PrizePoolService prizePoolService ;
+
+
 
     @Override
     public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
         if (update.hasMessage()) {
+            if (update.getMessage().getChat().getType().equals("private")) {
+                Long tgId = update.getMessage().getFrom().getId();
+                UserTakeoutSession userTakeoutSession = userTakeoutSessionList.getUserTakeoutSession(tgId);
+                if (userTakeoutSession != null) {
+                    new UserTakeout(this, update.getMessage(), userTakeoutSessionList, userMapper, takeoutMapper,fileService).execute(botMenuFactory);
+                    return null;
+                }
+                UserCreateLotterySession userCreateLotterySession = userCreateLotterySessionList.getUserTakeoutSession(tgId);
+                if (userCreateLotterySession != null) {
+                    new UserCreateLottery(this, update.getMessage(), userCreateLotterySessionList, userMapper, takeoutMapper,lotteryMapper,prizePoolService,botConfig).execute(botMenuFactory);
+                    return null;
+                }
+            }
             if (update.getMessage().hasText()) {
                 try {
                     new MessageHandle(this, update.getMessage(), messageFactory,botMenuFactory).handle();

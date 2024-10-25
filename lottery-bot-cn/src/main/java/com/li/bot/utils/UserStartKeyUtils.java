@@ -16,6 +16,7 @@ public class UserStartKeyUtils {
         userStartKeyList.add("供需发布");
         userStartKeyList.add("供需频道");
         userStartKeyList.add("TRX兑换");
+        userStartKeyList.add("充值积分");
         userStartKeyList.add("个人中心");
     }
 

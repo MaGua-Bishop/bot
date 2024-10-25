@@ -81,9 +81,6 @@ public class ViewWinningUserMessage implements IMessage{
             return;
         }
         User user = getUser(message.getFrom());
-        if(!user.getIsAdmin()){
-            return;
-        }
         // 定义正则表达式来匹配UUID
         String regex = "([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})";
         Pattern pattern = Pattern.compile(regex);

@@ -1,6 +1,8 @@
 package com.li.bot.controller;
 
+import com.li.bot.entity.RechargeDTO;
 import com.li.bot.service.impl.BotServiceImpl;
+import com.li.bot.service.impl.TelegramBotServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,10 +21,13 @@ public class TelegramBotController {
 
     private final BotServiceImpl botService ;
 
+    private final TelegramBotServiceImpl telegramBotService ;
 
-    public TelegramBotController(BotServiceImpl botService)
+
+    public TelegramBotController(BotServiceImpl botService, TelegramBotServiceImpl telegramBotService)
     {
         this.botService = botService;
+        this.telegramBotService = telegramBotService;
     }
 
     @PostMapping("/tgbot/lottery_bot_cn")
@@ -36,6 +41,18 @@ public class TelegramBotController {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.OK);
         }
+    }
+
+    @PostMapping("/tgbot/lottery_bot_cn/recharge")
+    public ResponseEntity<?> recharge(@RequestBody RechargeDTO rechargeDTO){
+        log.info("服务端接收到的参数");
+        log.info("转出账户:{}", rechargeDTO.getFrom());
+        log.info("转入账户:{}", rechargeDTO.getTo());
+        log.info("转入金额:{}", rechargeDTO.getAmount());
+        log.info("交易时间:{}", rechargeDTO.getTransactionTime());
+        log.info("订单号:{}", rechargeDTO.getTxId());
+        telegramBotService.userRecharge(rechargeDTO);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 }

@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -24,6 +25,8 @@ public class User {
     private Boolean isAdmin ;
     @TableField("create_time")
     private Date createTime;
+    @TableField("money")
+    private BigDecimal money ;
 
     public Long getTgId() {
         return tgId;
@@ -63,5 +66,13 @@ public class User {
 
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
+    }
+
+    public BigDecimal getMoney() {
+        return money;
+    }
+
+    public void setMoney(BigDecimal money) {
+        this.money = money;
     }
 }

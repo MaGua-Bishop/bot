@@ -24,3 +24,4 @@ bot:
   port: 7890    #端口
 #  ${SERVER_HOST}
   url: ${SERVER_HOST}/tgbot/lottery_bot_cn #ngrok地址]
+  reviewgroup: reviewgroup.json

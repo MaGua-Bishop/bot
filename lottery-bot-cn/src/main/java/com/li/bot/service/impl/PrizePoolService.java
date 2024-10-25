@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -65,8 +66,7 @@ public class PrizePoolService {
 
     private InlineKeyboardMarkup createInlineKeyboardButton(){
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
-        buttonList.add(InlineKeyboardButton.builder().text("ended").callbackData("null").build());
-        buttonList.add(InlineKeyboardButton.builder().text("ended").callbackData("null").build());
+        buttonList.add(InlineKeyboardButton.builder().text("已结束").callbackData("null").build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
         return inlineKeyboardMarkup;
@@ -87,11 +87,19 @@ public class PrizePoolService {
             lottery.setStatus(LotteryStatus.END.getCode());
             lottery.setUpdateTime(LocalDateTime.now());
             lotteryMapper.updateById(lottery);
+            EditMessageReplyMarkup editMessageReplyMarkup = EditMessageReplyMarkup.builder().chatId(lottery.getChatId()).messageId(Integer.valueOf(String.valueOf(lottery.getMessageId()))).replyMarkup(createInlineKeyboardButton()).build();
+            SendMessage sendMessage = SendMessage.builder().chatId(lottery.getChatId()).text("抽奖id:<code>" + lottery.getLotteryId() + "</code>\n抽奖已结束\n请发送\n<b><code>/view "+lottery.getLotteryId()+"</code></b>\n命令查看中奖者名单").parseMode("html").build();
+            try {
+                bot.execute(editMessageReplyMarkup);
+                bot.execute(sendMessage);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
             return null;
         }
         List<String> prizePoolIds = moneyList.stream().map(PrizePoolVO::getPrizePoolId).collect(Collectors.toList());
-
         int index = new Random().nextInt(prizePoolIds.size());
+
         return prizePoolIds.get(index);
     }
     private BigDecimal getPositiveRandomAmount(NormalDistribution normalDist, BigDecimal max) {
