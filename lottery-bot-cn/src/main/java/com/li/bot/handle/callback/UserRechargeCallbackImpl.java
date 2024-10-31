@@ -55,7 +55,7 @@ public class UserRechargeCallbackImpl implements ICallback{
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text("此订单10分钟内有效，过期后请重新生成订单。\n"+
-                        "转账地址: <code>TD8xFqeF5ni5PDTwmdwJUE8h3cqgbfMMMM</code> (TRC-20网络)\n" +
+                        "<b>转账地址: </b><code>TJJTTR4CB2NQY6eLhy6kWjBbyNePv4pQGM</code> (TRC-20网络)\n" +
                         "转账金额: " + bigDecimal + " USDT\n" +
                         "请注意转账金额务必与上方的转账金额一致，否则无法自动到账\n" +
                         "支付完成后, 请等待1分钟左右查询，自动到账。")
