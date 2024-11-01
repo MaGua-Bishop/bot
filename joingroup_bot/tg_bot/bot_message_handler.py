@@ -16,7 +16,7 @@ bot.set_my_commands(commands, scope=types.BotCommandScopeAllPrivateChats())
 
 def get_user(message) -> TgUser:
     try:
-        user = TgUser.objects.get(tg_id=message.from_user.id)  # 替换为实际的 tg_id
+        user = TgUser.objects.get(tg_id=message.from_user.id)
         return user
     except TgUser.DoesNotExist:
         new_user = TgUser(
