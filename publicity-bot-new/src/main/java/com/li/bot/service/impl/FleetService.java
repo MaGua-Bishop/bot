@@ -43,29 +43,29 @@ import java.util.stream.Collectors;
 public class FleetService {
 
     @Autowired
-    private BotConfig botConfig ;
+    private BotConfig botConfig;
 
     @Autowired
-    private ConvoysMapper convoysMapper ;
+    private ConvoysMapper convoysMapper;
 
     @Autowired
     private TaskScheduler taskScheduler;
 
 
     @Autowired
-    private ConvoysInviteMapper convoysInviteMapper ;
+    private ConvoysInviteMapper convoysInviteMapper;
 
     @Autowired
-    private InviteMapper inviteMapper ;
+    private InviteMapper inviteMapper;
 
     @Autowired
-    private ButtonMapper buttonMapper ;
+    private ButtonMapper buttonMapper;
 
     @Autowired
-    private FileService fileService ;
+    private FileService fileService;
 
     @Autowired
-    private BotServiceImpl bot ;
+    private BotServiceImpl bot;
 
 
     private Map<Long, ScheduledFuture<?>> scheduledTasks = new HashMap<>();
@@ -78,7 +78,7 @@ public class FleetService {
         }
     }
 
-    private InlineKeyboardMarkup createInlineKeyboardButton(){
+    private InlineKeyboardMarkup createInlineKeyboardButton() {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
 
         List<Button> buttons = buttonMapper.selectList(null);
@@ -113,13 +113,13 @@ public class FleetService {
     }
 
     private void runFleetTask(Convoys convoys) {
-        if(convoys.getIntervalMinutes() <= 0){
+        if (convoys.getIntervalMinutes() <= 0) {
             return;
         }
         // 你的定时任务逻辑
         List<ConvoysInvite> convoysInviteList = convoysInviteMapper.selectList(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getConvoysId, convoys.getConvoysId()).eq(ConvoysInvite::getStatus, ConvoysInviteStatus.BOARDED.getCode()));
         if (convoysInviteList.isEmpty()) {
-            System.out.println("车队 " + convoys.getName() + " 的定时任务执行了！当前时间：" + new java.util.Date()+"该车队没成员 没自动推送");
+            System.out.println("车队 " + convoys.getName() + " 的定时任务执行了！当前时间：" + new java.util.Date() + "该车队没成员 没自动推送");
             return;
         }
         List<Invite> inviteList = inviteMapper.getInviteListByIds(convoysInviteList.stream().map(ConvoysInvite::getInviteId).collect(Collectors.toList()));
@@ -130,22 +130,24 @@ public class FleetService {
             try {
                 bot.execute(getChat);
             } catch (TelegramApiException e) {
-                ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, in.getInviteId()).eq(ConvoysInvite::getStatus, ConvoysInviteStatus.BOARDED.getCode()));
-                inviteMapper.deleteById(in);
-                convoysInviteMapper.deleteById(convoysInvite);
-                SendMessage send = SendMessage.builder().chatId(in.getTgId()).text("《"+in.getName()+"》\n检测到机器人发不了消息,机器人已自动退出").parseMode("html").build();
-                try {
-                    bot.execute(send);
-                } catch (TelegramApiException ex) {
-                    throw new RuntimeException(ex);
-                }
+                log.info("车队 " + convoys.getName() + " 的定时任务执行了！用户" + in.getName() + "的群组" + in.getChatId() + "不存在");
+//                System.out.println(e);
+//                ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, in.getInviteId()).eq(ConvoysInvite::getStatus, ConvoysInviteStatus.BOARDED.getCode()));
+//                inviteMapper.deleteById(in);
+//                convoysInviteMapper.deleteById(convoysInvite);
+//                SendMessage send = SendMessage.builder().chatId(in.getTgId()).text("《" + in.getName() + "》\n检测到机器人发不了消息,机器人已自动退出\n退出原因:机器人找不到聊天").parseMode("html").build();
+//                try {
+//                    bot.execute(send);
+//                } catch (TelegramApiException ex) {
+//                    throw new RuntimeException(ex);
+//                }
                 continue;
             }
             StringBuilder builder = new StringBuilder();
-            builder.append("<a href=\"https://"+botConfig.getBotname()+"\">" +"\uD83D\uDE80来自热点精品互推"+convoys.getName()+"\uD83D\uDE80\n</a>" );
-            builder.append("<b>"+fileService.getText() + "</b>\n" );
+            builder.append("<a href=\"https://" + botConfig.getBotname() + "\">" + "\uD83D\uDE80来自热点精品互推" + convoys.getName() + "\uD83D\uDE80\n</a>");
+            builder.append("<b>" + fileService.getText() + "</b>\n");
             builder.append(BotMessageUtils.getConvoysMemberInfoList(inviteList));
-            builder.append("\n"+"<b>"+fileService.getButtonText()+ "</b>");
+            builder.append("\n" + "<b>" + fileService.getButtonText() + "</b>");
             SendMessage send = SendMessage.builder().chatId(in.getChatId()).text(String.valueOf(builder)).parseMode("html").replyMarkup(createInlineKeyboardButton()).disableWebPagePreview(true).build();
             Message execute = null;
             Long cId = null;
@@ -154,9 +156,9 @@ public class FleetService {
 
                 ConvoysInvite c = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, in.getInviteId()).eq(ConvoysInvite::getConvoysId, convoys.getConvoysId()));
                 Integer messageId = c.getMessageId();
-                cId= c.getConvoysId() ;
+                cId = c.getConvoysId();
                 if (messageId == null) {
-                    convoysInviteMapper.updateMessageIdById(execute.getMessageId(),in.getInviteId(),c.getConvoysId());
+                    convoysInviteMapper.updateMessageIdById(execute.getMessageId(), in.getInviteId(), c.getConvoysId());
                 } else {
                     try {
                         bot.execute(DeleteMessage.builder()
@@ -166,11 +168,11 @@ public class FleetService {
                     } catch (TelegramApiException e) {
                         throw new RuntimeException(e);
                     }
-                    convoysInviteMapper.updateMessageIdById(execute.getMessageId(), in.getInviteId(),c.getConvoysId());
+                    convoysInviteMapper.updateMessageIdById(execute.getMessageId(), in.getInviteId(), c.getConvoysId());
                 }
             } catch (Exception e) {
                 // 更新messageId为空
-                convoysInviteMapper.updateMessageIdById(execute.getMessageId(), in.getInviteId(),cId);
+                convoysInviteMapper.updateMessageIdById(execute.getMessageId(), in.getInviteId(), cId);
                 log.error("车队:{}发送消息失败", convoys.getName());
             }
         }
@@ -206,8 +208,6 @@ public class FleetService {
         // 从数据库中删除车队记录
         convoysMapper.deleteById(convoyId);
     }
-
-
 
 
 }
