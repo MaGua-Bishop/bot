@@ -34,25 +34,25 @@ import java.util.regex.Pattern;
 @Slf4j
 public class AdminEdit {
 
-    private BotServiceImpl bot ;
+    private BotServiceImpl bot;
 
-    private Message message ;
+    private Message message;
 
-    private AdminEditSessionList adminEditSessionList ;
+    private AdminEditSessionList adminEditSessionList;
 
-    private BusinessMapper businessMapper ;
+    private BusinessMapper businessMapper;
 
-    public AdminEdit(BotServiceImpl bot,  Message message, AdminEditSessionList adminEditSessionList,BusinessMapper businessMapper){
-        this.bot = bot ;
-        this.message = message ;
-        this.adminEditSessionList = adminEditSessionList ;
-        this.businessMapper = businessMapper ;
+    public AdminEdit(BotServiceImpl bot, Message message, AdminEditSessionList adminEditSessionList, BusinessMapper businessMapper) {
+        this.bot = bot;
+        this.message = message;
+        this.adminEditSessionList = adminEditSessionList;
+        this.businessMapper = businessMapper;
     }
 
-    public void execute(BotMenuFactory botMenuFactory,BotKeyFactory botKeyFactory){
+    public void execute(BotMenuFactory botMenuFactory, BotKeyFactory botKeyFactory) {
 
         IBotMenu menu = botMenuFactory.getMenu(message.getText());
-        if(menu != null ){
+        if (menu != null) {
             try {
                 bot.execute(SendMessage.builder().chatId(message.getChatId()).text("操作已取消").build());
                 adminEditSessionList.removeUserSession(message.getChatId());
@@ -61,14 +61,14 @@ public class AdminEdit {
             }
             menu.execute(bot, message);
             return;
-        }else {
+        } else {
             IKeyboard key = botKeyFactory.getKey(message.getText());
-            if(key != null ){
+            if (key != null) {
                 try {
                     bot.execute(SendMessage.builder().chatId(message.getChatId()).text("操作已取消").build());
                     adminEditSessionList.removeUserSession(message.getChatId());
                 } catch (TelegramApiException e) {
-                     throw new RuntimeException(e);
+                    throw new RuntimeException(e);
                 }
                 key.execute(bot, message);
                 return;
@@ -85,7 +85,7 @@ public class AdminEdit {
         }
     }
 
-        private BigDecimal isMoney(String money){
+    private BigDecimal isMoney(String money) {
         // 使用正则表达式验证是否是数字且最多保留两位小数
         Pattern pattern = Pattern.compile("^\\d+(\\.\\d{1,2})?$");
         Matcher matcher = pattern.matcher(money);
@@ -101,25 +101,26 @@ public class AdminEdit {
         }
     }
 
-    private void handleUserMessageInput(Message message,AdminEditSession userSession) {
+    private void handleUserMessageInput(Message message, AdminEditSession userSession) {
         Integer type = userSession.getType();
-        if(0 == type){
+        if (0 == type) {
             Business business = userSession.getBusiness();
 
             business.setMessageId(message.getMessageId());
+            business.setTgId(message.getFrom().getId());
             businessMapper.updateById(business);
             try {
-                bot.execute(SendMessage.builder().chatId(message.getChatId()).text(business.getName()+"文案修改成功").build());
+                bot.execute(SendMessage.builder().chatId(message.getChatId()).text(business.getName() + "文案修改成功").build());
                 adminEditSessionList.removeUserSession(message.getChatId());
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
-        }else {
+        } else {
             Business business = userSession.getBusiness();
 
             String text = message.getText();
             BigDecimal money = isMoney(text);
-            if(money == null){
+            if (money == null) {
                 try {
                     bot.execute(SendMessage.builder().chatId(message.getChatId()).text("金额错误,请重新修改业务价格").build());
                 } catch (TelegramApiException e) {
@@ -130,7 +131,7 @@ public class AdminEdit {
             business.setMoney(money);
             businessMapper.updateById(business);
             try {
-                bot.execute(SendMessage.builder().chatId(message.getChatId()).text(business.getName()+"价格修改成功").build());
+                bot.execute(SendMessage.builder().chatId(message.getChatId()).text(business.getName() + "价格修改成功").build());
                 adminEditSessionList.removeUserSession(message.getChatId());
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);

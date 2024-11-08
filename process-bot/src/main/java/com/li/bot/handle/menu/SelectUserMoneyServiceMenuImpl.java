@@ -47,7 +47,7 @@ public class SelectUserMoneyServiceMenuImpl implements IBotMenu {
 
     private Long getUserId(String text){
         // 正则表达式模式，用于匹配固定十位数的ID
-        Pattern idPattern = Pattern.compile("\\b\\d{10}\\b");
+        Pattern idPattern = Pattern.compile("^\\d{5,15}$");
         Matcher idMatcher = idPattern.matcher(text);
 
         // 查找并打印所有匹配的ID

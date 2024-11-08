@@ -49,6 +49,7 @@ public class BotServiceImpl extends TelegramWebhookBot {
 
 
     public BotServiceImpl(BotConfig botConfig) {
+//        super(botConfig.getDefaultBotOptions());
         this.botConfig = botConfig;
     }
 
@@ -138,7 +139,7 @@ public class BotServiceImpl extends TelegramWebhookBot {
 
     private Long getUserId(String text) {
         // 正则表达式模式，用于匹配固定十位数的ID
-        Pattern idPattern = Pattern.compile("^\\d{10}$");
+        Pattern idPattern = Pattern.compile("^\\d{5,15}$");
         Matcher idMatcher = idPattern.matcher(text);
 
         // 检查整个文本是否完全匹配十位数字
@@ -257,6 +258,33 @@ public class BotServiceImpl extends TelegramWebhookBot {
             if (!b) {
                 return null;
             }
+            if (update.getMessage().getChat().getType().equals("private")) {
+
+                Long tgId = update.getMessage().getFrom().getId();
+                OrderSession orderSession = addOrderSessionList.getUserSession(tgId);
+
+                if (orderSession != null) {
+                    AddOrder addOrder = new AddOrder(this, orderSession, update.getMessage(), addOrderSessionList, orderMapper, userMapper);
+                    addOrder.execute(botMenuFactory, botKeyFactory);
+                    return null;
+                }
+                if (adminEditSessionList.getUserSession(tgId) != null) {
+                    new AdminEdit(this, update.getMessage(), adminEditSessionList, businessMapper).execute(botMenuFactory, botKeyFactory);
+                    return null;
+                }
+
+                BusinessSession businessSession = addBusinessSessionList.getUserSession(tgId);
+                if (businessSession != null) {
+                    new AddBusiness(this, businessSession, update.getMessage(), addBusinessSessionList, businessMapper).execute(botMenuFactory, botKeyFactory);
+                    return null;
+                }
+            }else{
+                Long tgId = update.getMessage().getFrom().getId();
+                if(cancelOrderSessionList.getCancelOrderSession(tgId) !=null){
+                    new CancelOrder(this, update.getMessage(), cancelOrderSessionList, orderMapper, businessMapper, userMapper,replyMapper).execute(botMenuFactory, botKeyFactory);
+                    return null;
+                }
+            }
             String text = "";
             if (update.getMessage().getText() != null) {
                 text = update.getMessage().getText();
@@ -283,33 +311,6 @@ public class BotServiceImpl extends TelegramWebhookBot {
                 if (isAdminUpdateUserMoney(text)) {
                     IBotMenu menu = botMenuFactory.getMenu("修改用户金额");
                     menu.execute(this, update.getMessage());
-                    return null;
-                }
-            }
-            if (update.getMessage().getChat().getType().equals("private")) {
-
-                Long tgId = update.getMessage().getFrom().getId();
-                OrderSession orderSession = addOrderSessionList.getUserSession(tgId);
-
-                if (orderSession != null) {
-                    AddOrder addOrder = new AddOrder(this, orderSession, update.getMessage(), addOrderSessionList, orderMapper, userMapper);
-                    addOrder.execute(botMenuFactory, botKeyFactory);
-                    return null;
-                }
-                if (adminEditSessionList.getUserSession(tgId) != null) {
-                    new AdminEdit(this, update.getMessage(), adminEditSessionList, businessMapper).execute(botMenuFactory, botKeyFactory);
-                    return null;
-                }
-
-                BusinessSession businessSession = addBusinessSessionList.getUserSession(tgId);
-                if (businessSession != null) {
-                    new AddBusiness(this, businessSession, update.getMessage(), addBusinessSessionList, businessMapper).execute(botMenuFactory, botKeyFactory);
-                    return null;
-                }
-            }else{
-                Long tgId = update.getMessage().getFrom().getId();
-                if(cancelOrderSessionList.getCancelOrderSession(tgId) !=null){
-                    new CancelOrder(this, update.getMessage(), cancelOrderSessionList, orderMapper, businessMapper, userMapper,replyMapper).execute(botMenuFactory, botKeyFactory);
                     return null;
                 }
             }

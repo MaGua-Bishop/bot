@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-47e+2epp3&%7zhtdy*wtj##&z4*+59q79pc#_m)!k&6odd!(w1
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    os.environ.get('SERVER_HOST')
+    '*'
 ]
 
 # Application definition
@@ -79,13 +79,20 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'joingroup_bot',  # 数据库名称
-        'USER': os.environ.get('DATABASE_BOT_USERNAME'),        # 数据库用户名
-        'PASSWORD': os.environ.get('DATABASE_BOT_PASSWORD'),    # 数据库密码
-        'HOST': os.environ.get('DATABASE_BOT_HOST'),            # 数据库主机
+        'USER': os.environ.get('DATABASE_BOT_USERNAME'),  # 数据库用户名
+        'PASSWORD': os.environ.get('DATABASE_BOT_PASSWORD'),  # 数据库密码
+        'HOST': os.environ.get('DATABASE_BOT_HOST'),  # 数据库主机
         'PORT': os.environ.get('DATABASE_BOT_PORT'),
     }
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME': 'joingroup_bot',  # 数据库名称
+    #     'USER': 'user_HHC7zR',  # 数据库用户名
+    #     'PASSWORD': 'password_PpfikBkasdwqkcoq',  # 数据库密码
+    #     'HOST': '5.45.72.79',  # 数据库主机
+    #     'PORT': '5400',
+    # }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -125,3 +132,21 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.db.backends': {
+            'handlers': ['console'],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
+    }
+}

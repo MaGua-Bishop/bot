@@ -130,17 +130,18 @@ public class FleetService {
             try {
                 bot.execute(getChat);
             } catch (TelegramApiException e) {
-                log.info("车队 " + convoys.getName() + " 的定时任务执行了！用户" + in.getName() + "的群组" + in.getChatId() + "不存在");
-//                System.out.println(e);
-//                ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, in.getInviteId()).eq(ConvoysInvite::getStatus, ConvoysInviteStatus.BOARDED.getCode()));
-//                inviteMapper.deleteById(in);
-//                convoysInviteMapper.deleteById(convoysInvite);
-//                SendMessage send = SendMessage.builder().chatId(in.getTgId()).text("《" + in.getName() + "》\n检测到机器人发不了消息,机器人已自动退出\n退出原因:机器人找不到聊天").parseMode("html").build();
-//                try {
-//                    bot.execute(send);
-//                } catch (TelegramApiException ex) {
-//                    throw new RuntimeException(ex);
-//                }
+                log.info("车队异常,请处理:",e);
+                //判断是否是邀请链接过期
+                log.info("车队 " + convoys.getName() + " 的定时任务执行了！用户" + in.getName() + "的频道" + in.getChatId() + "有问题，已自动退出");
+                ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, in.getInviteId()).eq(ConvoysInvite::getStatus, ConvoysInviteStatus.BOARDED.getCode()));
+                inviteMapper.deleteById(in);
+                convoysInviteMapper.deleteById(convoysInvite);
+                SendMessage send = SendMessage.builder().chatId(in.getTgId()).text("《" + in.getName() + "》\n检测到机器人发不了消息,机器人已自动退出\n退出原因:已过期链接").parseMode("html").build();
+                try {
+                    bot.execute(send);
+                } catch (TelegramApiException ex) {
+                    throw new RuntimeException(ex);
+                }
                 continue;
             }
             StringBuilder builder = new StringBuilder();

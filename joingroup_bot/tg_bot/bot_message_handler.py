@@ -8,8 +8,8 @@ from decimal import Decimal
 
 commands = [
     types.BotCommand("start", "启动机器人"),
-    types.BotCommand("join", "加入群聊"),
-    types.BotCommand("help", "帮助")
+    types.BotCommand("join", "进入私密群"),
+    # types.BotCommand("help", "帮助")
 ]
 bot.set_my_commands(commands, scope=types.BotCommandScopeAllPrivateChats())
 
@@ -22,24 +22,24 @@ def get_user(message) -> TgUser:
         new_user = TgUser(
             tg_id=message.from_user.id,
             tg_username=message.from_user.username,
-            tg_full_name=message.from_user.first_name + message.from_user.last_name,
+            tg_full_name=message.from_user.full_name,
         )
         new_user.save()
         return new_user
 
 
-@bot.message_handler(commands=['start'])
+@bot.message_handler(commands=['start'], func=lambda message: message.chat.type == 'private')
 def get_start_command(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     button1 = types.KeyboardButton("充值")
     button2 = types.KeyboardButton("个人中心")
     markup.add(button1, button2)
-    bot.send_message(message.chat.id, "欢迎使用bot\n/join 购买入群链接，并加入群聊", reply_markup=markup,
+    bot.send_message(message.chat.id, "欢迎使用bot\n/join 购买私密群聊链接，并进入私密群聊", reply_markup=markup,
                      parse_mode='html')
     get_user(message)
 
 
-@bot.message_handler(commands=['join'])
+@bot.message_handler(commands=['join'], func=lambda message: message.chat.type == 'private')
 def get_join_command(message):
     user = get_user(message)
     data = get_set_file_data()
@@ -55,7 +55,7 @@ def get_join_command(message):
     user.save()
     markup = quick_markup(
         {
-            '加入群聊': {'url': invite_link.invite_link}
+            '进入私密群聊': {'url': invite_link.invite_link}
         }
     )
     join_group = TgJoinGroup(
@@ -63,27 +63,32 @@ def get_join_command(message):
         money=price
     )
     join_group.save()
-    bot.send_message(message.chat.id, "请点击下方加入群聊按钮", reply_markup=markup)
+    bot.send_message(message.chat.id, "请点击下方进入私密群聊按钮", reply_markup=markup)
 
 
-@bot.message_handler(commands=['help'])
-def get_help_command(message):
-    text = '''
-    欢迎使用bot\n
-    <b>使用说明:</b>\n
-    /join 购买入群链接，并加入群聊
-    '''
-    bot.send_message(message.chat.id, text, parse_mode='html')
-
+# @bot.message_handler(commands=['help'], func=lambda message: message.chat.type == 'private')
+# def get_help_command(message):
+#     text = '''
+#     欢迎使用bot\n
+#     <b>使用说明:</b>\n
+#     /join 购买入群链接，并加入群聊
+#     '''
+#     bot.send_message(message.chat.id, text, parse_mode='html')
 
 # 处理内置键盘
+
+
 @bot.message_handler(func=lambda message: message.text == '个人中心' and message.chat.type == 'private')
-def get_personal_center(message):
-    full_name = message.from_user.first_name + message.from_user.last_name
+def get_info(message):
+    # 获取用户的完整姓名
+    full_name = message.from_user.full_name
+
     user = get_user(message)
+
     text = f'''
-        个人中心:\nTGID:<code>{message.from_user.id}</code>\n用户名:<a href=\"tg://user?id={message.from_user.id}\">{full_name}</a>\n余额:<b>{user.money}</b>
+            个人中心:\nTGID:<code>{message.from_user.id}</code>\n用户名: {full_name}\n余额:<b>{user.money}</b>
         '''
+
     if user.is_admin:
         markup = quick_markup({
             '设置价格': {'callback_data': 'admin_set_money'},
@@ -99,18 +104,19 @@ def get_personal_center(message):
 @bot.message_handler(func=lambda message: message.text == '充值' and message.chat.type == 'private')
 def get_recharge(message):
     try:
-        full_name = message.from_user.first_name + message.from_user.last_name
+        full_name = message.from_user.full_name
         user = get_user(message)
+
         text = f'''
-            TGID:<code>{message.from_user.id}</code>\n用户名:<a href=\"tg://user?id={message.from_user.id}\">{full_name}</a>\n余额:<b>{user.money}</b>\n\n<b>请选择充值的金额</b>'''
-        markup = quick_markup({
-            '100U': {'callback_data': 'user_recharge_100'},
-            '200U': {'callback_data': 'user_recharge_200'},
-            '300U': {'callback_data': 'user_recharge_300'},
-            '500U': {'callback_data': 'user_recharge_500'},
-            '1000U': {'callback_data': 'user_recharge_1000'},
-            '2000U': {'callback_data': 'user_recharge_2000'}
-        }, row_width=3)
+            TGID:<code>{message.from_user.id}</code>\n用户名:{full_name}\n余额:<b>{user.money}</b>\n\n<b>请选择充值的金额</b>'''
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton(text='4U', callback_data='user_recharge_4'),
+                   types.InlineKeyboardButton(text='8U', callback_data='user_recharge_8'),
+                   types.InlineKeyboardButton(text='12U', callback_data='user_recharge_12'))
+        markup.add(types.InlineKeyboardButton(text='20U', callback_data='user_recharge_20'),
+                   types.InlineKeyboardButton(text='50U', callback_data='user_recharge_50'),
+                   types.InlineKeyboardButton(text='100U', callback_data='user_recharge_100'))
+
         bot.send_message(message.chat.id, text, parse_mode='html', reply_markup=markup)
     except Exception as e:
         print(e)
@@ -137,8 +143,8 @@ def set_group(message):
 
 # 监听新成员加入指定群聊
 def delete_message_after_timeout(chat_id, message_id, timeout):
-    print(f'执行删除消息，消息id:{message_id}')
-    bot.delete_message(chat_id, message_id)
+    print(f'执行删除消息，消息id:{message_id},type:{type(message_id)}')
+    bot.delete_message(chat_id, message_id.message_id)
 
 
 @bot.message_handler(content_types=['new_chat_members'])
@@ -163,11 +169,10 @@ def welcome_new_member(message):
                 chat_id=group_chat_id,  # 目标聊天的chat_id
                 from_chat_id=data.get_join_group_message().get_chat_id(),
                 message_id=data.get_join_group_message().get_message_id(),
+                reply_markup=markup
             )
-            edit_message = bot.edit_message_reply_markup(chat_id=chat_id, message_id=send_message.message_id,
-                                                         reply_markup=markup)
             interval = 180
             Timer(interval, delete_message_after_timeout,
-                  args=(edit_message.chat.id, edit_message.message_id, interval)).start()
+                  args=(data.get_chat_id(), send_message, interval)).start()
         except Exception as e:
             print(e)

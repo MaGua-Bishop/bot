@@ -40,7 +40,7 @@ public class ReduceUserMoneyServiceMenuImpl implements IBotMenu {
 
     private Long getUserId(String text) {
         // 正则表达式模式，用于匹配固定十位数的ID
-        Pattern idPattern = Pattern.compile("^\\d{10}$");
+        Pattern idPattern = Pattern.compile("^\\d{5,15}$");
         Matcher idMatcher = idPattern.matcher(text);
 
         // 检查整个文本是否完全匹配十位数字

@@ -37,7 +37,7 @@ class RechargeView(View):
         print(data)
 
         result = execute_custom_sql(
-            f"SELECT * FROM tg_recharge WHERE create_time >= NOW() - INTERVAL '10 minutes' and money = {amount} and status = 0")
+            f"SELECT * FROM tg_recharge WHERE create_time >= NOW() - INTERVAL '15 minutes' and money = {amount} and status = 0")
         results = []
         for row in result:
             recharge = TgRecharge(
@@ -50,6 +50,7 @@ class RechargeView(View):
             )
             results.append(recharge)
         if results:
+            des = '充值成功'
             data = results[0]
             user = TgUser.objects.get(tg_id=data.tg_id)
             with connection.cursor() as cursor:
@@ -58,6 +59,5 @@ class RechargeView(View):
             user.save()
             bot.send_message(data.tg_id, f'充值成功\n当前余额:<b>{user.money}</b>', parse_mode='html')
         else:
-            print("没有找到对应的充值记录")
-
-        return JsonResponse({'status': 'ok'})
+            des = '没有找到对应的充值记录'
+        return JsonResponse({'status': 'ok', 'des': des})

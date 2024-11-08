@@ -142,8 +142,8 @@ public class FleetService {
                 continue;
             }
             StringBuilder builder = new StringBuilder();
-            builder.append("<a href=\"https://"+botConfig.getBotname()+"\">" +"来自"+convoys.getName()+"\n</a>" );
-            builder.append("<b>"+fileService.getText() + "</b>\n" );
+            builder.append("<a href=\"https://"+botConfig.getBotname()+"\">" +"🍑桃子色色互推:"+convoys.getName()+"🍑</a>\n\n" );
+//            builder.append("<b>"+fileService.getText() + "</b>\n" );
             builder.append(BotMessageUtils.getConvoysMemberInfoList(inviteList));
             builder.append("\n"+"<b>"+fileService.getButtonText()+ "</b>");
             SendMessage send = SendMessage.builder().chatId(in.getChatId()).text(String.valueOf(builder)).parseMode("html").replyMarkup(createInlineKeyboardButton()).disableWebPagePreview(true).build();

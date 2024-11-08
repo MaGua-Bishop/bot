@@ -7,27 +7,6 @@ from django.db.models import Sum
 from decimal import Decimal
 from django.db import connection
 
-
-# @bot.callback_query_handler(func=lambda call: call.data == 'admin_set_group_url')
-# def admin_set_group(call):
-#     """
-#         管理员设置群聊邀请链接
-#     """
-#     bot.send_message(call.message.chat.id, '请输入群聊邀请链接')
-#     bot.register_next_step_handler(call.message, admin_input_group)
-#
-#
-# def admin_input_group(message):
-#     url = message.text
-#     if re.match(r'^https://t.me/', url):
-#         data = get_set_file_data()
-#         data.set_group_url(url)
-#         save_set_file_data(data)
-#         bot.send_message(message.chat.id, '设置成功')
-#     else:
-#         bot.send_message(message.chat.id, '无效的URL,请输入以 https:// 开头的有效 URL')
-
-
 @bot.callback_query_handler(func=lambda call: call.data == 'admin_set_money')
 def admin_set_group(call):
     """
@@ -163,7 +142,7 @@ def admin_add_button(call):
     """
     amount = call.data[len('user_recharge_'):]
     money = Decimal(amount)
-    sql_query = "SELECT count(recharge_id) FROM tg_recharge WHERE create_time >= NOW() - INTERVAL '10 minutes'"  # 你的自定义 SQL 查询
+    sql_query = "SELECT count(recharge_id) FROM tg_recharge WHERE create_time >= NOW() - INTERVAL '15 minutes'"  # 你的自定义 SQL 查询
 
     count = execute_custom_sql(sql_query)
     print(count)
@@ -172,12 +151,13 @@ def admin_add_button(call):
     else:
         count = count[0][0]
         money += Decimal('0.01') * Decimal(count + 1)
+        print(f'{count}发现重复充值:{Decimal(count + 1)}，增加费用为:{money}')
 
     recharge = TgRecharge(
         money=money,
         tg_id=call.message.chat.id,
     )
     recharge.save()
-    address = 'aaa'
-    text = f'''此订单10分钟内有效，过期后请重新生成订单。\n\n<b>转账地址(点击可复制): </b><code>{address}</code> (TRC-20网络)\n\n转账金额:<b>{money} USDT</b>\n\n请注意<b>转账金额务必与上方的转账金额一致</b>，否则无法自动到账\n支付完成后, 请等待1分钟左右查询，自动到账。'''
+    address = 'THAghPyQjk7hbKmNY6psM2UcSEj8M8JzC3'
+    text = f'''此订单15分钟内有效，过期后请重新生成订单。\n\n<b>转账地址(点击可复制): </b><code>{address}</code> (TRC-20网络)\n\n转账金额:<b>{money} USDT</b>\n\n请注意<b>转账金额务必与上方的转账金额一致</b>，否则无法自动到账\n支付完成后, 请等待1分钟左右查询，自动到账。'''
     bot.send_message(call.message.chat.id, text, parse_mode='html')

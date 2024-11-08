@@ -1,0 +1,588 @@
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/favicon.ico">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>澳门威尼斯人活动申请</title>
+    <script>
+        // 通过 JavaScript 显示弹窗
+        window.onload = function () {
+            {% if error_message %}
+                alert('{{ error_message }}');
+            {% elif success_message %}
+                alert('{{ success_message }}');
+            {% endif %}
+        }
+    </script>
+    <meta name="viewport" content="width=device-width,user-scalable=no">
+    <link rel="stylesheet" href="static/css/reset.css">
+    <link rel="stylesheet" href="static/css/global.css">
+    <style data-id="immersive-translate-input-injected-css">
+        .immersive-translate-input {
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 2147483647;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .immersive-translate-attach-loading::after {
+            content: " ";
+
+            --loading-color: #f78fb6;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: block;
+            margin: 12px auto;
+            position: relative;
+            color: white;
+            left: -100px;
+            box-sizing: border-box;
+            animation: immersiveTranslateShadowRolling 1.5s linear infinite;
+
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-2000%, -50%);
+            z-index: 100;
+        }
+
+        .immersive-translate-loading-spinner {
+            vertical-align: middle !important;
+            width: 10px !important;
+            height: 10px !important;
+            display: inline-block !important;
+            margin: 0 4px !important;
+            border: 2px rgba(221, 244, 255, 0.6) solid !important;
+            border-top: 2px rgba(0, 0, 0, 0.375) solid !important;
+            border-left: 2px rgba(0, 0, 0, 0.375) solid !important;
+            border-radius: 50% !important;
+            padding: 0 !important;
+            -webkit-animation: immersive-translate-loading-animation 0.6s infinite linear !important;
+            animation: immersive-translate-loading-animation 0.6s infinite linear !important;
+        }
+
+        @-webkit-keyframes immersive-translate-loading-animation {
+            from {
+                -webkit-transform: rotate(0deg);
+            }
+
+            to {
+                -webkit-transform: rotate(359deg);
+            }
+        }
+
+        @keyframes immersive-translate-loading-animation {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(359deg);
+            }
+        }
+
+        .immersive-translate-input-loading {
+            --loading-color: #f78fb6;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: block;
+            margin: 12px auto;
+            position: relative;
+            color: white;
+            left: -100px;
+            box-sizing: border-box;
+            animation: immersiveTranslateShadowRolling 1.5s linear infinite;
+        }
+
+        @keyframes immersiveTranslateShadowRolling {
+            0% {
+                box-shadow: 0px 0 rgba(255, 255, 255, 0), 0px 0 rgba(255, 255, 255, 0),
+                0px 0 rgba(255, 255, 255, 0), 0px 0 rgba(255, 255, 255, 0);
+            }
+
+            12% {
+                box-shadow: 100px 0 var(--loading-color), 0px 0 rgba(255, 255, 255, 0),
+                0px 0 rgba(255, 255, 255, 0), 0px 0 rgba(255, 255, 255, 0);
+            }
+
+            25% {
+                box-shadow: 110px 0 var(--loading-color), 100px 0 var(--loading-color),
+                0px 0 rgba(255, 255, 255, 0), 0px 0 rgba(255, 255, 255, 0);
+            }
+
+            36% {
+                box-shadow: 120px 0 var(--loading-color), 110px 0 var(--loading-color),
+                100px 0 var(--loading-color), 0px 0 rgba(255, 255, 255, 0);
+            }
+
+            50% {
+                box-shadow: 130px 0 var(--loading-color), 120px 0 var(--loading-color),
+                110px 0 var(--loading-color), 100px 0 var(--loading-color);
+            }
+
+            62% {
+                box-shadow: 200px 0 rgba(255, 255, 255, 0), 130px 0 var(--loading-color),
+                120px 0 var(--loading-color), 110px 0 var(--loading-color);
+            }
+
+            75% {
+                box-shadow: 200px 0 rgba(255, 255, 255, 0), 200px 0 rgba(255, 255, 255, 0),
+                130px 0 var(--loading-color), 120px 0 var(--loading-color);
+            }
+
+            87% {
+                box-shadow: 200px 0 rgba(255, 255, 255, 0), 200px 0 rgba(255, 255, 255, 0),
+                200px 0 rgba(255, 255, 255, 0), 130px 0 var(--loading-color);
+            }
+
+            100% {
+                box-shadow: 200px 0 rgba(255, 255, 255, 0), 200px 0 rgba(255, 255, 255, 0),
+                200px 0 rgba(255, 255, 255, 0), 200px 0 rgba(255, 255, 255, 0);
+            }
+        }
+
+        .immersive-translate-toast {
+            display: flex;
+            position: fixed;
+            z-index: 2147483647;
+            left: 0;
+            right: 0;
+            top: 1%;
+            width: fit-content;
+            padding: 12px 20px;
+            margin: auto;
+            overflow: auto;
+            background: #fef6f9;
+            box-shadow: 0px 4px 10px 0px rgba(0, 10, 30, 0.06);
+            font-size: 15px;
+            border-radius: 8px;
+            color: #333;
+        }
+
+        .immersive-translate-toast-content {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+
+        .immersive-translate-toast-hidden {
+            margin: 0 20px 0 72px;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .immersive-translate-toast-close {
+            color: #666666;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 0 10px;
+            cursor: pointer;
+        }
+
+        @media screen and (max-width: 768px) {
+            .immersive-translate-toast {
+                top: 0;
+                padding: 12px 0px 0 10px;
+            }
+
+            .immersive-translate-toast-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .immersive-translate-toast-hidden {
+                margin: 10px auto;
+            }
+        }
+
+        .immersive-translate-modal {
+            display: none;
+            position: fixed;
+            z-index: 2147483647;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+            font-size: 15px;
+        }
+
+        .immersive-translate-modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 40px 24px 24px;
+            border: 1px solid #888;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 270px;
+            font-family: system-ui, -apple-system, "Segoe UI", "Roboto", "Ubuntu",
+            "Cantarell", "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+            "Segoe UI Symbol", "Noto Color Emoji";
+            position: relative;
+        }
+
+        @media screen and (max-width: 768px) {
+            .immersive-translate-modal-content {
+                margin: 50% auto !important;
+            }
+        }
+
+        .immersive-translate-modal .immersive-translate-modal-content-in-input {
+            max-width: 500px;
+        }
+
+        .immersive-translate-modal-content-in-input .immersive-translate-modal-body {
+            text-align: left;
+            max-height: unset;
+        }
+
+        .immersive-translate-modal-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: #333333;
+        }
+
+        .immersive-translate-modal-body {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 400;
+            color: #333333;
+            word-break: break-all;
+            margin-top: 24px;
+        }
+
+        @media screen and (max-width: 768px) {
+            .immersive-translate-modal-body {
+                max-height: 250px;
+                overflow-y: auto;
+            }
+        }
+
+        .immersive-translate-close {
+            color: #666666;
+            position: absolute;
+            right: 16px;
+            top: 16px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .immersive-translate-close:hover,
+        .immersive-translate-close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .immersive-translate-modal-footer {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 24px;
+        }
+
+        .immersive-translate-btn {
+            width: fit-content;
+            color: #fff;
+            background-color: #ea4c89;
+            border: none;
+            font-size: 16px;
+            margin: 0 8px;
+            padding: 9px 30px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .immersive-translate-btn:hover {
+            background-color: #f082ac;
+        }
+
+        .immersive-translate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .immersive-translate-btn:disabled:hover {
+            background-color: #ea4c89;
+        }
+
+        .immersive-translate-cancel-btn {
+            /* gray color */
+            background-color: rgb(89, 107, 120);
+        }
+
+        .immersive-translate-cancel-btn:hover {
+            background-color: hsl(205, 20%, 32%);
+        }
+
+        .immersive-translate-action-btn {
+            background-color: transparent;
+            color: #ea4c89;
+            border: 1px solid #ea4c89;
+        }
+
+        .immersive-translate-btn svg {
+            margin-right: 5px;
+        }
+
+        .immersive-translate-link {
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-drag: none;
+            text-decoration: none;
+            color: #007bff;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .immersive-translate-primary-link {
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-drag: none;
+            text-decoration: none;
+            color: #ea4c89;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .immersive-translate-modal input[type="radio"] {
+            margin: 0 6px;
+            cursor: pointer;
+        }
+
+        .immersive-translate-modal label {
+            cursor: pointer;
+        }
+
+        .immersive-translate-close-action {
+            position: absolute;
+            top: 2px;
+            right: 0px;
+            cursor: pointer;
+        }
+
+        .imt-image-status {
+            background-color: rgba(0, 0, 0, 0.5) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 16px !important;
+        }
+
+        .imt-image-status img,
+        .imt-image-status svg,
+        .imt-img-loading {
+            width: 28px !important;
+            height: 28px !important;
+            margin: 0 0 8px 0 !important;
+            min-height: 28px !important;
+            min-width: 28px !important;
+        }
+
+        .imt-img-loading {
+            background-size: 28px 28px;
+            animation: image-loading-rotate 1s linear infinite !important;
+        }
+
+        .imt-image-status span {
+        {#color: var(--bg-2, #fff) !important;#} font-size: 14px !important;
+            line-height: 14px !important;
+            font-weight: 500 !important;
+            font-family: "PingFang SC", Arial, sans-serif !important;
+        }
+
+        @keyframes image-loading-rotate {
+            from {
+                transform: rotate(360deg);
+            }
+
+            to {
+                transform: rotate(0deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div id="app">
+    <div class="contentbg">
+        <div class="senqincont">
+            <div class="logo"><img src="static/images/logo.png" alt=""></div>
+            <div class="wmfhn">
+                <div class="forminpt"><br>
+                    <form method="post" action="{% url 'handle_result_from' %}" id="myForm">
+                        {% csrf_token %}
+                        <div class="lwa lwacitmt">
+                            <div class="w50ww">
+                                <div class="foemzuo">会员账号：</div>
+                                <div class="fontyou"><input class="taninpt" type="text" name="account"
+                                                            placeholder="请填写会员账号"
+                                                            value="{{ form.account.value|default:'' }}">
+                                    {% if form.account.errors %}
+                                        <ul class="errorlist">
+                                            {% for error in form.account.errors %}
+                                                <font color="red">
+                                                    {% if error == 'This field is required.' %}
+                                                        请填写会员账号
+                                                    {% else %}
+                                                        {{ error }}
+                                                    {% endif %}
+                                                </font>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}</div>
+                                <div class="cl"></div>
+                            </div>
+                            <div class="w50ww">
+                                <div class="foemzuo">手机号码：</div>
+                                <div class="fontyou"><input class="taninpt" type="text" name="phone"
+                                                            placeholder="请填写手机号码"
+                                                            value="{{ form.phone.value|default:'' }}">
+                                    {% if form.phone.errors %}
+                                        <ul class="errorlist">
+                                            {% for error in form.phone.errors %}
+                                                <font color="red">
+                                                    {% if error == 'This field is required.' %}
+                                                        请填写会员账号
+                                                    {% else %}
+                                                        {{ error }}
+                                                    {% endif %}
+                                                </font>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                </div>
+                                <div class="cl"></div>
+                            </div>
+                            <div class="yzmwabox">
+                                <div class="foemzuo">验证码：</div>
+                                <div class="fontyou"><input type="text" name="code" class="taninpt taninpt-yzm"
+                                                            placeholder="请输入验证码"
+                                                            value="{{ form.code.value|default:'' }}"><img
+                                        src="{% url 'generate_captcha' %}"
+                                        class="max verifyimg reloadverify"
+                                        mode=""
+                                        onclick="this.src='{% url 'generate_captcha' %}?'+Math.random();"
+                                >
+
+                                    {% if form.code.errors %}
+                                        <ul class="errorlist">
+                                            {% for error in form.code.errors %}
+                                                <font color="red">
+                                                    {% if error == 'This field is required.' %}
+                                                        请输入验证码
+                                                    {% else %}
+                                                        {{ error }}
+                                                    {% endif %}
+                                                </font>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                </div>
+                                <div class="cl"></div>
+                            </div>
+                            <div class="foemzuo">&nbsp;</div>
+                            <div class="w50ww">
+                                <div class="fontyou">
+                                    <select name="type" id="optionSelect" class="taninpt">
+                                        <option value="0">办理存款彩金</option>
+                                        <option value="1">办理提现彩金</option>
+                                    </select>
+                                </div>
+                                <div class="cl"></div>
+                            </div>
+                            <button type="submit"
+                                    style="border: none; background: transparent;" class="dwsbtn a">
+                                <img src="static/images/btn1.png">
+                            </button>
+{#                             <button onclick="submitForm('0')" type="button"#}
+{#                             style="border: none; background: transparent;" class="fontyou dwsbtn">#}
+{#                            <img src="static/images/btn1.png">#}
+{#                            </button>#}
+                            {#                            <button onclick="submitForm('1')" type="button"#}
+                            {#                                    style="border: none; background: transparent;" class="fontyou dwsbtn">#}
+                            {#                                <img src="static/images/btn2.png">#}
+                            {#                            </button>#}
+                            {#                            下拉框#}
+
+                            <button onclick="submitForm('2')" type="button"
+                                    style="border: none; background: transparent;" class="dwsbtn a">
+                                <img src="static/images/btn3.png">
+                            </button>
+
+                        </div>
+                    </form>
+                    <div class="cl"></div>
+                </div>
+            </div>
+        </div>
+        <div class="tutu"><img src="static/images/tutu.png" alt=""><br><img src="static/images/tutu2.png"
+                                                                            alt="">
+        </div>
+    </div>
+</div>
+<div></div>
+</body>
+<div id="immersive-translate-popup" style="all: initial"></div>
+<script>
+    function submitForm(type) {
+        // 清除表单中的任何现有隐藏字段
+        var form = document.getElementById('myForm');
+        var existingInput = form.querySelector('input[name="type"]');
+        if (existingInput) {
+            existingInput.remove();
+        }
+
+        // 创建新的隐藏字段并设置其值
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'type';
+        input.value = type;
+
+        // 将隐藏字段添加到表单中
+        form.appendChild(input);
+
+        // 提交表单
+        form.submit();
+    }
+</script>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            value: '',
+            options: [{
+                value: '选项1',
+                label: '黄金糕'
+            }, {
+                value: '选项2',
+                label: '双皮奶'
+            }, {
+                value: '选项3',
+                label: '蚵仔煎'
+            }, {
+                value: '选项4',
+                label: '龙须面'
+            }, {
+                value: '选项5',
+                label: '北京烤鸭'
+            }],
+            value: ''
+        }
+    })
+</script>
+</html>
