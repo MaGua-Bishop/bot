@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'captcha',
     'admin_web',
+    'import_export',
 
 ]
 
@@ -160,3 +161,6 @@ SIMPLEUI_CONFIG = {
         },
     ]
 }
+
+# 导入导出
+IMPORT_EXPORT_USE_TRANSACTIONS = True
