@@ -10,6 +10,7 @@ import com.li.bot.mapper.LotteryMapper;
 import com.li.bot.mapper.TakeoutMapper;
 import com.li.bot.mapper.UserMapper;
 import com.li.bot.meun.BotMenuFactory;
+import com.li.bot.meun.IBotMenu;
 import com.li.bot.sessions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,8 +24,11 @@ import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.annotation.PostConstruct;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class BotServiceImpl extends TelegramWebhookBot {
@@ -34,6 +38,7 @@ public class BotServiceImpl extends TelegramWebhookBot {
 
 
     public BotServiceImpl(BotConfig botConfig) {
+//        super(botConfig.getDefaultBotOptions());
         this.botConfig = botConfig;
     }
 
@@ -86,30 +91,64 @@ public class BotServiceImpl extends TelegramWebhookBot {
     }
 
     @Autowired
-    private CallbackFactory callbackFactory ;
+    private CallbackFactory callbackFactory;
 
     @Autowired
-    private MessageFactory messageFactory ;
+    private MessageFactory messageFactory;
 
     @Autowired
-    private BotMenuFactory botMenuFactory ;
+    private BotMenuFactory botMenuFactory;
 
     @Autowired
     private UserTakeoutSessionList userTakeoutSessionList;
     @Autowired
-    private UserCreateLotterySessionList userCreateLotterySessionList ;
+    private UserCreateLotterySessionList userCreateLotterySessionList;
 
     @Autowired
     private UserMapper userMapper;
     @Autowired
     private TakeoutMapper takeoutMapper;
     @Autowired
-    private FileService fileService ;
+    private FileService fileService;
     @Autowired
-    private LotteryMapper lotteryMapper ;
+    private LotteryMapper lotteryMapper;
     @Autowired
-    private PrizePoolService prizePoolService ;
+    private PrizePoolService prizePoolService;
 
+    private Long getUserId(String text) {
+        // 正则表达式模式，用于匹配固定十位数的ID
+        Pattern idPattern = Pattern.compile("^\\d{5,15}$");
+        Matcher idMatcher = idPattern.matcher(text);
+
+        // 检查整个文本是否完全匹配十位数字
+        if (idMatcher.matches()) {
+            // 如果匹配成功，将文本转换为 Long 并返回
+            return Long.parseLong(text);
+        }
+        // 如果不匹配，返回 null
+        return null;
+    }
+
+    private Boolean isAdminUpdateUserMoney(String text) {
+        String[] split = text.split(" ");
+        if (split.length != 2) {
+            return false;
+        }
+        String id = split[0];
+        Long userId = getUserId(id);
+        if (userId == null) {
+            return false;
+        }
+        String money = split[1];
+        try {
+            BigDecimal amount = new BigDecimal(money);
+            // 如果能成功转换为 BigDecimal，则返回 true
+            return true;
+        } catch (NumberFormatException e) {
+            // 如果转换失败，说明 money 不是有效的数字
+            return false;
+        }
+    }
 
 
     @Override
@@ -119,18 +158,30 @@ public class BotServiceImpl extends TelegramWebhookBot {
                 Long tgId = update.getMessage().getFrom().getId();
                 UserTakeoutSession userTakeoutSession = userTakeoutSessionList.getUserTakeoutSession(tgId);
                 if (userTakeoutSession != null) {
-                    new UserTakeout(this, update.getMessage(), userTakeoutSessionList, userMapper, takeoutMapper,fileService).execute(botMenuFactory);
+                    new UserTakeout(this, update.getMessage(), userTakeoutSessionList, userMapper, takeoutMapper, fileService).execute(botMenuFactory);
                     return null;
                 }
                 UserCreateLotterySession userCreateLotterySession = userCreateLotterySessionList.getUserTakeoutSession(tgId);
                 if (userCreateLotterySession != null) {
-                    new UserCreateLottery(this, update.getMessage(), userCreateLotterySessionList, userMapper, takeoutMapper,lotteryMapper,prizePoolService,botConfig).execute(botMenuFactory);
+                    new UserCreateLottery(this, update.getMessage(), userCreateLotterySessionList, userMapper, takeoutMapper, lotteryMapper, prizePoolService, botConfig).execute(botMenuFactory);
+                    return null;
+                }
+            } else if (update.getMessage().getChat().getType().equals("group") || update.getMessage().getChat().getType().equals("supergroup")) {
+                Long userId = getUserId(update.getMessage().getText());
+                if (userId != null) {
+                    IBotMenu menu = botMenuFactory.getMenu("查询用户余额");
+                    menu.execute(this, update.getMessage());
+                    return null;
+                }
+                if (isAdminUpdateUserMoney(update.getMessage().getText())) {
+                    IBotMenu menu = botMenuFactory.getMenu("修改用户金额");
+                    menu.execute(this, update.getMessage());
                     return null;
                 }
             }
             if (update.getMessage().hasText()) {
                 try {
-                    new MessageHandle(this, update.getMessage(), messageFactory,botMenuFactory).handle();
+                    new MessageHandle(this, update.getMessage(), messageFactory, botMenuFactory).handle();
                 } catch (TelegramApiException e) {
                     throw new RuntimeException(e);
                 }

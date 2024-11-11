@@ -76,6 +76,11 @@ public class MessageHandle {
             messageFactory.getMessage("setReviewGroup").execute(bot,message);
             return;
         }
+        if((type.equals("group") || type.equals("supergroup")) && message.getText().startsWith("#减少余额")){
+            botMenuFactory.getMenu("减少余额").execute(bot,message);
+            return;
+        }
+
     }
 }
 

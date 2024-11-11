@@ -20,8 +20,10 @@ mybatis-plus:
 bot:
   botname: t.me/CSDB0_bot
   token: 7546072718:AAG6FYBEKHscrIObDSx1DFDvCAolxOKd2HE
+  #  botname: t.me/lidemobot
+  #  token: 8030696965:AAFY6eZti5yIg7J0p-mXIHSH9fLsmrvHBFE
   host: 127.0.0.1 #ip
   port: 7890    #端口
-#  ${SERVER_HOST}
+  #  ${SERVER_HOST}
   url: ${SERVER_HOST}/tgbot/lottery_bot_cn #ngrok地址]
   reviewgroup: reviewgroup.json
