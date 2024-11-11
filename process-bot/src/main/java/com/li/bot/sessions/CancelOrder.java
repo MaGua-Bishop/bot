@@ -44,31 +44,31 @@ import java.util.regex.Pattern;
 @Slf4j
 public class CancelOrder {
 
-    private BotServiceImpl bot ;
+    private BotServiceImpl bot;
 
-    private Message message ;
+    private Message message;
 
-    private CancelOrderSessionList cancelOrderSessionList ;
+    private CancelOrderSessionList cancelOrderSessionList;
 
-    private OrderMapper orderMapper ;
+    private OrderMapper orderMapper;
 
-    private BusinessMapper businessMapper ;
+    private BusinessMapper businessMapper;
 
-    private UserMapper userMapper ;
+    private UserMapper userMapper;
 
-    private ReplyMapper replyMapper ;
+    private ReplyMapper replyMapper;
 
-    public CancelOrder(BotServiceImpl bot, Message message, CancelOrderSessionList cancelOrderSessionList, OrderMapper orderMapper, BusinessMapper businessMapper, UserMapper userMapper, ReplyMapper replyMapper){
-        this.bot = bot ;
-        this.message = message ;
-        this.cancelOrderSessionList = cancelOrderSessionList ;
-        this.orderMapper = orderMapper ;
-        this.businessMapper = businessMapper ;
-        this.userMapper = userMapper ;
-        this.replyMapper = replyMapper ;
+    public CancelOrder(BotServiceImpl bot, Message message, CancelOrderSessionList cancelOrderSessionList, OrderMapper orderMapper, BusinessMapper businessMapper, UserMapper userMapper, ReplyMapper replyMapper) {
+        this.bot = bot;
+        this.message = message;
+        this.cancelOrderSessionList = cancelOrderSessionList;
+        this.orderMapper = orderMapper;
+        this.businessMapper = businessMapper;
+        this.userMapper = userMapper;
+        this.replyMapper = replyMapper;
     }
 
-    private InlineKeyboardMarkup createButton(String name){
+    private InlineKeyboardMarkup createButton(String name) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         buttonList.add(InlineKeyboardButton.builder().text(name).callbackData("无").build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 5);
@@ -76,12 +76,12 @@ public class CancelOrder {
         return inlineKeyboardMarkup;
     }
 
-    public void execute(BotMenuFactory botMenuFactory,BotKeyFactory botKeyFactory){
-        if (message.getChat().getType().equals("private")){
+    public void execute(BotMenuFactory botMenuFactory, BotKeyFactory botKeyFactory) {
+        if (message.getChat().getType().equals("private")) {
             return;
         }
         IBotMenu menu = botMenuFactory.getMenu(message.getText());
-        if(menu != null ){
+        if (menu != null) {
             try {
                 bot.execute(SendMessage.builder().chatId(message.getChatId()).text("操作已取消").build());
                 cancelOrderSessionList.removeUserSession(message.getChatId());
@@ -90,14 +90,14 @@ public class CancelOrder {
             }
             menu.execute(bot, message);
             return;
-        }else {
+        } else {
             IKeyboard key = botKeyFactory.getKey(message.getText());
-            if(key != null ){
+            if (key != null) {
                 try {
                     bot.execute(SendMessage.builder().chatId(message.getChatId()).text("操作已取消").build());
                     cancelOrderSessionList.removeUserSession(message.getChatId());
                 } catch (TelegramApiException e) {
-                     throw new RuntimeException(e);
+                    throw new RuntimeException(e);
                 }
                 key.execute(bot, message);
                 return;
@@ -114,7 +114,7 @@ public class CancelOrder {
         }
     }
 
-        private BigDecimal isMoney(String money){
+    private BigDecimal isMoney(String money) {
         // 使用正则表达式验证是否是数字且最多保留两位小数
         Pattern pattern = Pattern.compile("^\\d+(\\.\\d{1,2})?$");
         Matcher matcher = pattern.matcher(money);
@@ -130,13 +130,13 @@ public class CancelOrder {
         }
     }
 
-    private void handleUserMessageInput(Message message,CancelOrderSession userSession) {
+    private void handleUserMessageInput(Message message, CancelOrderSession userSession) {
         String text = message.getText();
         Order order = userSession.getOrder();
         order.setStatus(OrderStatus.Cancel.getCode());
         order.setReviewTgId(message.getFrom().getId());
         int index = orderMapper.updateOrderById(order.getStatus(), order.getReviewTgId(), UUID.fromString(order.getOrderId()), LocalDateTime.now());
-        if(index == 1) {
+        if (index == 1) {
             replyMapper.updateStatusByOrderId02(order.getOrderId());
             //获取业务的金额
             Long businessId = order.getBusinessId();
@@ -146,19 +146,27 @@ public class CancelOrder {
             User selectOne = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, order.getTgId()));
             selectOne.setMoney(selectOne.getMoney().add(money));
             userMapper.updateById(selectOne);
-            EditMessageReplyMarkup editMessageReplyMarkup = EditMessageReplyMarkup.builder().chatId(message.getChatId()).messageId(userSession.getMessageId()).replyMarkup(createButton("已取消")).build();
+//            EditMessageReplyMarkup editMessageReplyMarkup = EditMessageReplyMarkup.builder().chatId(message.getChatId()).messageId(userSession.getMessageId()).replyMarkup(createButton("已取消")).build();
+//            try {
+//                bot.execute(editMessageReplyMarkup);
+//            } catch (TelegramApiException e) {
+//                throw new RuntimeException(e);
+////                System.out.println("忽略重复点击错误");
+//            }
+            String userName = message.getFrom().getLastName() + message.getFrom().getFirstName();
+            SendMessage sendMessage = SendMessage.builder().chatId(message.getChatId()).text("<a href=\"tg://user?id=" + message.getFrom().getId() + "\">" + userName + "</a>" +
+                    "\n订单id:<code>" + order.getOrderId() + "</code>\n<b>已取消</b>").parseMode("html").build();
             try {
-                bot.execute(editMessageReplyMarkup);
+                bot.execute(sendMessage);
             } catch (TelegramApiException e) {
-                throw new RuntimeException(e);
-//                System.out.println("忽略重复点击错误");
+                System.out.println("忽略重复点击错误");
             }
             try {
-                bot.execute(SendMessage.builder().chatId(order.getTgId()).text("您报单的<b>"+business.getName()+"</b>订单已取消\n" +
+                bot.execute(SendMessage.builder().chatId(order.getTgId()).text("您报单的<b>" + business.getName() + "</b>订单已取消\n" +
                         "订单id：\n" +
-                        "<code>" + order.getOrderId() + "</code>\n"+"<b>取消原因:</b>\n"+text).parseMode("html").build());
+                        "<code>" + order.getOrderId() + "</code>\n" + "<b>取消原因:</b>\n" + text).parseMode("html").build());
             } catch (TelegramApiException e) {
-                throw new RuntimeException(e);
+                System.out.println("忽略重复点击错误");
             }
         }
 

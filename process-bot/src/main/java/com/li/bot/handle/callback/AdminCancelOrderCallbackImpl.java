@@ -34,20 +34,20 @@ import java.util.UUID;
  * @CreateTime: 2024-10-01
  */
 @Component
-public class AdminCancelOrderCallbackImpl implements ICallback{
+public class AdminCancelOrderCallbackImpl implements ICallback {
 
     @Autowired
-    private UserMapper userMapper ;
+    private UserMapper userMapper;
 
     @Autowired
-    private OrderMapper orderMapper ;
+    private OrderMapper orderMapper;
     @Autowired
-    private BusinessMapper businessMapper ;
+    private BusinessMapper businessMapper;
     @Autowired
-    private CancelOrderSessionList cancelOrderSessionList ;
+    private CancelOrderSessionList cancelOrderSessionList;
 
     @Autowired
-    private ReplyMapper replyMapper ;
+    private ReplyMapper replyMapper;
 
     @Override
     public String getCallbackName() {
@@ -55,8 +55,7 @@ public class AdminCancelOrderCallbackImpl implements ICallback{
     }
 
 
-
-    private InlineKeyboardMarkup createButton(String name){
+    private InlineKeyboardMarkup createButton(String name) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         buttonList.add(InlineKeyboardButton.builder().text(name).callbackData("无").build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 5);
@@ -69,7 +68,7 @@ public class AdminCancelOrderCallbackImpl implements ICallback{
         String data = callbackQuery.getData();
         String orderId = data.substring(data.lastIndexOf(":") + 1);
         Reply reply = replyMapper.selectOne(new LambdaQueryWrapper<Reply>().eq(Reply::getOrderId, orderId));
-        if(reply == null){
+        if (reply == null) {
             try {
                 bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("订单不存在").build());
             } catch (TelegramApiException e) {
@@ -77,7 +76,7 @@ public class AdminCancelOrderCallbackImpl implements ICallback{
             }
             return;
         }
-        if(!reply.getTgId().equals(callbackQuery.getFrom().getId())){
+        if (!reply.getTgId().equals(callbackQuery.getFrom().getId())) {
             try {
                 bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("订单不是您的,您不可操作").build());
             } catch (TelegramApiException e) {
@@ -85,9 +84,12 @@ public class AdminCancelOrderCallbackImpl implements ICallback{
             }
             return;
         }
+        if (reply.getStatus() == -2) {
+            return;
+        }
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, callbackQuery.getFrom().getId()));
         Order order = orderMapper.getOrderByIdAndStatus(UUID.fromString(orderId), OrderStatus.IN_PROGRESS.getCode());
-        if(order == null){
+        if (order == null) {
             try {
                 bot.execute(SendMessage.builder().chatId(callbackQuery.getFrom().getId()).text("该订单异常").parseMode("MarkdownV2").build());
             } catch (TelegramApiException e) {
@@ -99,6 +101,6 @@ public class AdminCancelOrderCallbackImpl implements ICallback{
                 "请输入取消订单的原因").parseMode("MarkdownV2").build();
         bot.execute(sendMessage);
 
-        cancelOrderSessionList.addUserSession(callbackQuery.getFrom().getId(),reply,order,callbackQuery.getMessage().getMessageId());
-        }
+        cancelOrderSessionList.addUserSession(callbackQuery.getFrom().getId(), reply, order, callbackQuery.getMessage().getMessageId());
+    }
 }
