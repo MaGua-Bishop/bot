@@ -48,28 +48,26 @@ public class StartKeyImpl implements IKeyboard {
     private UserMapper userMapper;
 
     @Autowired
-    private BusinessMapper businessMapper ;
+    private BusinessMapper businessMapper;
 
     @Autowired
     private OrderMapper orderMapper;
 
     @Autowired
-    private FileService fileService ;
+    private FileService fileService;
 
-    private Integer getChatType(String chatId){
+    private Integer getChatType(String chatId) {
         String string = fileService.readFileContent();
         Workgroup workgroup = JSONObject.parseObject(string, Workgroup.class);
         String string02 = fileService.readFileContent02();
         Workgroup workgroup02 = JSONObject.parseObject(string02, Workgroup.class);
         Integer type = null;
-        if(workgroup.getGroupList().contains(chatId)){
-            type = 0 ;
-        }else if(workgroup02.getGroupList().contains(chatId)){
-            type = 1 ;
-        }else {
-            type = 0 ;
+        if (workgroup.getGroupList().contains(chatId)) {
+            type = 0;
+        } else if (workgroup02.getGroupList().contains(chatId)) {
+            type = 1;
         }
-        return type ;
+        return type;
     }
 
     private void startKey(BotServiceImpl bot, Message message) {
@@ -113,22 +111,28 @@ public class StartKeyImpl implements IKeyboard {
         }
     }
 
-    private InlineKeyboardMarkup createInlineKeyboardButton(Long tgId,Integer type){
+    private InlineKeyboardMarkup createInlineKeyboardButton(Long tgId, Integer type, Message message) {
         //查出全部业务只要名称和主键
         List<BusinessListVo> businessListVos = businessMapper.selectBusinessList(type);
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
-        if(!businessListVos.isEmpty()){
-            User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, tgId));
-            if(user != null && user.getIsAdmin() ){
-                for (BusinessListVo business : businessListVos) {
-                    buttonList.add(InlineKeyboardButton.builder().text("("+business.getSize()+")"+business.getName()).callbackData("select:businessId:"+String.valueOf(business.getBusinessId())).build());
-                }
-            }else {
-                for (BusinessListVo business : businessListVos) {
-                    buttonList.add(InlineKeyboardButton.builder().text("("+business.getSize()+")"+business.getName()).callbackData("select:businessId:"+String.valueOf(business.getBusinessId())).build());
-                }
+        User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, tgId));
+        if (!businessListVos.isEmpty()) {
+            if (user == null) {
+                user = new User();
+                user.setTgId(tgId);
+                user.setTgName(message.getFrom().getFirstName() + message.getFrom().getLastName());
+                userMapper.insert(user);
             }
-        }else {
+            for (BusinessListVo business : businessListVos) {
+                buttonList.add(InlineKeyboardButton.builder().text("(" + business.getSize() + ")" + business.getName()).callbackData("select:businessId:" + String.valueOf(business.getBusinessId())).build());
+            }
+        } else {
+            if (user == null) {
+                user = new User();
+                user.setTgId(tgId);
+                user.setTgName(message.getFrom().getFirstName() + message.getFrom().getLastName());
+                userMapper.insert(user);
+            }
             buttonList.add(InlineKeyboardButton.builder().text("暂无未领取的业务").callbackData("null").build());
         }
         buttonList.add(InlineKeyboardButton.builder().text("接单记录").callbackData("select:reply:records:").build());
@@ -145,11 +149,20 @@ public class StartKeyImpl implements IKeyboard {
         if (type.equals("private")) {
             startKey(bot, message);
         } else if (type.equals("group") || type.equals("supergroup")) {
+            //判断是否是工作群
+            String string = fileService.readFileContent();
+            Workgroup workgroup = JSONObject.parseObject(string, Workgroup.class);
+            boolean b = workgroup.getGroupList().contains(message.getChatId().toString());
+            String string02 = fileService.readFileContent02();
+            Workgroup workgroup02 = JSONObject.parseObject(string02, Workgroup.class);
+            boolean b02 = workgroup02.getGroupList().contains(message.getChatId().toString());
+            if (!b && !b02) {
+                System.out.println("非工作群");
+                return;
+            }
             Integer chatType = getChatType(message.getChatId().toString());
-            InlineKeyboardMarkup inlineKeyboardButton = createInlineKeyboardButton(message.getFrom().getId(),chatType);
-            String userName = message.getFrom().getLastName() + message.getFrom().getFirstName();
-            SendMessage msg = SendMessage.builder().chatId(message.getChatId().toString()).text("<a href=\"tg://user?id="+message.getFrom().getId()+"\">"+userName+"</a>" +
-                    "请点击业务").replyMarkup(inlineKeyboardButton).parseMode("html").build();
+            InlineKeyboardMarkup inlineKeyboardButton = createInlineKeyboardButton(message.getFrom().getId(), chatType, message);
+            SendMessage msg = SendMessage.builder().chatId(message.getChatId().toString()).text("请点击业务").replyMarkup(inlineKeyboardButton).parseMode("html").build();
             try {
                 bot.execute(msg);
             } catch (TelegramApiException e) {
