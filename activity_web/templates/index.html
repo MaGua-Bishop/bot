@@ -478,7 +478,6 @@
                                         mode=""
                                         onclick="this.src='{% url 'generate_captcha' %}?'+Math.random();"
                                 >
-
                                     {% if form.code.errors %}
                                         <ul class="errorlist">
                                             {% for error in form.code.errors %}
@@ -509,16 +508,6 @@
                                     style="border: none; background: transparent;" class="dwsbtn a">
                                 <img src="static/images/btn1.png">
                             </button>
-{#                             <button onclick="submitForm('0')" type="button"#}
-{#                             style="border: none; background: transparent;" class="fontyou dwsbtn">#}
-{#                            <img src="static/images/btn1.png">#}
-{#                            </button>#}
-                            {#                            <button onclick="submitForm('1')" type="button"#}
-                            {#                                    style="border: none; background: transparent;" class="fontyou dwsbtn">#}
-                            {#                                <img src="static/images/btn2.png">#}
-                            {#                            </button>#}
-                            {#                            下拉框#}
-
                             <button onclick="submitForm('2')" type="button"
                                     style="border: none; background: transparent;" class="dwsbtn a">
                                 <img src="static/images/btn3.png">

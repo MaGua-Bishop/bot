@@ -141,7 +141,7 @@ SIMPLEUI_CONFIG = {
     'system_keep': False,
 
     # 用于菜单排序和过滤, 不填此字段为默认排序和全部显示。空列表[] 为全部不显示.
-    'menu_display': ['审核'],
+    'menu_display': ['审核', '后台用户'],
 
     # 设置是否开启动态菜单, 默认为False. 如果开启, 则会在每次用户登陆时刷新展示菜单内容。
     # 一般建议关闭。
@@ -153,10 +153,20 @@ SIMPLEUI_CONFIG = {
             'models': [
                 {
                     'name': '审核',
-                    # 注意url按'/admin/应用名小写/模型名小写/'命名。
                     'url': '/admin/admin_web/audit/',
                     'icon': 'fa fa-user'
                 },
+            ]
+        },
+        {
+            'name': '后台用户',
+            'icon': 'fa fa-lock',
+            'models': [
+                {
+                    'name': '用户',
+                    'url': '/admin/auth/user/',
+                    'icon': 'fa fa-user-check'
+                }
             ]
         },
     ]
