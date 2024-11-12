@@ -69,9 +69,9 @@ public class StartMessage implements IMessage{
         if(user == null){
             user = new User() ;
             user.setTgId(from.getId());
-            String name = from.getFirstName() +from.getLastName();
-            user.setTgName(name);
-            user.setTgUserName(from.getUserName());
+            String firstName = from.getFirstName();
+            String lastName = from.getLastName();
+            user.setTgName(firstName + (lastName != null ? lastName : ""));
             userMapper.insert(user);
         }
         return user;

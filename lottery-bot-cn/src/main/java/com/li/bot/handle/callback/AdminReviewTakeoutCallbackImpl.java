@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
  * @CreateTime: 2024-10-01
  */
 @Component
-public class AdminReviewTakeoutCallbackImpl implements ICallback{
+public class AdminReviewTakeoutCallbackImpl implements ICallback {
 
     @Override
     public String getCallbackName() {
@@ -39,12 +39,12 @@ public class AdminReviewTakeoutCallbackImpl implements ICallback{
     }
 
     @Autowired
-    private TakeoutMapper takeoutMapper ;
+    private TakeoutMapper takeoutMapper;
 
     @Autowired
-    private UserMapper userMapper ;
+    private UserMapper userMapper;
 
-    private InlineKeyboardMarkup createButton(String name){
+    private InlineKeyboardMarkup createButton(String name) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         buttonList.add(InlineKeyboardButton.builder().text(name).callbackData("null").build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
@@ -52,11 +52,11 @@ public class AdminReviewTakeoutCallbackImpl implements ICallback{
         return inlineKeyboardMarkup;
     }
 
-    private void adminReview(BotServiceImpl bot, CallbackQuery callbackQuery, Long takeoutId,Integer type){
+    private void adminReview(BotServiceImpl bot, CallbackQuery callbackQuery, Long takeoutId, Integer type) {
         Takeout takeout = takeoutMapper.selectOne(new LambdaQueryWrapper<Takeout>().eq(Takeout::getTakeoutId, takeoutId).eq(Takeout::getStatus, 0));
-        if(Objects.isNull(takeout)){
+        if (Objects.isNull(takeout)) {
             try {
-                bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("提现申请已处理或不存在").build());
+                bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("提现申请已处理").build());
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
@@ -66,24 +66,23 @@ public class AdminReviewTakeoutCallbackImpl implements ICallback{
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, takeout.getTgId()));
 
         //更新状态
-        String name  = "";
-        SendMessage sendMessage = null ;
-       if(type == 0){
-           takeout.setStatus(1);
-           name = "\uD83D\uDFE2已同意" ;
-           sendMessage = SendMessage.builder().chatId(user.getTgId()).text("您的提现积分:<b>"+takeout.getMoney()+"</b>\n已同意\n请等待客服处理").parseMode("html").build();
-       }else if (type == 1){
-           takeout.setStatus(-1);
-           user.setMoney(user.getMoney().add(takeout.getMoney()));
-           userMapper.updateById(user);
-           name = "\uD83D\uDD34已拒绝";
-           sendMessage = SendMessage.builder().chatId(user.getTgId()).text("您的提现积分:<b>"+takeout.getMoney()+"</b>\n已拒绝").parseMode("html").build();
+        String name = "";
+        SendMessage sendMessage = null;
+        if (type == 0) {
+            takeout.setStatus(1);
+            name = "\uD83D\uDFE2已同意";
+            sendMessage = SendMessage.builder().chatId(user.getTgId()).text("您的提现积分:<b>" + takeout.getMoney() + "</b>\n已同意\n请等待客服处理").parseMode("html").build();
+        } else if (type == 1) {
+            takeout.setStatus(-1);
+            user.setMoney(user.getMoney().add(takeout.getMoney()));
+            userMapper.updateById(user);
+            name = "\uD83D\uDD34已拒绝";
+            sendMessage = SendMessage.builder().chatId(user.getTgId()).text("您的提现积分:<b>" + takeout.getMoney() + "</b>\n已拒绝").parseMode("html").build();
 
-       }
-       takeout.setReviewTgId(callbackQuery.getFrom().getId());
+        }
+        takeout.setReviewTgId(callbackQuery.getFrom().getId());
         takeout.setUpdateTime(LocalDateTime.now());
         takeoutMapper.updateById(takeout);
-
 
 
         EditMessageText messageText = EditMessageText.builder()
@@ -97,7 +96,8 @@ public class AdminReviewTakeoutCallbackImpl implements ICallback{
             bot.execute(messageText);
             bot.execute(sendMessage);
         } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
+            System.out.println("提现错误:" + e);
+            System.out.println("error");
         }
     }
 
@@ -105,6 +105,11 @@ public class AdminReviewTakeoutCallbackImpl implements ICallback{
     @Transactional
     public synchronized void execute(BotServiceImpl bot, CallbackQuery callbackQuery) throws TelegramApiException {
         String data = callbackQuery.getData();
+
+        User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, callbackQuery.getFrom().getId()));
+        if (!user.getIsAdmin()) {
+            return;
+        }
 
         //正则解析
         String regex = "admin:review:takeout:type:(\\d+):takeoutId:(\\d+)";

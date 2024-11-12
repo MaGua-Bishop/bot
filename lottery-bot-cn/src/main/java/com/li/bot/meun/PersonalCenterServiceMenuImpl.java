@@ -22,7 +22,7 @@ import java.util.List;
  * @CreateTime: 2024-09-30
  */
 @Component
-public class PersonalCenterServiceMenuImpl implements IBotMenu{
+public class PersonalCenterServiceMenuImpl implements IBotMenu {
 
     @Override
     public String getMenuName() {
@@ -30,7 +30,7 @@ public class PersonalCenterServiceMenuImpl implements IBotMenu{
     }
 
     @Autowired
-    private UserMapper userMapper ;
+    private UserMapper userMapper;
 
     private InlineKeyboardMarkup createInlineKeyboardButton() {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
@@ -49,14 +49,14 @@ public class PersonalCenterServiceMenuImpl implements IBotMenu{
 
         User from = message.getFrom();
         Long id = from.getId();
-        String username = from.getUserName().isEmpty()? from.getFirstName()+ from.getLastName():from.getUserName();
+        String username = from.getUserName().isEmpty() ? from.getFirstName() + (from.getLastName() != null ? from.getLastName() : "") : from.getUserName();
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId());
         com.li.bot.entity.database.User user = userMapper.selectOne(new LambdaQueryWrapper<com.li.bot.entity.database.User>().eq(com.li.bot.entity.database.User::getTgId, id));
-        if(user == null){
+        if (user == null) {
             return;
         }
-        sendMessage.setText("个人中心\n用户名:<a href=\"tg://user?id="+id+"\">"+username+"</a>\nID:<code>"+id+"</code>\n积分:"+user.getMoney()+"");
+        sendMessage.setText("个人中心\n用户名:<a href=\"tg://user?id=" + id + "\">" + username + "</a>\nID:<code>" + id + "</code>\n积分:" + user.getMoney() + "");
         sendMessage.setParseMode("html");
         sendMessage.setReplyMarkup(createInlineKeyboardButton());
         try {

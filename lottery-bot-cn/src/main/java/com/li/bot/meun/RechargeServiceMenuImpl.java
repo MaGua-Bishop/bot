@@ -56,7 +56,9 @@ public class RechargeServiceMenuImpl implements IBotMenu {
         if (user == null) {
             user = new User();
             user.setTgId(tgId);
-            user.setTgName(message.getFrom().getFirstName() + message.getFrom().getLastName());
+            String firstName = message.getFrom().getFirstName();
+            String lastName = message.getFrom().getLastName();
+            user.setTgName(firstName + (lastName != null ? lastName : ""));
             userMapper.insert(user);
         }
 

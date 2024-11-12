@@ -34,21 +34,21 @@ import java.util.regex.Pattern;
 @Slf4j
 public class UserTakeout {
 
-    private BotServiceImpl bot ;
+    private BotServiceImpl bot;
 
-    private Message message ;
+    private Message message;
 
-    private UserTakeoutSessionList userTakeoutSessionList ;
-
-
-    private UserMapper userMapper ;
-
-    private TakeoutMapper takeoutMapper ;
-
-    private FileService fileService ;
+    private UserTakeoutSessionList userTakeoutSessionList;
 
 
-    public UserTakeout(BotServiceImpl bot, Message message, UserTakeoutSessionList userTakeoutSessionList, UserMapper userMapper, TakeoutMapper takeoutMapper,FileService fileService){
+    private UserMapper userMapper;
+
+    private TakeoutMapper takeoutMapper;
+
+    private FileService fileService;
+
+
+    public UserTakeout(BotServiceImpl bot, Message message, UserTakeoutSessionList userTakeoutSessionList, UserMapper userMapper, TakeoutMapper takeoutMapper, FileService fileService) {
         this.bot = bot;
         this.message = message;
         this.userTakeoutSessionList = userTakeoutSessionList;
@@ -57,18 +57,18 @@ public class UserTakeout {
         this.fileService = fileService;
     }
 
-    private InlineKeyboardMarkup createButton(Long takeoutId){
+    private InlineKeyboardMarkup createButton(Long takeoutId) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
-        buttonList.add(InlineKeyboardButton.builder().text("同意").callbackData("admin:review:takeout:type:"+0+":takeoutId:"+takeoutId).build());
-        buttonList.add(InlineKeyboardButton.builder().text("拒绝").callbackData("admin:review:takeout:type:"+1+":takeoutId:"+takeoutId).build());
+        buttonList.add(InlineKeyboardButton.builder().text("同意").callbackData("admin:review:takeout:type:" + 0 + ":takeoutId:" + takeoutId).build());
+        buttonList.add(InlineKeyboardButton.builder().text("拒绝").callbackData("admin:review:takeout:type:" + 1 + ":takeoutId:" + takeoutId).build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
         return inlineKeyboardMarkup;
     }
 
-    public void execute(BotMenuFactory botMenuFactory){
+    public void execute(BotMenuFactory botMenuFactory) {
         IBotMenu menu = botMenuFactory.getMenu(message.getText());
-        if(menu != null ){
+        if (menu != null) {
             userTakeoutSessionList.removeUserSession(message.getChatId());
             menu.execute(bot, message);
             return;
@@ -84,7 +84,7 @@ public class UserTakeout {
         }
     }
 
-        private BigDecimal isMoney(String money){
+    private BigDecimal isMoney(String money) {
         // 使用正则表达式验证是否是数字且最多保留两位小数
         Pattern pattern = Pattern.compile("^\\d+(\\.\\d{1,2})?$");
         Matcher matcher = pattern.matcher(money);
@@ -100,11 +100,11 @@ public class UserTakeout {
         }
     }
 
-    private void handleUserMessageInput(Message message,UserTakeoutSession userSession) {
+    private void handleUserMessageInput(Message message, UserTakeoutSession userSession) {
         String text = message.getText();
 
         BigDecimal money = isMoney(text);
-        if(money == null || money.compareTo(BigDecimal.ZERO) <= 0){
+        if (money == null || money.compareTo(BigDecimal.ZERO) <= 0) {
             SendMessage sendMessage = SendMessage.builder().chatId(message.getChatId()).text("输入的积分不正确").build();
             try {
                 bot.execute(sendMessage);
@@ -116,10 +116,10 @@ public class UserTakeout {
         }
 
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, message.getFrom().getId()));
-        if(Objects.isNull(user)){
+        if (Objects.isNull(user)) {
             return;
         }
-        if(user.getMoney().compareTo(money) < 0){
+        if (user.getMoney().compareTo(money) < 0) {
             SendMessage sendMessage = SendMessage.builder().chatId(message.getChatId()).text("您的积分不足").build();
             try {
                 bot.execute(sendMessage);
@@ -138,7 +138,7 @@ public class UserTakeout {
         takeout.setMoney(money);
         takeout.setStatus(0);
         int insert = takeoutMapper.insert(takeout);
-        if(insert > 0){
+        if (insert > 0) {
             SendMessage sendMessage = SendMessage.builder().chatId(message.getChatId()).text("提现申请成功\n请等待提现审核").build();
             try {
                 bot.execute(sendMessage);
@@ -148,11 +148,12 @@ public class UserTakeout {
 
             List<String> groupIdList = fileService.getGroupIdList();
             for (String groupId : groupIdList) {
-                SendMessage groupMessage = SendMessage.builder().chatId(groupId).text(BotSendMessageUtils.getAdminReviewMessage(user,takeout)).replyMarkup(createButton(takeout.getTakeoutId())).parseMode("html").build();
+                SendMessage groupMessage = SendMessage.builder().chatId(groupId).text(BotSendMessageUtils.getAdminReviewMessage(user, takeout)).replyMarkup(createButton(takeout.getTakeoutId())).parseMode("html").build();
                 try {
                     bot.execute(groupMessage);
                 } catch (TelegramApiException e) {
-                    throw new RuntimeException(e);
+                    System.out.println("提现错误:" + e);
+                    continue;
                 }
             }
         }

@@ -73,8 +73,9 @@ public class CreateLotteryMessage implements IMessage {
             user = new User();
             org.telegram.telegrambots.meta.api.objects.User from = message.getFrom();
             user.setTgId(from.getId());
-            String name = from.getFirstName() + from.getLastName();
-            user.setTgName(name);
+            String firstName = message.getFrom().getFirstName();
+            String lastName = message.getFrom().getLastName();
+            user.setTgName(firstName + (lastName != null ? lastName : ""));
             user.setTgUserName(from.getUserName());
             userMapper.insert(user);
             return;
@@ -102,7 +103,9 @@ public class CreateLotteryMessage implements IMessage {
                 String uuid = IdUtil.randomUUID();
                 lottery.setLotteryId(uuid);
                 lottery.setTgId(message.getFrom().getId());
-                lottery.setTgName(message.getFrom().getFirstName() + message.getFrom().getLastName());
+                String firstName = message.getFrom().getFirstName();
+                String lastName = message.getFrom().getLastName();
+                lottery.setTgName(firstName + (lastName != null ? lastName : ""));
                 lottery.setChatId(message.getChatId());
                 lottery.setMoney(money);
                 lottery.setNumber(count);
