@@ -63,7 +63,7 @@ public class AddOrder {
         if(menu != null ){
             try {
                 bot.execute(SendMessage.builder().chatId(message.getChatId()).text("操作已取消").build());
-                addOrderSessionList.removeUserSession(message.getChatId());
+                addOrderSessionList.removeUserSession(message.getFrom().getId());
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
@@ -74,7 +74,7 @@ public class AddOrder {
             if(key != null ){
                 try {
                     bot.execute(SendMessage.builder().chatId(message.getChatId()).text("操作已取消").build());
-                    addOrderSessionList.removeUserSession(message.getChatId());
+                    addOrderSessionList.removeUserSession(message.getFrom().getId());
                 } catch (TelegramApiException e) {
                      throw new RuntimeException(e);
                 }

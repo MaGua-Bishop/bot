@@ -55,7 +55,7 @@ public class AdminEdit {
         if (menu != null) {
             try {
                 bot.execute(SendMessage.builder().chatId(message.getChatId()).text("操作已取消").build());
-                adminEditSessionList.removeUserSession(message.getChatId());
+                adminEditSessionList.removeUserSession(message.getFrom().getId());
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
@@ -66,7 +66,7 @@ public class AdminEdit {
             if (key != null) {
                 try {
                     bot.execute(SendMessage.builder().chatId(message.getChatId()).text("操作已取消").build());
-                    adminEditSessionList.removeUserSession(message.getChatId());
+                    adminEditSessionList.removeUserSession(message.getFrom().getId());
                 } catch (TelegramApiException e) {
                     throw new RuntimeException(e);
                 }
@@ -111,7 +111,7 @@ public class AdminEdit {
             businessMapper.updateById(business);
             try {
                 bot.execute(SendMessage.builder().chatId(message.getChatId()).text(business.getName() + "文案修改成功").build());
-                adminEditSessionList.removeUserSession(message.getChatId());
+                adminEditSessionList.removeUserSession(message.getFrom().getId());
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
@@ -132,12 +132,12 @@ public class AdminEdit {
             businessMapper.updateById(business);
             try {
                 bot.execute(SendMessage.builder().chatId(message.getChatId()).text(business.getName() + "价格修改成功").build());
-                adminEditSessionList.removeUserSession(message.getChatId());
+                adminEditSessionList.removeUserSession(message.getFrom().getId());
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
         }
 
-        adminEditSessionList.removeUserSession(message.getChatId());
+        adminEditSessionList.removeUserSession(message.getFrom().getId());
     }
 }
