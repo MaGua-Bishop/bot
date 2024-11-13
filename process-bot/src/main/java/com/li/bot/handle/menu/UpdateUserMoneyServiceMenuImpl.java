@@ -7,6 +7,7 @@ import com.li.bot.entity.database.User;
 import com.li.bot.mapper.UserMapper;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.service.impl.FileService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -23,6 +24,7 @@ import java.util.regex.Pattern;
  * @CreateTime: 2024-09-30
  */
 @Component
+@Slf4j
 public class UpdateUserMoneyServiceMenuImpl implements IBotMenu {
 
     @Override
@@ -35,7 +37,7 @@ public class UpdateUserMoneyServiceMenuImpl implements IBotMenu {
     private FileService fileService;
 
     @Autowired
-    private UserMapper userMapper ;
+    private UserMapper userMapper;
 
 
     private Long getUserId(String text) {
@@ -52,7 +54,7 @@ public class UpdateUserMoneyServiceMenuImpl implements IBotMenu {
         return null;
     }
 
-        private BigDecimal isMoney(String money){
+    private BigDecimal isMoney(String money) {
         // 使用正则表达式验证是否是数字且最多保留两位小数
         Pattern pattern = Pattern.compile("^\\d+(\\.\\d{1,2})?$");
         Matcher matcher = pattern.matcher(money);
@@ -74,7 +76,7 @@ public class UpdateUserMoneyServiceMenuImpl implements IBotMenu {
 
         Long id = message.getFrom().getId();
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, id));
-        if(!user.getIsAdmin()){
+        if (!user.getIsAdmin()) {
             System.out.println("非管理员");
             return;
         }
@@ -86,7 +88,7 @@ public class UpdateUserMoneyServiceMenuImpl implements IBotMenu {
         String string02 = fileService.readFileContent02();
         Workgroup workgroup02 = JSONObject.parseObject(string02, Workgroup.class);
         boolean b02 = workgroup02.getGroupList().contains(message.getChatId().toString());
-        if(!b &&! b02){
+        if (!b && !b02) {
             System.out.println("非工作群");
             return;
         }
@@ -94,15 +96,15 @@ public class UpdateUserMoneyServiceMenuImpl implements IBotMenu {
         String text = message.getText();
 
         String[] split = text.split(" ");
-        if(split.length != 2){
+        if (split.length != 2) {
             return;
         }
         Long userId = getUserId(split[0]);
-        if(userId == null){
+        if (userId == null) {
             return;
         }
         String money = split[1];
-        BigDecimal amount ;
+        BigDecimal amount;
         try {
             amount = new BigDecimal(money);
             // 如果能成功转换为 BigDecimal，则返回 true
@@ -114,22 +116,23 @@ public class UpdateUserMoneyServiceMenuImpl implements IBotMenu {
             }
             return;
         }
-            User selectUserId = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, userId));
-            if(selectUserId == null){
-                try {
-                    bot.execute(SendMessage.builder().chatId(message.getChatId()).text("用户不存在").build());
-                } catch (TelegramApiException e) {
-                    throw new RuntimeException(e);
-                }
-                return;
-            }
-            selectUserId.setMoney(selectUserId.getMoney().add(amount));
-            userMapper.updateById(selectUserId);
+        User selectUserId = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, userId));
+        BigDecimal money1 = selectUserId.getMoney();
+        if (selectUserId == null) {
             try {
-                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("修改用户金额成功\n用户名:<a href=\"tg://user?id="+selectUserId.getTgId()+"\">"+selectUserId.getTgName()+"</a>\n用户id:"+selectUserId.getTgId()+"\n用户余额:"+selectUserId.getMoney() ).parseMode("html").build());
-
+                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("用户不存在").build());
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
+            return;
+        }
+        selectUserId.setMoney(selectUserId.getMoney().add(amount));
+        userMapper.updateById(selectUserId);
+        try {
+            bot.execute(SendMessage.builder().chatId(message.getChatId()).text("修改用户金额成功\n用户名:<a href=\"tg://user?id=" + selectUserId.getTgId() + "\">" + selectUserId.getTgName() + "</a>\n用户id:" + selectUserId.getTgId() + "\n用户余额:" + selectUserId.getMoney()).parseMode("html").build());
+            log.info("用户id:{},添加前余额:{},添加余额:{},添加后余额:{}", selectUserId.getTgId(), money1, amount, selectUserId.getMoney());
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
