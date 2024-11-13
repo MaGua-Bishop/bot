@@ -84,7 +84,7 @@ public class CancelOrder {
         if (menu != null) {
             try {
                 bot.execute(SendMessage.builder().chatId(message.getChatId()).text("操作已取消").build());
-                cancelOrderSessionList.removeUserSession(message.getChatId());
+                cancelOrderSessionList.removeUserSession(message.getFrom().getId());
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
@@ -95,7 +95,7 @@ public class CancelOrder {
             if (key != null) {
                 try {
                     bot.execute(SendMessage.builder().chatId(message.getChatId()).text("操作已取消").build());
-                    cancelOrderSessionList.removeUserSession(message.getChatId());
+                    cancelOrderSessionList.removeUserSession(message.getFrom().getId());
                 } catch (TelegramApiException e) {
                     throw new RuntimeException(e);
                 }
@@ -169,8 +169,6 @@ public class CancelOrder {
                 System.out.println("忽略重复点击错误");
             }
         }
-
-
-        cancelOrderSessionList.removeUserSession(message.getChatId());
+        cancelOrderSessionList.removeUserSession(message.getFrom().getId());
     }
 }
