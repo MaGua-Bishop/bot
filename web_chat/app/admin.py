@@ -34,11 +34,12 @@ custom_admin_site = CustomAdminSite(name='custom_admin')
 
 # 定义 ModelAdmin 类
 class UserAdmin(admin.ModelAdmin):
-    list_display = ['user', 'money', 'link', "operate"]
+    list_display = ['user', 'money', 'link', "operate", 'admin']
     list_display_links = ("user",)
-    list_filter = ("user",)
+    list_filter = ("user", "admin")
     list_editable = ("money",)
     exclude = ("uid",)
+    readonly_fields = ('admin',)  # 使 admin 字段只读
 
     @admin.display(description='链接', ordering='operate')
     def link(self, obj):
@@ -52,6 +53,11 @@ class UserAdmin(admin.ModelAdmin):
         btn_approve = f"""<button onclick="window.location.href='{url}'"
                       class="el-button el-button--success el-button--small">重置链接</button>"""
         return mark_safe(f"<div>{btn_approve}</div>")
+
+    def save_model(self, request, obj, form, change):
+        # 将请求对象附加到实例上，供信号处理器使用
+        obj._request = request
+        super().save_model(request, obj, form, change)
 
 
 class ChangeMoneyAdmin(admin.ModelAdmin):
