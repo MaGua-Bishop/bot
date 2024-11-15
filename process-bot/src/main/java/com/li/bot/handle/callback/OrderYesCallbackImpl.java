@@ -2,6 +2,7 @@ package com.li.bot.handle.callback;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.google.common.collect.Lists;
 import com.li.bot.entity.Workgroup;
 import com.li.bot.entity.database.Business;
@@ -16,14 +17,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.CopyMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -34,7 +38,7 @@ import java.util.regex.Pattern;
  * @CreateTime: 2024-10-01
  */
 @Component
-public class OrderYesCallbackImpl implements ICallback{
+public class OrderYesCallbackImpl implements ICallback {
 
     @Override
     public String getCallbackName() {
@@ -42,17 +46,17 @@ public class OrderYesCallbackImpl implements ICallback{
     }
 
     @Autowired
-    private OrderMapper orderMapper ;
+    private OrderMapper orderMapper;
 
     @Autowired
     private BusinessMapper businessMapper;
 
     @Autowired
-    private FileService fileService ;
+    private FileService fileService;
 
-        private InlineKeyboardMarkup createInlineKeyboardButton(String orderId){
+    private InlineKeyboardMarkup createInlineKeyboardButton(String orderId) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
-        buttonList.add(InlineKeyboardButton.builder().text("领取").callbackData("receive:order:"+orderId).build());
+        buttonList.add(InlineKeyboardButton.builder().text("领取").callbackData("receive:order:" + orderId).build());
 //        buttonList.add(InlineKeyboardButton.builder().text("放弃").callbackData("waiver:order:"+orderId).build());
 //        buttonList.add(InlineKeyboardButton.builder().text("取消订单").callbackData("admin:cancel:order:"+orderId).build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 5);
@@ -60,7 +64,7 @@ public class OrderYesCallbackImpl implements ICallback{
         return inlineKeyboardMarkup;
     }
 
-    private InlineKeyboardMarkup createButton(String name){
+    private InlineKeyboardMarkup createButton(String name) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         buttonList.add(InlineKeyboardButton.builder().text(name).callbackData("无").build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 5);
@@ -68,13 +72,13 @@ public class OrderYesCallbackImpl implements ICallback{
         return inlineKeyboardMarkup;
     }
 
-    private List<String> getGroupList(){
+    private List<String> getGroupList() {
         String fileContent = fileService.readFileContent();
         Workgroup workgroup = JSONObject.parseObject(fileContent, Workgroup.class);
         return workgroup.getGroupList();
     }
 
-    private List<String> getGroupList02(){
+    private List<String> getGroupList02() {
         String fileContent = fileService.readFileContent02();
         Workgroup workgroup = JSONObject.parseObject(fileContent, Workgroup.class);
         return workgroup.getGroupList();
@@ -90,12 +94,12 @@ public class OrderYesCallbackImpl implements ICallback{
         // 创建 Matcher 对象
         Matcher matcher = pattern.matcher(data);
 
-        String orderId = null ;
-        String type = null ;
+        String orderId = null;
+        String type = null;
         // 查找匹配
         if (matcher.find()) {
             // 提取 yes 后面的数字
-             orderId = matcher.group(1);
+            orderId = matcher.group(1);
             // 提取 type 后面的数字
             type = matcher.group(2);
 
@@ -105,12 +109,11 @@ public class OrderYesCallbackImpl implements ICallback{
         Order order = orderMapper.getOrderByIdAndStatus(id, OrderStatus.REVIEW.getCode());
 
 
-
-        if(order != null){
+        if (order != null) {
             order.setStatus(OrderStatus.PENDING.getCode());
             order.setReviewTgId(callbackQuery.getFrom().getId());
-            int index = orderMapper.updateOrderById(order.getStatus(), order.getReviewTgId(),id, LocalDateTime.now());
-            if(index == 1){
+            int index = orderMapper.updateOrderById(order.getStatus(), order.getReviewTgId(), id, LocalDateTime.now());
+            if (index == 1) {
                 EditMessageReplyMarkup editMessageReplyMarkup = EditMessageReplyMarkup.builder().chatId(callbackQuery.getMessage().getChatId()).messageId(callbackQuery.getMessage().getMessageId()).replyMarkup(createButton("已通过")).build();
                 try {
                     bot.execute(editMessageReplyMarkup);
@@ -118,50 +121,78 @@ public class OrderYesCallbackImpl implements ICallback{
                     System.out.println("忽略重复点击错误");
                 }
 
-                if(type.equals("0")){
+                if (type.equals("0")) {
                     List<String> groupList = getGroupList();
                     for (String groupChatId : groupList) {
 
                         Business business = businessMapper.selectOne(new LambdaQueryWrapper<Business>().eq(Business::getBusinessId, order.getBusinessId()));
-
-                        SendMessage sendMessage = SendMessage.builder().chatId(groupChatId).text(BotMessageUtils.getOrderInfoMessage(order.getCreateTime(), order.getMessageText(),business.getName(), order.getOrderId())).replyMarkup(createInlineKeyboardButton(order.getOrderId())).parseMode("html").build();
-                        try {
-                            bot.execute(sendMessage);
-                        } catch (TelegramApiException e) {
-                            System.out.println("忽略重复点击错误");
+                        String fileId = order.getFileId();
+                        if (StringUtils.isNotBlank(fileId)) {
+                            SendPhoto sendPhotoRequest = new SendPhoto();
+                            sendPhotoRequest.setChatId(groupChatId);
+                            InputFile inputFile = new InputFile(fileId);
+                            sendPhotoRequest.setPhoto(inputFile);
+                            sendPhotoRequest.setParseMode("html");
+                            sendPhotoRequest.setCaption(BotMessageUtils.getOrderInfoMessage(order.getCreateTime(), order.getMessageText(), business.getName(), order.getOrderId()));
+                            sendPhotoRequest.setReplyMarkup(createInlineKeyboardButton(order.getOrderId()));
+                            try {
+                                bot.execute(sendPhotoRequest);
+                            } catch (TelegramApiException e) {
+                                throw new RuntimeException(e);
+                            }
+                        } else {
+                            SendMessage sendMessage = SendMessage.builder().chatId(groupChatId).text(BotMessageUtils.getOrderInfoMessage(order.getCreateTime(), order.getMessageText(), business.getName(), order.getOrderId())).replyMarkup(createInlineKeyboardButton(order.getOrderId())).parseMode("html").build();
+                            try {
+                                bot.execute(sendMessage);
+                            } catch (TelegramApiException e) {
+                                System.out.println("忽略重复点击错误");
+                            }
                         }
                     }
-                }else if(type.equals("1")){
+                } else if (type.equals("1")) {
                     List<String> groupList = getGroupList02();
                     for (String groupChatId : groupList) {
-
                         Business business = businessMapper.selectOne(new LambdaQueryWrapper<Business>().eq(Business::getBusinessId, order.getBusinessId()));
-
-                        SendMessage sendMessage = SendMessage.builder().chatId(groupChatId).text(BotMessageUtils.getOrderInfoMessage(order.getCreateTime(), order.getMessageText(),business.getName(), order.getOrderId())).replyMarkup(createInlineKeyboardButton(order.getOrderId())).parseMode("html").build();
-                        try {
-                            bot.execute(sendMessage);
-                        } catch (TelegramApiException e) {
-                            System.out.println("忽略重复点击错误");
+                        String fileId = order.getFileId();
+                        if (StringUtils.isNotBlank(fileId)) {
+                            SendPhoto sendPhotoRequest = new SendPhoto();
+                            sendPhotoRequest.setChatId(groupChatId);
+                            InputFile inputFile = new InputFile(fileId);
+                            sendPhotoRequest.setPhoto(inputFile);
+                            sendPhotoRequest.setParseMode("html");
+                            sendPhotoRequest.setCaption(BotMessageUtils.getOrderInfoMessage(order.getCreateTime(), order.getMessageText(), business.getName(), order.getOrderId()));
+                            sendPhotoRequest.setReplyMarkup(createInlineKeyboardButton(order.getOrderId()));
+                            try {
+                                bot.execute(sendPhotoRequest);
+                            } catch (TelegramApiException e) {
+                                throw new RuntimeException(e);
+                            }
+                        } else {
+                            SendMessage sendMessage = SendMessage.builder().chatId(groupChatId).text(BotMessageUtils.getOrderInfoMessage(order.getCreateTime(), order.getMessageText(), business.getName(), order.getOrderId())).replyMarkup(createInlineKeyboardButton(order.getOrderId())).parseMode("html").build();
+                            try {
+                                bot.execute(sendMessage);
+                            } catch (TelegramApiException e) {
+                                System.out.println("忽略重复点击错误");
+                            }
                         }
                     }
                 }
-
                 try {
                     bot.execute(SendMessage.builder().chatId(order.getTgId()).text("订单审核通过\n" +
                             "订单id：\n" +
-                            "<code>"+order.getOrderId()+"</code>").parseMode("html").build());
+                            "<code>" + order.getOrderId() + "</code>").parseMode("html").build());
                 } catch (TelegramApiException e) {
                     System.out.println("忽略重复点击错误");
                 }
 
-            }else {
+            } else {
                 try {
                     bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("订单审核处理失败").parseMode("MarkdownV2").build());
                 } catch (TelegramApiException e) {
                     throw new RuntimeException(e);
                 }
             }
-        }else {
+        } else {
             EditMessageReplyMarkup editMessageReplyMarkup = EditMessageReplyMarkup.builder().chatId(callbackQuery.getMessage().getChatId()).messageId(callbackQuery.getMessage().getMessageId()).replyMarkup(createButton("已通过")).build();
             try {
                 bot.execute(editMessageReplyMarkup);

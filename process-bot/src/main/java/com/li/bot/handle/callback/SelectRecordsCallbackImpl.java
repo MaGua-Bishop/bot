@@ -1,6 +1,7 @@
 package com.li.bot.handle.callback;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.google.common.collect.Lists;
 import com.li.bot.entity.database.Business;
 import com.li.bot.entity.database.Order;
@@ -15,7 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.CopyMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -97,17 +100,53 @@ public class SelectRecordsCallbackImpl implements ICallback {
                 continue;
             }
             String name = business.getName();
-
-            SendMessage message = SendMessage.builder().text(BotMessageUtils.getUserReplyMessage(reply,order.getMessageText(),name)).parseMode("html").chatId(callbackQuery.getMessage().getChatId()).build();
-            try {
-                if(status == 1){
-                    bot.execute(message);
-                }else {
-                    SendMessage messages = SendMessage.builder().text(BotMessageUtils.getUserReplyMessage(reply,order.getMessageText(),name)).parseMode("html").chatId(callbackQuery.getMessage().getChatId()).replyMarkup(createInlineKeyboardButton(order.getOrderId())).build();
-                    bot.execute(messages);
+            if(status == 1){
+                String fileId = order.getFileId();
+                if (StringUtils.isNotBlank(fileId)) {
+                    SendPhoto sendPhotoRequest = new SendPhoto();
+                    sendPhotoRequest.setChatId(callbackQuery.getMessage().getChatId());
+                    InputFile inputFile = new InputFile(fileId);
+                    sendPhotoRequest.setPhoto(inputFile);
+                    sendPhotoRequest.setParseMode("html");
+                    sendPhotoRequest.setCaption(BotMessageUtils.getUserReplyMessage(reply,order.getMessageText(),name));
+                    try {
+                        bot.execute(sendPhotoRequest);
+                    } catch (TelegramApiException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text(BotMessageUtils.getUserReplyMessage(reply,order.getMessageText(),name)).parseMode("html").build();
+                    try {
+                        bot.execute(sendMessage);
+                    } catch (TelegramApiException e) {
+                        System.out.println("忽略重复点击错误");
+                    }
                 }
-            } catch (TelegramApiException e) {
-                throw new RuntimeException(e);
+            }else {
+//                    SendMessage messages = SendMessage.builder().text(BotMessageUtils.getUserReplyMessage(reply,order.getMessageText(),name)).parseMode("html").chatId(callbackQuery.getMessage().getChatId()).replyMarkup(createInlineKeyboardButton(order.getOrderId())).build();
+//                    bot.execute(messages);
+                String fileId = order.getFileId();
+                if (StringUtils.isNotBlank(fileId)) {
+                    SendPhoto sendPhotoRequest = new SendPhoto();
+                    sendPhotoRequest.setChatId(callbackQuery.getMessage().getChatId());
+                    InputFile inputFile = new InputFile(fileId);
+                    sendPhotoRequest.setPhoto(inputFile);
+                    sendPhotoRequest.setParseMode("html");
+                    sendPhotoRequest.setCaption(BotMessageUtils.getUserReplyMessage(reply,order.getMessageText(),name));
+                    sendPhotoRequest.setReplyMarkup(createInlineKeyboardButton(order.getOrderId()));
+                    try {
+                        bot.execute(sendPhotoRequest);
+                    } catch (TelegramApiException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text(BotMessageUtils.getUserReplyMessage(reply,order.getMessageText(),name)).parseMode("html").replyMarkup(createInlineKeyboardButton(order.getOrderId())).build();
+                    try {
+                        bot.execute(sendMessage);
+                    } catch (TelegramApiException e) {
+                        System.out.println("忽略重复点击错误");
+                    }
+                }
             }
         }
     }

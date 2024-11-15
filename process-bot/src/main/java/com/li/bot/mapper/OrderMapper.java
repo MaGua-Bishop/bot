@@ -20,7 +20,7 @@ import java.util.UUID;
 @Mapper
 public interface OrderMapper extends BaseMapper<Order> {
 
-    @Insert("insert into tg_order(tg_id,business_id,message_text) values(#{tgId},#{businessId},#{messageText})")
+    @Insert("insert into tg_order(tg_id,business_id,message_text,file_id) values(#{tgId},#{businessId},#{messageText},#{fileId})")
     @Options(useGeneratedKeys = true, keyProperty = "orderId", keyColumn = "order_id")
     int insertOrder(Order order);
 

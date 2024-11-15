@@ -1,6 +1,7 @@
 package com.li.bot.handle.callback;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.google.common.collect.Lists;
 import com.li.bot.entity.database.*;
 import com.li.bot.mapper.BusinessMapper;
@@ -15,9 +16,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.CopyMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -77,17 +80,32 @@ public class SendOrderCallbackImpl implements ICallback {
             } else {
                 desc = "杂单后台";
             }
-            SendMessage sendMessage = SendMessage.builder().chatId(u.getTgId()).text(BotMessageUtils.getOrderInfoMessage(new Date(), order.getMessageText(), business.getName(), order.getOrderId()) + "\n注意属于:<b>" + desc + "</b>").replyMarkup(createInlineKeyboardButton(order.getOrderId())).parseMode("html").build();
-            try {
-                bot.execute(sendMessage);
-            } catch (TelegramApiException e) {
-                throw new RuntimeException(e);
+            String fileId = business.getFileId();
+            if (StringUtils.isNotBlank(fileId)) {
+                SendPhoto sendPhotoRequest = new SendPhoto();
+                sendPhotoRequest.setChatId(u.getTgId());
+                InputFile inputFile = new InputFile(fileId);
+                sendPhotoRequest.setPhoto(inputFile);
+                sendPhotoRequest.setParseMode("html");
+                sendPhotoRequest.setCaption(BotMessageUtils.getOrderInfoMessage(new Date(), order.getMessageText(), business.getName(), order.getOrderId()) + "\n注意属于:<b>" + desc + "</b>");
+                sendPhotoRequest.setReplyMarkup(createInlineKeyboardButton(order.getOrderId()));
+                try {
+                    bot.execute(sendPhotoRequest);
+                } catch (TelegramApiException e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                SendMessage sendMessage = SendMessage.builder().chatId(u.getTgId()).text(BotMessageUtils.getOrderInfoMessage(new Date(), order.getMessageText(), business.getName(), order.getOrderId()) + "\n注意属于:<b>" + desc + "</b>").replyMarkup(createInlineKeyboardButton(order.getOrderId())).parseMode("html").build();
+                try {
+                    bot.execute(sendMessage);
+                } catch (TelegramApiException e) {
+                    throw new RuntimeException(e);
+                }
             }
             log.info("已转发给管理员:" + u.getTgName());
         });
 
     }
-
     private InlineKeyboardMarkup createButton(String name) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         buttonList.add(InlineKeyboardButton.builder().text(name).callbackData("无").build());
@@ -143,6 +161,10 @@ public class SendOrderCallbackImpl implements ICallback {
 
         Order order = new Order();
         order.setMessageText(business.getMessageText());
+        String fileId = business.getFileId();
+        if (StringUtils.isNotBlank(fileId)) {
+            order.setFileId(fileId);
+        }
         order.setTgId(tgId);
         order.setBusinessId(business.getBusinessId());
         int insert = orderMapper.insertOrder(order);

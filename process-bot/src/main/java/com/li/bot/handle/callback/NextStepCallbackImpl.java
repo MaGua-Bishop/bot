@@ -33,7 +33,7 @@ public class NextStepCallbackImpl implements ICallback {
     }
 
     @Autowired
-    private AddOrderSessionList addOrderSessionList ;
+    private AddOrderSessionList addOrderSessionList;
 
 
     @Override
@@ -41,7 +41,7 @@ public class NextStepCallbackImpl implements ICallback {
         //解析业务id
 //        String data = callbackQuery.getData();
 //        Long businessId = Long.parseLong(data.substring(data.lastIndexOf(":") + 1));
-        SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getFrom().getId()).text("请输入所需内容").build();
+        SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getFrom().getId()).text("请输入所需内容或发送图片(图片可添加说明)").build();
 
         bot.execute(sendMessage);
         OrderSession userSession = addOrderSessionList.getUserSession(callbackQuery.getFrom().getId());

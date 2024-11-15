@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -31,36 +32,36 @@ import java.util.regex.Pattern;
 @Slf4j
 public class AddOrder {
 
-    private BotServiceImpl bot ;
+    private BotServiceImpl bot;
 
     private OrderSession orderSession;
 
-    private Message message ;
+    private Message message;
 
-    private AddOrderSessionList addOrderSessionList ;
+    private AddOrderSessionList addOrderSessionList;
     private OrderMapper orderMapper;
 
-    private UserMapper userMapper ;
+    private UserMapper userMapper;
 
-    private CallbackQuery callbackQuery  ;
+    private CallbackQuery callbackQuery;
 
-    public AddOrder(BotServiceImpl bot, OrderSession orderSession, Message message, AddOrderSessionList addOrderSessionList, OrderMapper orderMapper, UserMapper userMapper){
-        this.bot = bot ;
+    public AddOrder(BotServiceImpl bot, OrderSession orderSession, Message message, AddOrderSessionList addOrderSessionList, OrderMapper orderMapper, UserMapper userMapper) {
+        this.bot = bot;
         this.orderSession = orderSession;
-        this.message = message ;
+        this.message = message;
         this.addOrderSessionList = addOrderSessionList;
         this.orderMapper = orderMapper;
-        this.userMapper = userMapper ;
+        this.userMapper = userMapper;
     }
 
-    public void setCallbackFactory(CallbackQuery callbackQuery ){
-        this.callbackQuery = callbackQuery ;
+    public void setCallbackFactory(CallbackQuery callbackQuery) {
+        this.callbackQuery = callbackQuery;
     }
 
-    public void execute(BotMenuFactory botMenuFactory,BotKeyFactory botKeyFactory){
+    public void execute(BotMenuFactory botMenuFactory, BotKeyFactory botKeyFactory) {
 
         IBotMenu menu = botMenuFactory.getMenu(message.getText());
-        if(menu != null ){
+        if (menu != null) {
             try {
                 bot.execute(SendMessage.builder().chatId(message.getChatId()).text("操作已取消").build());
                 addOrderSessionList.removeUserSession(message.getFrom().getId());
@@ -69,14 +70,14 @@ public class AddOrder {
             }
             menu.execute(bot, message);
             return;
-        }else {
+        } else {
             IKeyboard key = botKeyFactory.getKey(message.getText());
-            if(key != null ){
+            if (key != null) {
                 try {
                     bot.execute(SendMessage.builder().chatId(message.getChatId()).text("操作已取消").build());
                     addOrderSessionList.removeUserSession(message.getFrom().getId());
                 } catch (TelegramApiException e) {
-                     throw new RuntimeException(e);
+                    throw new RuntimeException(e);
                 }
                 key.execute(bot, message);
                 return;
@@ -96,25 +97,30 @@ public class AddOrder {
     private void handleUserMessageInput(Message message) {
         OrderSession userSession = addOrderSessionList.getUserSession(message.getFrom().getId());
         userSession.setState(OrderSessionState.WAITING_FOR_PURCHASE);
-        userSession.getBusiness().setMessageText(message.getText());
-            List<InlineKeyboardButton> buttonList = new ArrayList<>();
-            buttonList.add(InlineKeyboardButton.builder().text("提交").callbackData("send:order:yes").build());
-            buttonList.add(InlineKeyboardButton.builder().text("不提交").callbackData("send:order:no").build());
-            List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
-            InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
+        if (message.hasPhoto()) {
+            PhotoSize photo = message.getPhoto().get(message.getPhoto().size() - 1);
+            String fileId = photo.getFileId();
+            userSession.getBusiness().setFileId(fileId);
+            String caption = message.getCaption() != null ? message.getCaption() : "";
+            userSession.getBusiness().setMessageText(caption);
+        }else{
+            userSession.getBusiness().setMessageText(message.getText());
+        }
+        List<InlineKeyboardButton> buttonList = new ArrayList<>();
+        buttonList.add(InlineKeyboardButton.builder().text("提交").callbackData("send:order:yes").build());
+        buttonList.add(InlineKeyboardButton.builder().text("不提交").callbackData("send:order:no").build());
+        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
+        InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
 
         BigDecimal money = userSession.getBusiness().getMoney();
 
         try {
-            bot.execute(SendMessage.builder().chatId(message.getChatId()).text("是否提交该业务报单\n业务价格:"+money).replyMarkup(inlineKeyboardMarkup).build());
+            bot.execute(SendMessage.builder().chatId(message.getChatId()).text("是否提交该业务报单\n业务价格:" + money).replyMarkup(inlineKeyboardMarkup).build());
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
         }
 
     }
-
-
-
 
 
     public static BigDecimal parseBusinessPrice(String input) {

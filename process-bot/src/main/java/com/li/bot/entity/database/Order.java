@@ -39,4 +39,7 @@ public class Order {
     @TableField("message_text")
     private String messageText;
 
+    @TableField("file_id")
+    private String fileId;
+
 }

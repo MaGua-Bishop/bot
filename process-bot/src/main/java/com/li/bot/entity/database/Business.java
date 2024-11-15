@@ -42,4 +42,7 @@ public class Business {
     @TableField(exist = false)
     private String messageText;
 
+    @TableField(exist = false)
+    private String fileId;
+
 }
