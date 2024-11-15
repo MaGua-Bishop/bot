@@ -1,29 +1,22 @@
 package com.li.bot.sessions;
 
-import com.google.common.collect.Lists;
 import com.li.bot.entity.database.Business;
 import com.li.bot.handle.key.BotKeyFactory;
 import com.li.bot.handle.key.IKeyboard;
 import com.li.bot.handle.menu.BotMenuFactory;
 import com.li.bot.handle.menu.IBotMenu;
 import com.li.bot.mapper.BusinessMapper;
-import com.li.bot.mapper.OrderMapper;
-import com.li.bot.mapper.UserMapper;
 import com.li.bot.service.impl.BotServiceImpl;
+import com.li.bot.service.impl.FileService;
 import com.li.bot.sessions.enums.AdminEditSessionState;
-import com.li.bot.sessions.enums.OrderSessionState;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,11 +35,14 @@ public class AdminEdit {
 
     private BusinessMapper businessMapper;
 
-    public AdminEdit(BotServiceImpl bot, Message message, AdminEditSessionList adminEditSessionList, BusinessMapper businessMapper) {
+    private FileService fileService;
+
+    public AdminEdit(BotServiceImpl bot, Message message, AdminEditSessionList adminEditSessionList, BusinessMapper businessMapper, FileService fileService) {
         this.bot = bot;
         this.message = message;
         this.adminEditSessionList = adminEditSessionList;
         this.businessMapper = businessMapper;
+        this.fileService = fileService;
     }
 
     public void execute(BotMenuFactory botMenuFactory, BotKeyFactory botKeyFactory) {
@@ -111,6 +107,20 @@ public class AdminEdit {
             businessMapper.updateById(business);
             try {
                 bot.execute(SendMessage.builder().chatId(message.getChatId()).text(business.getName() + "文案修改成功").build());
+                adminEditSessionList.removeUserSession(message.getFrom().getId());
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
+        } else if (2 == type) {
+            //保存用户发送的二维码
+            // 获取最清晰的图片（最大的 PhotoSize）
+            PhotoSize photo = message.getPhoto().get(message.getPhoto().size() - 1);
+
+            // 获取图片的 file_id
+            String fileId = photo.getFileId();
+            fileService.setCodeImage(fileId);
+            try {
+                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("二维码修改成功").build());
                 adminEditSessionList.removeUserSession(message.getFrom().getId());
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);

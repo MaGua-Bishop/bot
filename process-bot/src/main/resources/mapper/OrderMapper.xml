@@ -5,33 +5,72 @@
 <mapper namespace="com.li.bot.mapper.OrderMapper">
 
     <resultMap type="UserAndOrderVo" id="getUserAndOrderVo">
-        <result property="orderId"    column="order_id"    />
-        <result property="tgId"    column="tg_id"    />
-        <result property="businessName"    column="business_name"    />
-        <result property="businessMoney"    column="business_money"    />
-        <result property="orderStatus"    column="order_status"    />
-        <result property="createTime"    column="create_time"    />
+        <result property="orderId" column="order_id"/>
+        <result property="tgId" column="tg_id"/>
+        <result property="businessName" column="business_name"/>
+        <result property="businessMoney" column="business_money"/>
+        <result property="orderStatus" column="order_status"/>
+        <result property="createTime" column="create_time"/>
     </resultMap>
 
     <resultMap type="OrderAndBusinessVo" id="getOrderAndBusiness">
-        <result property="orderId"    column="order_id"    />
-        <result property="businessId"    column="business_id"    />
-        <result property="businessName"    column="business_name"    />
-        <result property="orderStatus"    column="order_status"    />
-        <result property="businessMoney"    column="business_money"    />
+        <result property="orderId" column="order_id"/>
+        <result property="businessId" column="business_id"/>
+        <result property="businessName" column="business_name"/>
+        <result property="orderStatus" column="order_status"/>
+        <result property="businessMoney" column="business_money"/>
     </resultMap>
 
 
-
     <select id="getUserAndOrderVoByTgId" resultMap="getUserAndOrderVo">
-        SELECT o.order_id,u.tg_id,b.name as business_name,b.money as business_money,o.status as order_status,o.create_time
-        From tg_order o LEFT JOIN  tg_user u ON u.tg_id = o.tg_id LEFT JOIN tg_business b ON o.business_id = b.business_id
+        SELECT o.order_id,
+               u.tg_id,
+               b.name   as business_name,
+               b.money  as business_money,
+               o.status as order_status,
+               o.create_time
+        From tg_order o
+                 LEFT JOIN tg_user u ON u.tg_id = o.tg_id
+                 LEFT JOIN tg_business b ON o.business_id = b.business_id
         WHERE o.tg_id = #{tgId}
     </select>
 
     <select id="getOrderByBusinessIdAndStatus" resultMap="getOrderAndBusiness">
-        select o.order_id as order_id ,b.name as business_name ,o.status as order_status, b.money as business_money ,b.business_id as business_id from tg_order o left join tg_business b on o.business_id = b.business_id
-        where o.business_id = #{businessId} and o.status = #{status}
+        select o.order_id    as order_id,
+               b.name        as business_name,
+               o.status      as order_status,
+               b.money       as business_money,
+               b.business_id as business_id
+        from tg_order o
+                 left join tg_business b on o.business_id = b.business_id
+        where o.business_id = #{businessId}
+          and o.status = #{status}
+    </select>
+
+    <resultMap type="OrderBusinessVo" id="todayOrder">
+        <result property="orderId" column="order_id"/>
+        <result property="tgId" column="tg_id"/>
+        <result property="status" column="status"/>
+        <result property="businessName" column="business_name"/>
+        <result property="businessMoney" column="business_money"/>
+        <result property="replyTgId" column="replyTgId"/>
+        <result property="userName" column="userName"/>
+    </resultMap>
+
+
+    <select id="selectTodayOrder" resultMap="todayOrder">
+        SELECT o.order_id as order_id,
+               o.status as status,
+               o.tg_id as tg_id,
+               b.name as business_name,
+               b.money as business_money,
+               r.tg_id as replyTgId,
+               u.tg_name as userName
+        FROM tg_order o
+                 LEFT JOIN tg_business b ON o.business_id = b.business_id
+                 LEFT JOIN tg_reply r ON o.order_id = r.order_id::uuid
+                 LEFT JOIN tg_user u ON r.tg_id = u.tg_id  -- 显式转换为 uuid 类型进行比较
+        WHERE DATE(o.create_time) = CURRENT_DATE;
     </select>
 
 

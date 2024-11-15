@@ -97,8 +97,9 @@ public class AdminCancelOrderCallbackImpl implements ICallback {
             }
             return;
         }
-        SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("[@" + user.getTgName() + "](tg://user?id=" + callbackQuery.getFrom().getId() + ")" +
-                "请输入取消订单的原因").parseMode("MarkdownV2").build();
+        String a = "<a href=\"tg://user?id=" + callbackQuery.getFrom().getId() + "\">@" + user.getTgName() + "</a>";
+        SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text(a +
+                "请输入取消订单的原因").parseMode("html").build();
         bot.execute(sendMessage);
 
         cancelOrderSessionList.addUserSession(callbackQuery.getFrom().getId(), reply, order, callbackQuery.getMessage().getMessageId());

@@ -2,13 +2,11 @@ package com.li.bot.handle.callback;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
-import com.li.bot.entity.database.Business;
-import com.li.bot.entity.database.Order;
-import com.li.bot.entity.database.Reply;
-import com.li.bot.entity.database.User;
+import com.li.bot.entity.database.*;
 import com.li.bot.mapper.BusinessMapper;
 import com.li.bot.mapper.OrderMapper;
 import com.li.bot.mapper.UserMapper;
+import com.li.bot.mapper.UserMoneyMapper;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.sessions.AddOrderSessionList;
 import com.li.bot.utils.BotMessageUtils;
@@ -53,12 +51,14 @@ public class SendOrderCallbackImpl implements ICallback {
 
     @Autowired
     private AddOrderSessionList addOrderSessionList;
+    @Autowired
+    private UserMoneyMapper userMoneyMapper;
 
 
     private InlineKeyboardMarkup createInlineKeyboardButton(String orderId) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
-        buttonList.add(InlineKeyboardButton.builder().text("机主后台").callbackData("order:yes:" + orderId+":type:"+0).build());
-        buttonList.add(InlineKeyboardButton.builder().text("杂单后台").callbackData("order:yes:" + orderId+":type:"+1).build());
+        buttonList.add(InlineKeyboardButton.builder().text("机主后台").callbackData("order:yes:" + orderId + ":type:" + 0).build());
+        buttonList.add(InlineKeyboardButton.builder().text("杂单后台").callbackData("order:yes:" + orderId + ":type:" + 1).build());
         buttonList.add(InlineKeyboardButton.builder().text("不通过").callbackData("order:no:" + orderId).build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
@@ -72,12 +72,12 @@ public class SendOrderCallbackImpl implements ICallback {
         Integer type = business.getType();
         useList.forEach(u -> {
             String desc = "";
-            if(type == 0){
+            if (type == 0) {
                 desc = "机主后台";
-            }else {
+            } else {
                 desc = "杂单后台";
             }
-            SendMessage sendMessage = SendMessage.builder().chatId(u.getTgId()).text(BotMessageUtils.getOrderInfoMessage(new Date(), order.getMessageText(), business.getName(), order.getOrderId())+"\n注意属于:<b>"+desc+"</b>").replyMarkup(createInlineKeyboardButton(order.getOrderId())).parseMode("html").build();
+            SendMessage sendMessage = SendMessage.builder().chatId(u.getTgId()).text(BotMessageUtils.getOrderInfoMessage(new Date(), order.getMessageText(), business.getName(), order.getOrderId()) + "\n注意属于:<b>" + desc + "</b>").replyMarkup(createInlineKeyboardButton(order.getOrderId())).parseMode("html").build();
             try {
                 bot.execute(sendMessage);
             } catch (TelegramApiException e) {
@@ -88,7 +88,7 @@ public class SendOrderCallbackImpl implements ICallback {
 
     }
 
-    private InlineKeyboardMarkup createButton(String name){
+    private InlineKeyboardMarkup createButton(String name) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         buttonList.add(InlineKeyboardButton.builder().text(name).callbackData("无").build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 5);
@@ -146,7 +146,16 @@ public class SendOrderCallbackImpl implements ICallback {
         order.setTgId(tgId);
         order.setBusinessId(business.getBusinessId());
         int insert = orderMapper.insertOrder(order);
+        UserMoney userMoneys = new UserMoney();
+        userMoneys.setMoney(businessMoney);
+        userMoneys.setType(1);
+        userMoneys.setTgId(tgId);
+        userMoneys.setUserMoney(user.getMoney());
+
+
         user.setMoney(user.getMoney().subtract(businessMoney));
+        userMoneys.setAfterMoney(user.getMoney());
+        userMoneyMapper.insert(userMoneys);
         int update = 0;
         if (insert == 1) {
             update = userMapper.updateById(user);

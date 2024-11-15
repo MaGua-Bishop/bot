@@ -75,12 +75,13 @@ public class SelectUserMoneyServiceMenuImpl implements IBotMenu {
         String string02 = fileService.readFileContent02();
         Workgroup workgroup02 = JSONObject.parseObject(string02, Workgroup.class);
         boolean b02 = workgroup02.getGroupList().contains(message.getChatId().toString());
-
-        if(!b && !b02){
+        String string03 = fileService.readFileContent03();
+        Workgroup workgroup03 = JSONObject.parseObject(string03, Workgroup.class);
+        boolean b03 = workgroup03.getGroupList().contains(message.getChatId().toString());
+        if (!b && !b02 && !b03) {
             System.out.println("非工作群");
             return;
         }
-
         String text = message.getText();
         Long userId = getUserId(text);
         if(userId == 0L){

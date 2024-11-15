@@ -4,7 +4,9 @@ import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.li.bot.entity.Workgroup;
 import com.li.bot.entity.database.User;
+import com.li.bot.entity.database.UserMoney;
 import com.li.bot.mapper.UserMapper;
+import com.li.bot.mapper.UserMoneyMapper;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.service.impl.FileService;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +40,9 @@ public class ReduceUserMoneyServiceMenuImpl implements IBotMenu {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private UserMoneyMapper userMoneyMapper;
 
 
     private Long getUserId(String text) {
@@ -88,7 +93,11 @@ public class ReduceUserMoneyServiceMenuImpl implements IBotMenu {
         String string02 = fileService.readFileContent02();
         Workgroup workgroup02 = JSONObject.parseObject(string02, Workgroup.class);
         boolean b02 = workgroup02.getGroupList().contains(message.getChatId().toString());
-        if (!b && !b02) {
+
+        String string03 = fileService.readFileContent03();
+        Workgroup workgroup03 = JSONObject.parseObject(string03, Workgroup.class);
+        boolean b03 = workgroup03.getGroupList().contains(message.getChatId().toString());
+        if (!b && !b02 && !b03) {
             System.out.println("非工作群");
             return;
         }
@@ -132,6 +141,13 @@ public class ReduceUserMoneyServiceMenuImpl implements IBotMenu {
         try {
             bot.execute(SendMessage.builder().chatId(message.getChatId()).text("修改用户金额成功\n用户名:<a href=\"tg://user?id=" + selectUserId.getTgId() + "\">" + selectUserId.getTgName() + "</a>\n用户id:" + selectUserId.getTgId() + "\n用户余额:" + selectUserId.getMoney()).parseMode("html").build());
             log.info("用户id:{},减少前余额:{},减少余额:{},减少后余额:{}", selectUserId.getTgId(), money1, amount, selectUserId.getMoney());
+            UserMoney userMoney = new UserMoney();
+            userMoney.setTgId(selectUserId.getTgId());
+            userMoney.setUserMoney(money1);
+            userMoney.setMoney(amount);
+            userMoney.setType(3);
+            userMoney.setAfterMoney(selectUserId.getMoney());
+            userMoneyMapper.insert(userMoney);
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
         }

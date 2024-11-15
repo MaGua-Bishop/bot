@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.li.bot.entity.database.Order;
 import com.li.bot.entity.database.vo.OrderAndBusinessVo;
+import com.li.bot.entity.database.vo.OrderBusinessVo;
 import com.li.bot.entity.database.vo.UserAndOrderVo;
 import org.apache.ibatis.annotations.*;
 
@@ -45,6 +46,8 @@ public interface OrderMapper extends BaseMapper<Order> {
 
     @Select("select * from tg_order where business_id = #{businessId} and (status = 1 or status = 2)")
     List<Order> getOrderByBusinessId01(Long businessId);
+
+    List<OrderBusinessVo> selectTodayOrder();
 
 
 }

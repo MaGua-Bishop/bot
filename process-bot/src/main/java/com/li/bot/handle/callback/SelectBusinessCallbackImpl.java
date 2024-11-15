@@ -50,8 +50,9 @@ public class SelectBusinessCallbackImpl implements ICallback {
         Long chatId = callbackQuery.getMessage().getChatId() ;
         String userName = callbackQuery.getFrom().getLastName() + callbackQuery.getFrom().getFirstName();
         if(result.getRecords().isEmpty()){
-            SendMessage msg = SendMessage.builder().chatId(chatId).text("[@" + userName + "](tg://user?id=" + chatId+ ")" +
-                    "该业务类型订单已全部完成").parseMode("MarkdownV2").build();
+            String a = "<a href=\"tg://user?id=" + chatId + "\">@" + userName + "</a>";
+            SendMessage msg = SendMessage.builder().chatId(chatId).text(a+
+                    "该业务类型订单已全部完成").parseMode("html").build();
             try {
                 bot.execute(msg);
             } catch (TelegramApiException e) {

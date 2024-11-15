@@ -44,6 +44,16 @@ public class FileService {
         }
     }
 
+    public String readFileContent03() {
+        String groupFilePath = botConfig.getGroupFile03();
+        try {
+            String string = FileUtils.readFileToString(new File(groupFilePath));
+            return string;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public String getChannelLink() {
         String channelFile = botConfig.getChannelFile();
         try {
@@ -56,6 +66,30 @@ public class FileService {
         }
     }
 
+    public String getCodeImage() {
+        String channelFile = botConfig.getCodeFile();
+        try {
+            String string = FileUtils.readFileToString(new File(channelFile));
+            JSONObject jsonObject = JSON.parseObject(string);
+            String s = jsonObject.getString("file_id");
+            return s;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void setCodeImage(String fileId) {
+        try {
+            String channelFile = botConfig.getCodeFile();
+            String string = FileUtils.readFileToString(new File(channelFile));
+            JSONObject jsonObject = JSON.parseObject(string);
+            jsonObject.put("file_id", fileId);
+            // 将更新后的对象写回文件
+            new ObjectMapper().writeValue(new File(botConfig.getCodeFile()), jsonObject);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 
     public void addGroupId(String newGroupId) {
@@ -91,6 +125,26 @@ public class FileService {
 
             // 将更新后的对象写回文件
             new ObjectMapper().writeValue(new File(botConfig.getGroupFile02()), workgroup);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addGroupId03(String newGroupId) {
+        try {
+            // 读取JSON文件
+            Workgroup workgroup = new ObjectMapper().readValue(readFileContent03(), Workgroup.class);
+
+            // 添加新的ID
+            if (workgroup.getGroupList() == null) {
+                workgroup.setGroupList(Arrays.asList(newGroupId));
+            } else {
+                workgroup.getGroupList().clear();
+                workgroup.getGroupList().add(newGroupId);
+            }
+
+            // 将更新后的对象写回文件
+            new ObjectMapper().writeValue(new File(botConfig.getGroupFile03()), workgroup);
         } catch (IOException e) {
             e.printStackTrace();
         }

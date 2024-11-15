@@ -19,17 +19,17 @@ public class BotConfig {
 
     private Integer port;
 
-    private String url ;
+    private String url;
 
-    private String groupFile ;
+    private String groupFile;
+    private String groupFile02;
+    private String groupFile03;
+    private String channelFile;
 
-    private String groupFile02 ;
-
-    private String channelFile ;
+    private String codeFile;
 
 
-
-    public DefaultBotOptions getDefaultBotOptions(){
+    public DefaultBotOptions getDefaultBotOptions() {
         //设置Http代理
         DefaultBotOptions botOptions = new DefaultBotOptions();
         botOptions.setProxyHost(host);

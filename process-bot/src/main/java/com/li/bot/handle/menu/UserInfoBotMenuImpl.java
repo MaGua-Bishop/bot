@@ -38,13 +38,14 @@ public class UserInfoBotMenuImpl implements IBotMenu {
     }
 
     @Autowired
-    private UserMapper userMapper ;
+    private UserMapper userMapper;
 
     @Autowired
-    private OrderMapper orderMapper ;
+    private OrderMapper orderMapper;
 
     /**
      * 根据订单状态分组
+     *
      * @param userOrderList
      * @return
      */
@@ -53,11 +54,12 @@ public class UserInfoBotMenuImpl implements IBotMenu {
                 .collect(Collectors.groupingBy(UserAndOrderVo::getOrderStatus));
     }
 
-        private InlineKeyboardMarkup createInlineKeyboardButton(){
+    private InlineKeyboardMarkup createInlineKeyboardButton() {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
-        buttonList.add(InlineKeyboardButton.builder().text("查看用户信息").callbackData("adminSelectUserInfo:"+1).build());
+        buttonList.add(InlineKeyboardButton.builder().text("查看用户信息").callbackData("adminSelectUserInfo:" + 1).build());
+        buttonList.add(InlineKeyboardButton.builder().text("查看今日账单").callbackData("adminSelectBilling").build());
 
-        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 5);
+        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 1);
 
 
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
@@ -66,48 +68,47 @@ public class UserInfoBotMenuImpl implements IBotMenu {
     }
 
 
-    private void startMessage(BotServiceImpl bot,Message message){
+    private void startMessage(BotServiceImpl bot, Message message) {
 
         //获取用户信息
         Long tgId = message.getFrom().getId();
         LambdaQueryWrapper<User> userWrapper = new LambdaQueryWrapper<>();
-        userWrapper.eq(User::getTgId,tgId);
+        userWrapper.eq(User::getTgId, tgId);
         User user = userMapper.selectOne(userWrapper);
 
         List<UserAndOrderVo> userOrderList = new ArrayList<>();
-        if(user == null){
+        if (user == null) {
             user = new User();
             user.setTgId(tgId);
-            user.setTgName(message.getFrom().getFirstName()+message.getFrom().getLastName());
+            user.setTgName(message.getFrom().getFirstName() + message.getFrom().getLastName());
             userMapper.insert(user);
-        }else {
+        } else {
             userOrderList = orderMapper.getUserAndOrderVoByTgId(tgId);
         }
 
 
         List<UserAndOrderVo> surplusOrder = new ArrayList<>();
         List<UserAndOrderVo> replyOrder = new ArrayList<>();
-        if(!userOrderList.isEmpty()){
+        if (!userOrderList.isEmpty()) {
             // 根据订单状态分组
             Map<Integer, List<UserAndOrderVo>> groupOrders = groupOrdersByStatus(userOrderList);
             // 遍历订单状态
             Set<Integer> orderStatus = groupOrders.keySet();
             for (Integer status : orderStatus) {
                 List<UserAndOrderVo> orders = groupOrders.get(status);
-                if(status == OrderStatus.IN_PROGRESS.getCode() || status == OrderStatus.PENDING.getCode() || status == OrderStatus.REVIEW.getCode()){
+                if (status == OrderStatus.IN_PROGRESS.getCode() || status == OrderStatus.PENDING.getCode() || status == OrderStatus.REVIEW.getCode()) {
                     surplusOrder.addAll(orders);
-                }else if(status == OrderStatus.COMPLETED.getCode()){
+                } else if (status == OrderStatus.COMPLETED.getCode()) {
                     replyOrder.addAll(orders);
                 }
             }
         }
 
 
-
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId());
-        sendMessage.setText(BotMessageUtils.getUserInfoMessage(user,userOrderList, surplusOrder, replyOrder));
-        if(user.getIsAdmin()){
+        sendMessage.setText(BotMessageUtils.getUserInfoMessage(user, userOrderList, surplusOrder, replyOrder));
+        if (user.getIsAdmin()) {
             sendMessage.setReplyMarkup(createInlineKeyboardButton());
         }
         sendMessage.enableMarkdownV2(true);

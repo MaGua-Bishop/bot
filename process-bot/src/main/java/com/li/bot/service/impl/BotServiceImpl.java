@@ -12,10 +12,7 @@ import com.li.bot.handle.callback.CallbackFactory;
 import com.li.bot.handle.key.BotKeyFactory;
 import com.li.bot.handle.menu.BotMenuFactory;
 import com.li.bot.handle.menu.IBotMenu;
-import com.li.bot.mapper.BusinessMapper;
-import com.li.bot.mapper.OrderMapper;
-import com.li.bot.mapper.ReplyMapper;
-import com.li.bot.mapper.UserMapper;
+import com.li.bot.mapper.*;
 import com.li.bot.sessions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -131,10 +128,15 @@ public class BotServiceImpl extends TelegramWebhookBot {
     private ChannelMembersServiceImpl channelMembersService;
 
     @Autowired
-    private CancelOrderSessionList cancelOrderSessionList ;
+    private CancelOrderSessionList cancelOrderSessionList;
 
     @Autowired
-    private ReplyMapper replyMapper ;
+    private ReplyMapper replyMapper;
+    @Autowired
+    private UserMoneyMapper userMoneyMapper;
+
+    @Autowired
+    private UserCodeRechargeSessionList userCodeRechargeSessionList;
 
 
     private Long getUserId(String text) {
@@ -269,7 +271,7 @@ public class BotServiceImpl extends TelegramWebhookBot {
                     return null;
                 }
                 if (adminEditSessionList.getUserSession(tgId) != null) {
-                    new AdminEdit(this, update.getMessage(), adminEditSessionList, businessMapper).execute(botMenuFactory, botKeyFactory);
+                    new AdminEdit(this, update.getMessage(), adminEditSessionList, businessMapper, fileService).execute(botMenuFactory, botKeyFactory);
                     return null;
                 }
 
@@ -278,10 +280,15 @@ public class BotServiceImpl extends TelegramWebhookBot {
                     new AddBusiness(this, businessSession, update.getMessage(), addBusinessSessionList, businessMapper).execute(botMenuFactory, botKeyFactory);
                     return null;
                 }
-            }else{
+                UserCodeRechargeSession userSession = userCodeRechargeSessionList.getUserSession(tgId);
+                if (userSession != null) {
+                    new UserCodeRecharge(this, update.getMessage(), userSession, userCodeRechargeSessionList, fileService,userMoneyMapper).execute(botMenuFactory, botKeyFactory);
+                    return null;
+                }
+            } else {
                 Long tgId = update.getMessage().getFrom().getId();
-                if(cancelOrderSessionList.getCancelOrderSession(tgId) !=null){
-                    new CancelOrder(this, update.getMessage(), cancelOrderSessionList, orderMapper, businessMapper, userMapper,replyMapper).execute(botMenuFactory, botKeyFactory);
+                if (cancelOrderSessionList.getCancelOrderSession(tgId) != null) {
+                    new CancelOrder(this, update.getMessage(), cancelOrderSessionList, orderMapper, businessMapper, userMapper, replyMapper, userMoneyMapper).execute(botMenuFactory, botKeyFactory);
                     return null;
                 }
             }

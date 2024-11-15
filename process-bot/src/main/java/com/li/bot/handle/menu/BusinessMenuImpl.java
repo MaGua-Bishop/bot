@@ -21,7 +21,7 @@ import java.util.List;
  * @CreateTime: 2024-09-30
  */
 @Component
-public class BusinessMenuImpl implements IBotMenu{
+public class BusinessMenuImpl implements IBotMenu {
 
     @Override
     public String getMenuName() {
@@ -29,13 +29,13 @@ public class BusinessMenuImpl implements IBotMenu{
     }
 
     @Autowired
-    private UserMapper userMapper ;
+    private UserMapper userMapper;
 
     @Autowired
-    private BusinessMapper businessMapper ;
+    private BusinessMapper businessMapper;
 
 
-    private InlineKeyboardMarkup createInlineKeyboardButton(Message message){
+    private InlineKeyboardMarkup createInlineKeyboardButton(Message message) {
 
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
 
@@ -46,22 +46,22 @@ public class BusinessMenuImpl implements IBotMenu{
         //判断用户是否管理员
         Long tgId = message.getFrom().getId();
         LambdaQueryWrapper<User> UserWrapper = new LambdaQueryWrapper<>();
-        UserWrapper.eq(User::getTgId,tgId);
+        UserWrapper.eq(User::getTgId, tgId);
         User user = userMapper.selectOne(UserWrapper);
 
-        if(user == null){
+        if (user == null) {
             user = new User();
             user.setTgId(tgId);
-            user.setTgName(message.getFrom().getFirstName()+message.getFrom().getLastName());
+            user.setTgName(message.getFrom().getFirstName() + message.getFrom().getLastName());
             userMapper.insert(user);
-        }else {
-            if(user.getIsAdmin()){
+        } else {
+            if (user.getIsAdmin()) {
                 buttonList.add(InlineKeyboardButton.builder().text("添加业务").callbackData("adminAddBusiness").build());
                 buttonList.add(InlineKeyboardButton.builder().text("提取未领取订单").callbackData("adminSelectListBusiness:0").build());
                 buttonList.add(InlineKeyboardButton.builder().text("提取未回复订单").callbackData("adminSelectListBusiness:1").build());
+                buttonList.add(InlineKeyboardButton.builder().text("更换充值二维码").callbackData("adminUpdateCode").build());
             }
         }
-
 
 
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);

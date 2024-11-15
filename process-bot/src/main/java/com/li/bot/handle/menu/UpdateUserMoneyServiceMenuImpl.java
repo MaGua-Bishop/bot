@@ -4,7 +4,9 @@ import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.li.bot.entity.Workgroup;
 import com.li.bot.entity.database.User;
+import com.li.bot.entity.database.UserMoney;
 import com.li.bot.mapper.UserMapper;
+import com.li.bot.mapper.UserMoneyMapper;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.service.impl.FileService;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +41,8 @@ public class UpdateUserMoneyServiceMenuImpl implements IBotMenu {
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private UserMoneyMapper userMoneyMapper;
 
     private Long getUserId(String text) {
         // 正则表达式模式，用于匹配固定十位数的ID
@@ -88,7 +92,10 @@ public class UpdateUserMoneyServiceMenuImpl implements IBotMenu {
         String string02 = fileService.readFileContent02();
         Workgroup workgroup02 = JSONObject.parseObject(string02, Workgroup.class);
         boolean b02 = workgroup02.getGroupList().contains(message.getChatId().toString());
-        if (!b && !b02) {
+        String string03 = fileService.readFileContent03();
+        Workgroup workgroup03 = JSONObject.parseObject(string03, Workgroup.class);
+        boolean b03 = workgroup03.getGroupList().contains(message.getChatId().toString());
+        if (!b && !b02 && !b03) {
             System.out.println("非工作群");
             return;
         }
@@ -131,6 +138,14 @@ public class UpdateUserMoneyServiceMenuImpl implements IBotMenu {
         try {
             bot.execute(SendMessage.builder().chatId(message.getChatId()).text("修改用户金额成功\n用户名:<a href=\"tg://user?id=" + selectUserId.getTgId() + "\">" + selectUserId.getTgName() + "</a>\n用户id:" + selectUserId.getTgId() + "\n用户余额:" + selectUserId.getMoney()).parseMode("html").build());
             log.info("用户id:{},添加前余额:{},添加余额:{},添加后余额:{}", selectUserId.getTgId(), money1, amount, selectUserId.getMoney());
+            UserMoney userMoney = new UserMoney();
+            userMoney.setTgId(selectUserId.getTgId());
+            userMoney.setUserMoney(money1);
+            userMoney.setMoney(amount);
+            userMoney.setType(4);
+            userMoney.setAfterMoney(selectUserId.getMoney());
+            userMoneyMapper.insert(userMoney);
+            bot.execute(SendMessage.builder().chatId(selectUserId.getTgId()).text("增加了<b>" + amount + "</b>余额\n您的当前余额为:<b>" + selectUserId.getMoney() + "</b>").parseMode("html").build());
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
         }

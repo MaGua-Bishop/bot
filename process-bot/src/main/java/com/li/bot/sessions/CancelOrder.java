@@ -2,19 +2,13 @@ package com.li.bot.sessions;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
-import com.li.bot.entity.database.Business;
-import com.li.bot.entity.database.Order;
-import com.li.bot.entity.database.Reply;
-import com.li.bot.entity.database.User;
+import com.li.bot.entity.database.*;
 import com.li.bot.enums.OrderStatus;
 import com.li.bot.handle.key.BotKeyFactory;
 import com.li.bot.handle.key.IKeyboard;
 import com.li.bot.handle.menu.BotMenuFactory;
 import com.li.bot.handle.menu.IBotMenu;
-import com.li.bot.mapper.BusinessMapper;
-import com.li.bot.mapper.OrderMapper;
-import com.li.bot.mapper.ReplyMapper;
-import com.li.bot.mapper.UserMapper;
+import com.li.bot.mapper.*;
 import com.li.bot.service.impl.BotServiceImpl;
 import com.li.bot.sessions.enums.AdminEditSessionState;
 import com.li.bot.sessions.enums.CancelOrderSessionState;
@@ -58,7 +52,9 @@ public class CancelOrder {
 
     private ReplyMapper replyMapper;
 
-    public CancelOrder(BotServiceImpl bot, Message message, CancelOrderSessionList cancelOrderSessionList, OrderMapper orderMapper, BusinessMapper businessMapper, UserMapper userMapper, ReplyMapper replyMapper) {
+    private UserMoneyMapper userMoneyMapper;
+
+    public CancelOrder(BotServiceImpl bot, Message message, CancelOrderSessionList cancelOrderSessionList, OrderMapper orderMapper, BusinessMapper businessMapper, UserMapper userMapper, ReplyMapper replyMapper, UserMoneyMapper userMoneyMapper) {
         this.bot = bot;
         this.message = message;
         this.cancelOrderSessionList = cancelOrderSessionList;
@@ -66,6 +62,7 @@ public class CancelOrder {
         this.businessMapper = businessMapper;
         this.userMapper = userMapper;
         this.replyMapper = replyMapper;
+        this.userMoneyMapper = userMoneyMapper;
     }
 
     private InlineKeyboardMarkup createButton(String name) {
@@ -144,7 +141,15 @@ public class CancelOrder {
             BigDecimal money = business.getMoney();
             //退还给用户
             User selectOne = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, order.getTgId()));
+            UserMoney userMoney = new UserMoney();
+            userMoney.setTgId(selectOne.getTgId());
+            userMoney.setUserMoney(selectOne.getMoney());
+            userMoney.setMoney(money);
+            userMoney.setType(2);
+
             selectOne.setMoney(selectOne.getMoney().add(money));
+            userMoney.setAfterMoney(selectOne.getMoney());
+            userMoneyMapper.insert(userMoney);
             userMapper.updateById(selectOne);
 //            EditMessageReplyMarkup editMessageReplyMarkup = EditMessageReplyMarkup.builder().chatId(message.getChatId()).messageId(userSession.getMessageId()).replyMarkup(createButton("已取消")).build();
 //            try {
