@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-058bg2-lbs+(@as193k74bn_0u0s)imz-9wz#5qs1$t*1h#86@
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
-HOST = "https://8d7b54bfb53d.ngrok.app"
+HOST = "https://0207-119-39-51-90.ngrok-free.app"
 
 # Application definition
 
@@ -56,7 +56,7 @@ CHANNEL_LAYERS = {
     },
 }
 CSRF_TRUSTED_ORIGINS = [
-    "https://8d7b54bfb53d.ngrok.app",
+    "https://0207-119-39-51-90.ngrok-free.app",
 ]
 
 MIDDLEWARE = [
@@ -153,7 +153,7 @@ SIMPLEUI_CONFIG = {
     'system_keep': False,
 
     # 用于菜单排序和过滤, 不填此字段为默认排序和全部显示。空列表[] 为全部不显示.
-    'menu_display': ['用户中心'],
+    'menu_display': ['用户中心', '代理中心'],
 
     # 设置是否开启动态菜单, 默认为False. 如果开启, 则会在每次用户登陆时刷新展示菜单内容。
     # 一般建议关闭。
@@ -174,6 +174,17 @@ SIMPLEUI_CONFIG = {
                 },
             ]
         },
-
+        {
+            'name': '代理中心',
+            'icon': 'fa fa-users',
+            'models': [
+                {
+                    'name': '代理用户',
+                    'url': '/admin/app/admin/',
+                }
+            ]
+        }
     ]
 }
+
+AUTH_USER_MODEL = 'app.Admin'
