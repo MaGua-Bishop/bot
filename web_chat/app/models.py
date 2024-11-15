@@ -16,7 +16,7 @@ class User(models.Model):
     user = models.CharField(max_length=255, verbose_name="用户名")
     money = models.FloatField(verbose_name="余额", default=0)
     uid = models.CharField(max_length=255, verbose_name="uid", default=generate_random_string)
-    admin = models.ForeignKey('Admin', on_delete=models.SET_NULL, null=True, verbose_name="创建管理员")
+    admin = models.ForeignKey('Admin', on_delete=models.SET_NULL, null=True, verbose_name="创建人")
 
     def __str__(self):
         return str(self.user)
@@ -26,11 +26,11 @@ class User(models.Model):
 def user_before_save(sender, instance, **kwargs):
     # 获取当前的请求对象
     request = getattr(instance, '_request', None)
-    
+
     # 如果是新创建的用户且有请求对象
     if not instance.pk and request and request.user.is_authenticated:
         instance.admin = request.user
-    
+
     # 处理金额变更的逻辑
     old_instance = sender.objects.filter(id=instance.pk).first()
     if old_instance:
@@ -38,8 +38,8 @@ def user_before_save(sender, instance, **kwargs):
         new_money = instance.money
         if old_money != new_money:
             ChangeMoney.objects.create(
-                user=instance, 
-                last_money=old_money, 
+                user=instance,
+                last_money=old_money,
                 money=new_money - old_money,
                 now_money=new_money
             )
