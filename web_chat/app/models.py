@@ -17,7 +17,7 @@ class User(models.Model):
     uid = models.CharField(max_length=255, verbose_name="uid", default=generate_random_string)
 
     def __str__(self):
-        return self.user
+        return str(self.user)
 
 
 @receiver(pre_save, sender=User)
@@ -48,7 +48,7 @@ class ChangeMoney(models.Model):
     create_time = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
 
     def __str__(self):
-        return self.user
+        return str(self.user.user)
 
 
 class Message(models.Model):
