@@ -152,6 +152,15 @@ public class CallbackQueryHandle {
             callbackFactory.getCallback("adminUpdateCode").execute(bot, callbackQuery);
             return;
         }
+        if (data.indexOf("admin:confirm:money:") == 0) {
+            callbackFactory.getCallback("adminConfirmMoney").execute(bot, callbackQuery);
+            return;
+        }
+        if (data.indexOf("admin:cancel:money:") == 0) {
+            callbackFactory.getCallback("adminCancelMoney").execute(bot, callbackQuery);
+            return;
+        }
+
 
 //        bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("未找到对应按钮回调").build());
 

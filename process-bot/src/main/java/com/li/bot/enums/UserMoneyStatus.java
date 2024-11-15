@@ -8,7 +8,9 @@ public enum UserMoneyStatus {
 
     Recharge(0, "充值"),
     Reduce(3, "管理员减少余额"),
-    Add(4, "管理员增加余额");
+    Add(4, "管理员增加余额"),
+    CODE(5, "扫码自动充值");
+
 
     private final Integer code;
     private final String message;

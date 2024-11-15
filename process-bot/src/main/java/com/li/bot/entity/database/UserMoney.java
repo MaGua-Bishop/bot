@@ -29,6 +29,9 @@ public class UserMoney {
     @TableField("create_time")
     private Date createTime;
 
+    @TableField("status")
+    private Integer status;
+
     public Long getMoneyId() {
         return moneyId;
     }
@@ -83,5 +86,13 @@ public class UserMoney {
 
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
     }
 }

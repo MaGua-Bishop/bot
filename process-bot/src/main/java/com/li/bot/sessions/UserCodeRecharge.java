@@ -121,6 +121,15 @@ public class UserCodeRecharge {
         return inlineKeyboardMarkup;
     }
 
+    private InlineKeyboardMarkup createInlineKeyboardButton02(Long moneyId) {
+        List<InlineKeyboardButton> buttonList = new ArrayList<>();
+        buttonList.add(InlineKeyboardButton.builder().text("确认转账").callbackData("admin:confirm:money:" + moneyId).build());
+        buttonList.add(InlineKeyboardButton.builder().text("取消转账").callbackData("admin:cancel:money:" + moneyId).build());
+        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
+        InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
+        return inlineKeyboardMarkup;
+    }
+
     private void handleUserMoneyInput(Message message) {
         String userMoney = message.getText();
         BigDecimal bigDecimal = parseBusinessPrice(userMoney);
@@ -155,7 +164,11 @@ public class UserCodeRecharge {
         SendPhoto sendPhotoRequest = new SendPhoto();
         String string = fileService.readFileContent03();
         Workgroup workgroup = JSONObject.parseObject(string, Workgroup.class);
-
+        UserMoney userMoney = new UserMoney();
+        userMoney.setTgId(message.getFrom().getId());
+        userMoney.setMoney(userCodeRechargeSession.getMoney());
+        userMoney.setType(5);
+        userMoneyMapper.insertUserMoney(userMoney);
         List<String> groupList = workgroup.getGroupList();
         for (String s : groupList) {
             sendPhotoRequest.setChatId(s);
@@ -164,8 +177,10 @@ public class UserCodeRecharge {
             String firstName = message.getFrom().getFirstName();
             String lastName = message.getFrom().getLastName();
             String a = "<a href=\"tg://user?id=" + message.getFrom().getId() + "\">" + firstName + (lastName != null ? lastName : "") + "</a>";
-            sendPhotoRequest.setCaption("用户扫码充值:\n用户id:<code>" + message.getFrom().getId() + "</code>\n用户名:@" + a + "\n转账金额:<code>" + userCodeRechargeSession.getMoney()+"</code>");
+            sendPhotoRequest.setCaption("用户扫码充值:\n用户id:<code>" + message.getFrom().getId() + "</code>\n用户名:@" + a + "\n转账金额:<code>" + userCodeRechargeSession.getMoney() + "</code>");
             sendPhotoRequest.setParseMode("html");
+            System.out.println("转账id:" + userMoney.getMoneyId());
+            sendPhotoRequest.setReplyMarkup(createInlineKeyboardButton02(userMoney.getMoneyId()));
             try {
                 bot.execute(SendMessage.builder().chatId(message.getChatId()).text("已发送转账图片，请等待充值").build());
                 bot.execute(sendPhotoRequest);
@@ -173,11 +188,6 @@ public class UserCodeRecharge {
                 e.printStackTrace();
             }
         }
-        UserMoney userMoney = new UserMoney();
-        userMoney.setTgId(message.getFrom().getId());
-        userMoney.setMoney(userCodeRechargeSession.getMoney());
-        userMoney.setType(5);
-        userMoneyMapper.insert(userMoney);
         userCodeRechargeSessionList.removeUserSession(message.getFrom().getId());
     }
 
