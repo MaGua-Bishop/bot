@@ -77,18 +77,29 @@ def save_message(request):
             print("接收到的消息数据:", data)
             
             user = User.objects.get(uid=data['user'])
-            admin_username = user.admin.username if user.admin else None
-            print(f"用户: {user}, 代理用户名: {admin_username}")
             
             message = Message.objects.create(
                 user=user,
-                admin_username=admin_username,
+                admin_username=data['admin_username'],
                 message=data.get('message'),
                 file_url=data.get('file_url'),
                 file_type=data.get('file_type')
             )
-            print(f"消息已保存: {message}")
-            return JsonResponse({'status': 'success'})
+            
+            # 返回完整的消息数据，包含用户名
+            return JsonResponse({
+                'status': 'success',
+                'message': {
+                    'user': user.uid,
+                    'user_name': user.user,  # 返回真实用户名
+                    'message': message.message,
+                    'file_url': message.file_url,
+                    'file_type': message.file_type,
+                    'admin_username': message.admin_username,
+                    'timestamp': message.timestamp.strftime('%H:%M'),
+                    'avatar': data.get('avatar')
+                }
+            })
         except Exception as e:
             print(f"保存消息时出错: {str(e)}")
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)

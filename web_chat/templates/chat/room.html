@@ -159,7 +159,7 @@
         const userName = new URLSearchParams(window.location.search).get('user') || 'Anonymous';
         const userAvatar = "https://lh3.googleusercontent.com/a/ALm5wu2Vm-KiLrLQW9QfemC-QvUWqJpuOha8VDg7m70D=k-s48";
         const adminId = "{{ admin_id }}";  // 从后端获取admin_id
-        
+
         console.log("初始化连接:");
         console.log("- 用户名:", userName);
         console.log("- Admin ID:", adminId);
@@ -176,7 +176,7 @@
         chatSocket.onmessage = function (e) {
             const data = JSON.parse(e.data);
             console.log("收到WebSocket消息:", data);
-            
+
             displayMessage(data);
         };
 
@@ -185,12 +185,16 @@
         }
 
         function displayMessage(data) {
+            console.log("显示消息:", data);  // 添加日志
+            
             const messageClass = data.user === userName ? 'self' : 'other';
             const avatar = data.avatar || userAvatar;
             const isImage = data.file_type && data.file_type.startsWith('image/');
             const isVideo = data.file_type && data.file_type.startsWith('video/');
             const contentText = data.message || '';
-            
+
+            console.log("消息类型:", {isImage, isVideo, hasText: !!contentText});  // 添加日志
+
             // 获取显示的用户名
             const displayName = data.user_name || data.user || 'Anonymous';
 
@@ -203,6 +207,8 @@
                 mediaContent = `<video src="${data.file_url}" controls class="media-content"
                                  style="width: 150px; border-radius: 8px; margin-top: 5px; object-fit: cover;"></video>`;
             }
+
+            console.log("生成的媒体内容:", mediaContent);  // 添加日志
 
             const messageHTML = `
                 <div class="message ${messageClass}">
@@ -242,15 +248,12 @@
                 user: userName,
                 user_name: userName,
                 message: message,
-                admin_username: adminId,  // 使用admin_username
+                admin_username: adminId,
                 avatar: userAvatar,
                 timestamp: getCurrentTime()
             };
 
             if (chatSocket.readyState === WebSocket.OPEN) {
-                // 先发送WebSocket消息
-                chatSocket.send(JSON.stringify(messageData));
-                
                 // 保存到数据库
                 $.ajax({
                     url: '/save_message/',
@@ -259,13 +262,17 @@
                     contentType: 'application/json',
                     success: function (response) {
                         console.log("消息已保存:", response);
+                        if (response.status === 'success') {
+                            // 使用response.message而不是messageData
+                            displayMessage(response.message);
+                            chatSocket.send(JSON.stringify(response.message));
+                            $("#chat-message-input").val('');
+                        }
                     },
                     error: function (xhr, status, error) {
                         console.error("保存消息失败:", error);
                     }
                 });
-
-                $("#chat-message-input").val('');
             } else {
                 console.error("WebSocket未连接");
             }
@@ -282,20 +289,19 @@
                 processData: false,
                 contentType: false,
                 success: function (response) {
+                    console.log("文件上传成功:", response);
+                    
                     const messageData = {
                         user: userName,
                         user_name: userName,
                         file_url: response.file_url,
                         file_type: file.type,
-                        admin_id: adminId,
+                        admin_username: adminId,
                         avatar: userAvatar,
                         timestamp: getCurrentTime()
                     };
 
-                    console.log("发送文件消息:");
-                    console.log("- 消息数据:", messageData);
-
-                    chatSocket.send(JSON.stringify(messageData));
+                    console.log("准备发送文件消息:", messageData);
 
                     // 保存文件消息到数据库
                     $.ajax({
@@ -305,6 +311,10 @@
                         contentType: 'application/json',
                         success: function (res) {
                             console.log("文件消息已保存:", res);
+                            if (res.status === 'success') {
+                                // 只发送WebSocket消息，不调用displayMessage
+                                chatSocket.send(JSON.stringify(res.message));
+                            }
                         },
                         error: function (xhr, status, error) {
                             console.error("保存文件消息失败:", error);
