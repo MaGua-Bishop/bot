@@ -263,8 +263,7 @@
                     success: function (response) {
                         console.log("消息已保存:", response);
                         if (response.status === 'success') {
-                            // 使用response.message而不是messageData
-                            displayMessage(response.message);
+                            // 只发送WebSocket消息，不调用displayMessage
                             chatSocket.send(JSON.stringify(response.message));
                             $("#chat-message-input").val('');
                         }
