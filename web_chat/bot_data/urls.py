@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
-from django.contrib import admin
+
 from app import views
 from app.admin import custom_admin_site  # 导入我们自定义的 admin site 实例
 
