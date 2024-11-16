@@ -61,6 +61,7 @@ public class AdminConfirmMoneyCallbackImpl implements ICallback {
             return;
         }
         User user1 = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getTgId, userMoney.getTgId()));
+        userMoney.setUserMoney(user1.getMoney());
         user1.setMoney(user1.getMoney().add(userMoney.getMoney()));
         userMapper.updateById(user1);
         SendMessage sendMessage = SendMessage.builder().chatId(userMoney.getTgId()).text("您的扫码充值成功\n充值金额:" + userMoney.getMoney() + "\n您余额为:" + user1.getMoney()).parseMode("html").build();

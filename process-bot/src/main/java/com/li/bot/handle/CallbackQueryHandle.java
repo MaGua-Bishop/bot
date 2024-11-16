@@ -152,12 +152,28 @@ public class CallbackQueryHandle {
             callbackFactory.getCallback("adminUpdateCode").execute(bot, callbackQuery);
             return;
         }
+        if (data.indexOf("adminDeleteCode") == 0) {
+            callbackFactory.getCallback("adminDeleteCode").execute(bot, callbackQuery);
+            return;
+        }
+        if (data.indexOf("adminUpdateRechargeCopy") == 0) {
+            callbackFactory.getCallback("adminUpdateRechargeCopy").execute(bot, callbackQuery);
+            return;
+        }
         if (data.indexOf("admin:confirm:money:") == 0) {
             callbackFactory.getCallback("adminConfirmMoney").execute(bot, callbackQuery);
             return;
         }
         if (data.indexOf("admin:cancel:money:") == 0) {
             callbackFactory.getCallback("adminCancelMoney").execute(bot, callbackQuery);
+            return;
+        }
+        if (data.indexOf("user:select:type:") == 0) {
+            callbackFactory.getCallback("userRechargeType").execute(bot, callbackQuery);
+            return;
+        }
+        if (data.indexOf("admin:deletecode:") == 0) {
+            callbackFactory.getCallback("admindeletecode").execute(bot, callbackQuery);
             return;
         }
 

@@ -2,6 +2,8 @@ package com.li.bot.sessions;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.google.common.collect.Lists;
+import com.li.bot.entity.Code;
+import com.li.bot.entity.Files;
 import com.li.bot.entity.Workgroup;
 import com.li.bot.entity.database.Business;
 import com.li.bot.entity.database.UserMoney;
@@ -143,16 +145,25 @@ public class UserCodeRecharge {
         userCodeRechargeSession.setMoney(bigDecimal);
         userCodeRechargeSession.setState(UserCodeRechargeState.WAITING_FOR_USER_CODE);
 
-        SendPhoto sendPhotoRequest = new SendPhoto();
-        sendPhotoRequest.setChatId(message.getChatId());
-        InputFile inputFile = new InputFile(fileService.getCodeImage());
-        sendPhotoRequest.setPhoto(inputFile);
-        sendPhotoRequest.setCaption("请发送转账成功的图片或点击下方按钮取消充值");
-        sendPhotoRequest.setReplyMarkup(createInlineKeyboardButton(message.getChatId()));
+        Code codeImage = fileService.getCodeImage();
+        List<Files> files = codeImage.getFiles();
+        for (Files file : files) {
+            SendPhoto sendPhotoRequest = new SendPhoto();
+            sendPhotoRequest.setChatId(message.getChatId());
+            InputFile inputFile = new InputFile(file.getFile_id());
+            sendPhotoRequest.setPhoto(inputFile);
+//            sendPhotoRequest.setCaption("请发送转账成功的图片");
+//            sendPhotoRequest.setReplyMarkup(createInlineKeyboardButton(message.getChatId()));
+            try {
+                bot.execute(sendPhotoRequest);  // 执行发送图片的操作
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
+        }
         try {
-            bot.execute(sendPhotoRequest);  // 执行发送图片的操作
+            bot.execute(SendMessage.builder().chatId(message.getChatId()).text("请发送转账成功的图片或点击下方取消充值").replyMarkup(createInlineKeyboardButton(message.getChatId())).build());
         } catch (TelegramApiException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 

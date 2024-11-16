@@ -21,6 +21,9 @@ public interface UserMoneyMapper extends BaseMapper<UserMoney> {
     @Select("SELECT * FROM tg_user_money WHERE DATE(create_time) = CURRENT_DATE AND (type IN (0, 3, 4) OR (type = 5 AND status = 1));")
     List<UserMoney> selectTodayUserMoney();
 
+    @Select("SELECT *  FROM tg_user_money  WHERE type IN (0, 1, 2, 3, 4, 5) AND (type != 5 OR (type = 5 AND status = 1));")
+    List<UserMoney> selectUserMoneys();
+
     @Insert("INSERT INTO tg_user_money (tg_id, money,type) VALUES (#{tgId}, #{money}, #{type})")
     @Options(useGeneratedKeys = true, keyProperty = "moneyId", keyColumn = "money_id")
     int insertUserMoney(UserMoney userMoney);

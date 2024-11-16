@@ -59,7 +59,6 @@ public class BusinessMenuImpl implements IBotMenu {
                 buttonList.add(InlineKeyboardButton.builder().text("添加业务").callbackData("adminAddBusiness").build());
                 buttonList.add(InlineKeyboardButton.builder().text("提取未领取订单").callbackData("adminSelectListBusiness:0").build());
                 buttonList.add(InlineKeyboardButton.builder().text("提取未回复订单").callbackData("adminSelectListBusiness:1").build());
-                buttonList.add(InlineKeyboardButton.builder().text("更换充值二维码").callbackData("adminUpdateCode").build());
             }
         }
 

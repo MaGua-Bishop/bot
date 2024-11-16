@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.li.bot.config.BotConfig;
+import com.li.bot.entity.Code;
 import com.li.bot.entity.Workgroup;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,30 +67,26 @@ public class FileService {
         }
     }
 
-    public String getCodeImage() {
+    public Code getCodeImage() {
         String channelFile = botConfig.getCodeFile();
         try {
             String string = FileUtils.readFileToString(new File(channelFile));
             JSONObject jsonObject = JSON.parseObject(string);
-            String s = jsonObject.getString("file_id");
+            Code s = jsonObject.to(Code.class);
             return s;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void setCodeImage(String fileId) {
-        try {
-            String channelFile = botConfig.getCodeFile();
-            String string = FileUtils.readFileToString(new File(channelFile));
-            JSONObject jsonObject = JSON.parseObject(string);
-            jsonObject.put("file_id", fileId);
-            // 将更新后的对象写回文件
-            new ObjectMapper().writeValue(new File(botConfig.getCodeFile()), jsonObject);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+public void setCodeImage(Code code) {
+    try {
+        new ObjectMapper().writeValue(new File(botConfig.getCodeFile()), code);
+    } catch (IOException e) {
+        e.printStackTrace();
     }
+}
+
 
 
     public void addGroupId(String newGroupId) {

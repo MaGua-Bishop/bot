@@ -58,6 +58,7 @@ public class UserInfoBotMenuImpl implements IBotMenu {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         buttonList.add(InlineKeyboardButton.builder().text("查看用户信息").callbackData("adminSelectUserInfo:" + 1).build());
         buttonList.add(InlineKeyboardButton.builder().text("查看今日账单").callbackData("adminSelectBilling").build());
+        buttonList.add(InlineKeyboardButton.builder().text("导出消费记录").callbackData("adminExport").build());
 
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 1);
 

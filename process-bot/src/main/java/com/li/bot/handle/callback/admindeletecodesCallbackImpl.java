@@ -8,8 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
-import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 /**
@@ -17,26 +17,29 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
  * @CreateTime: 2024-10-01
  */
 @Component
-public class UserCodeRechargeCallbackImpl implements ICallback {
+public class admindeletecodesCallbackImpl implements ICallback {
 
 
-    @Autowired
-    private UserCodeRechargeSessionList userCodeRechargeSessionList;
     @Autowired
     private FileService fileService;
 
     @Override
     public String getCallbackName() {
-        return "userCodeRecharge";
+        return "admindeletecode";
     }
 
     @Override
     @Transactional
     public synchronized void execute(BotServiceImpl bot, CallbackQuery callbackQuery) throws TelegramApiException {
+        String data = callbackQuery.getData();
+        String id = data.substring(data.lastIndexOf(":") + 1);
         Code codeImage = fileService.getCodeImage();
-
-        bot.execute(SendMessage.builder().chatId(callbackQuery.getFrom().getId()).text(codeImage.getText()).build());
-        userCodeRechargeSessionList.addUserSession(callbackQuery.getFrom().getId());
-
+        codeImage.getFiles().removeIf(file -> file.getId() == Integer.parseInt(id));
+        fileService.setCodeImage(codeImage);
+        bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("删除成功").build());
+        bot.execute(DeleteMessage.builder()
+                .chatId(callbackQuery.getMessage().getChatId())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .build());
     }
 }

@@ -1,5 +1,7 @@
 package com.li.bot.sessions;
 
+import com.li.bot.entity.Code;
+import com.li.bot.entity.Files;
 import com.li.bot.entity.database.Business;
 import com.li.bot.handle.key.BotKeyFactory;
 import com.li.bot.handle.key.IKeyboard;
@@ -11,12 +13,14 @@ import com.li.bot.service.impl.FileService;
 import com.li.bot.sessions.enums.AdminEditSessionState;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -118,9 +122,26 @@ public class AdminEdit {
 
             // 获取图片的 file_id
             String fileId = photo.getFileId();
-            fileService.setCodeImage(fileId);
+            Code codeImage = fileService.getCodeImage();
+            List<Files> files = codeImage.getFiles();
+            Files files1 = new Files();
+            files1.setFile_id(fileId);
+            files1.setId(files.size());
+            files.add(files1);
+            fileService.setCodeImage(codeImage);
             try {
-                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("二维码修改成功").build());
+                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("新增二维码成功").build());
+                adminEditSessionList.removeUserSession(message.getFrom().getId());
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
+        } else if (type == 3) {
+            Code codeImage = fileService.getCodeImage();
+            String text = message.getText();
+            codeImage.setText(text);
+            fileService.setCodeImage(codeImage);
+            try {
+                bot.execute(SendMessage.builder().chatId(message.getChatId()).text("修改充值文案成功").build());
                 adminEditSessionList.removeUserSession(message.getFrom().getId());
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
