@@ -180,6 +180,14 @@ class AdminModelAdmin(admin.ModelAdmin):
     list_display_links = ('username',)
     list_filter = ("username", "is_superuser")
 
+    def get_model_perms(self, request):
+        """
+        如果不是超级管理员，返回空权限字典，这样菜单就不会显示
+        """
+        if not request.user.is_superuser:
+            return {}
+        return super().get_model_perms(request)
+
     def get_fieldsets(self, request, obj=None):
         # 新建用户时
         if not obj:

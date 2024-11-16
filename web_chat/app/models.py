@@ -61,6 +61,7 @@ class ChangeMoney(models.Model):
 
 class Message(models.Model):
     user = models.ForeignKey("User", on_delete=models.CASCADE)
+    admin_username = models.CharField(max_length=255, verbose_name="所属代理", null=True, blank=True)
     message = models.TextField(null=True, blank=True)
     file_url = models.URLField(null=True, blank=True)
     file_type = models.CharField(max_length=50, null=True, blank=True)

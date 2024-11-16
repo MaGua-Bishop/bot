@@ -2,12 +2,14 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.core.files.storage import default_storage
 from django.conf import settings
-from app.models import Message,User,generate_random_string
+from app.models import Message, User, generate_random_string, Admin
 from django.views.decorators.csrf import csrf_exempt
 import json
 
+
 def page_not_found(request, exception):
     return render(request, '404.html')
+
 
 def room(request):
     user = request.GET.get('user')
@@ -16,15 +18,20 @@ def room(request):
     user = User.objects.filter(uid=user).first()
     if user is None:
         return render(request, '404.html')
-    return render(request, 'chat/room.html')
+    context = {
+        'admin_id': user.admin,
+    }
+    return render(request, 'chat/room.html', context)
 
-def reset_link(request,uid):
+
+def reset_link(request, uid):
     """重置链接"""
     user = User.objects.filter(uid=uid).first()
     if user:
         user.uid = generate_random_string()
         user.save()
-    return JsonResponse({"code":0})
+    return JsonResponse({"code": 0})
+
 
 @csrf_exempt
 def upload(request):
@@ -36,32 +43,53 @@ def upload(request):
     else:
         return JsonResponse({'error': 'Only POST requests are allowed'}, status=400)
 
+
 def get_messages(request):
-    messages = Message.objects.all().order_by('timestamp')
-    data = [
-        {
-            "user": msg.user.uid,
-            "username": msg.user.user,
-            "message": msg.message,
-            "file_url": settings.HOST+msg.file_url if msg.file_url != "" else "",
-            "file_type": msg.file_type,
-            # "timestamp": msg.timestamp.strftime("%H:%M"),
-            "avatar":"https://lh3.googleusercontent.com/a/ALm5wu2Vm-KiLrLQW9QfemC-QvUWqJpuOha8VDg7m70D=k-s48"
+    admin_username = request.GET.get('admin')
+    print(f"获取历史消息 - admin_username: {admin_username}")
+    
+    messages = Message.objects.filter(admin_username=admin_username).order_by('timestamp')
+    print(f"找到 {messages.count()} 条消息")
+    
+    data = []
+    for message in messages:
+        message_data = {
+            'user': message.user.uid,
+            'user_name': message.user.user,
+            'admin_username': message.admin_username,
+            'message': message.message,
+            'file_url': message.file_url,
+            'file_type': message.file_type,
+            'timestamp': message.timestamp.strftime('%H:%M'),
+            'admin_id': message.admin_username
         }
-        for msg in messages
-    ]
+        print(f"消息数据: {message_data}")
+        data.append(message_data)
+    
     return JsonResponse(data, safe=False)
+
 
 @csrf_exempt
 def save_message(request):
-    if request.method == "POST":
-        data = json.loads(request.body)
-        user = User.objects.filter(uid=data['user']).first()
-        if user:
-            Message.objects.create(
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            print("接收到的消息数据:", data)
+            
+            user = User.objects.get(uid=data['user'])
+            admin_username = user.admin.username if user.admin else None
+            print(f"用户: {user}, 代理用户名: {admin_username}")
+            
+            message = Message.objects.create(
                 user=user,
-                message=data.get('message', ''),
-                file_url=data.get('file_url', ''),
-                file_type=data.get('file_type', '')
+                admin_username=admin_username,
+                message=data.get('message'),
+                file_url=data.get('file_url'),
+                file_type=data.get('file_type')
             )
-        return JsonResponse({"status": "success"})
+            print(f"消息已保存: {message}")
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            print(f"保存消息时出错: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error'}, status=400)
