@@ -154,7 +154,7 @@ public class FleetService {
             Long cId = null;
             try {
                 execute = bot.execute(send);
-                log.info("频道" + in.getName() + "发送消息参数:" + execute);
+
                 ConvoysInvite c = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, in.getInviteId()).eq(ConvoysInvite::getConvoysId, convoys.getConvoysId()));
                 Integer messageId = c.getMessageId();
                 cId = c.getConvoysId();
@@ -172,9 +172,21 @@ public class FleetService {
                     convoysInviteMapper.updateMessageIdById(execute.getMessageId(), in.getInviteId(), c.getConvoysId());
                 }
             } catch (Exception e) {
-                 Integer messageId1 = execute.getMessageId();
-                 convoysInviteMapper.updateMessageIdById(messageId1, in.getInviteId(), cId);
-                log.info("车队 " + convoys.getName() + " 的定时任务执行了！频道" + in.getName() + "出现问题:" + e);
+                if (e.getMessage().contains("message to delete not found")) {
+                    log.info("车队 " + convoys.getName() + " 的定时任务执行了！用户" + in.getName() + "的频道" + in.getChatId() + "无法自动删除消息，自动退出");
+                    ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, in.getInviteId()).eq(ConvoysInvite::getStatus, ConvoysInviteStatus.BOARDED.getCode()));
+                    inviteMapper.deleteById(in);
+                    convoysInviteMapper.deleteById(convoysInvite);
+                    SendMessage send2 = SendMessage.builder().chatId(in.getTgId()).text("《" + in.getName() + "》\n检测到机器人发不了消息,机器人已自动退出\n退出原因:因找不到上一条推送消息，机器人自动退出").parseMode("html").build();
+                    try {
+                        bot.execute(send2);
+                    } catch (TelegramApiException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                    continue;
+                }
+                convoysInviteMapper.updateMessageIdById(execute.getMessageId(), in.getInviteId(), cId);
+                log.error("车队:{}发送消息失败,异常:{}", convoys.getName(), e);
             }
         }
         System.out.println("车队 " + convoys.getName() + " 的定时任务执行了！当前时间：" + new java.util.Date());
