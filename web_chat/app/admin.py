@@ -1,15 +1,12 @@
-from django.contrib.admin import AdminSite, SimpleListFilter
-from django.contrib.auth import authenticate
-from django.utils import timezone
-from django.http import HttpResponseForbidden
 from django.conf import settings
 from django.contrib import admin
-from django.utils.html import format_html
-from django.utils.safestring import mark_safe
+from django.contrib.admin import AdminSite, SimpleListFilter
 from django.core.exceptions import ValidationError
 from django.forms import ModelForm
-from django.contrib.auth.decorators import user_passes_test
-from django.urls import path
+from django.http import HttpResponseForbidden
+from django.utils import timezone
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 
 from app import models
 
