@@ -130,7 +130,7 @@ public class FleetService {
             try {
                 bot.execute(getChat);
             } catch (TelegramApiException e) {
-                log.info("车队异常,请处理:",e);
+                log.info("车队异常,请处理:", e);
                 //判断是否是邀请链接过期
                 log.info("车队 " + convoys.getName() + " 的定时任务执行了！用户" + in.getName() + "的频道" + in.getChatId() + "有问题，已自动退出");
                 ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, in.getInviteId()).eq(ConvoysInvite::getStatus, ConvoysInviteStatus.BOARDED.getCode()));
@@ -154,7 +154,7 @@ public class FleetService {
             Long cId = null;
             try {
                 execute = bot.execute(send);
-
+                log.info("频道" + in.getName() + "发送消息参数:" + execute);
                 ConvoysInvite c = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, in.getInviteId()).eq(ConvoysInvite::getConvoysId, convoys.getConvoysId()));
                 Integer messageId = c.getMessageId();
                 cId = c.getConvoysId();
@@ -172,9 +172,9 @@ public class FleetService {
                     convoysInviteMapper.updateMessageIdById(execute.getMessageId(), in.getInviteId(), c.getConvoysId());
                 }
             } catch (Exception e) {
-                // 更新messageId为空
-                convoysInviteMapper.updateMessageIdById(execute.getMessageId(), in.getInviteId(), cId);
-                log.error("车队:{}发送消息失败", convoys.getName());
+                 Integer messageId1 = execute.getMessageId();
+                 convoysInviteMapper.updateMessageIdById(messageId1, in.getInviteId(), cId);
+                log.info("车队 " + convoys.getName() + " 的定时任务执行了！频道" + in.getName() + "出现问题:" + e);
             }
         }
         System.out.println("车队 " + convoys.getName() + " 的定时任务执行了！当前时间：" + new java.util.Date());
