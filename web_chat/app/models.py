@@ -60,13 +60,13 @@ class ChangeMoney(models.Model):
 
 
 class Message(models.Model):
-    user = models.ForeignKey("User", on_delete=models.CASCADE)
+    user = models.ForeignKey("User", on_delete=models.CASCADE, null=True, blank=True)  # 允许为空
     admin_username = models.CharField(max_length=255, verbose_name="所属代理", null=True, blank=True)
     message = models.TextField(null=True, blank=True)
     file_url = models.URLField(null=True, blank=True)
     file_type = models.CharField(max_length=50, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
-
+    is_bot = models.BooleanField(default=False, verbose_name="是否机器人消息")  # 新增字段
     def __str__(self):
         return f"{self.user} - {self.timestamp}"
 

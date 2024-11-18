@@ -54,8 +54,6 @@ def get_messages(request):
     data = []
     for message in messages:
         message_data = {
-            'user': message.user.uid,
-            'user_name': message.user.user,
             'admin_username': message.admin_username,
             'message': message.message,
             'file_url': message.file_url,
@@ -63,6 +61,19 @@ def get_messages(request):
             'timestamp': message.timestamp.strftime('%H:%M'),
             'admin_id': message.admin_username
         }
+
+        # 根据是否是机器人消息添加不同的用户信息
+        if message.is_bot:
+            message_data.update({
+                'user': 'Anonymous',
+                'user_name': 'Anonymous',
+            })
+        else:
+            message_data.update({
+                'user': message.user.uid if message.user else None,
+                'user_name': message.user.user if message.user else None,
+            })
+
         print(f"消息数据: {message_data}")
         data.append(message_data)
 
