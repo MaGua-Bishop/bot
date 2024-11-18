@@ -15,7 +15,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
@@ -26,7 +25,7 @@ SECRET_KEY = 'django-insecure-058bg2-lbs+(@as193k74bn_0u0s)imz-9wz#5qs1$t*1h#86@
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
-HOST = "https://e9c3-119-39-51-90.ngrok-free.app"
+HOST = "https://f728-119-39-51-90.ngrok-free.app"
 
 # Application definition
 
@@ -56,7 +55,7 @@ CHANNEL_LAYERS = {
     },
 }
 CSRF_TRUSTED_ORIGINS = [
-    "https://e9c3-119-39-51-90.ngrok-free.app",
+    "https://f728-119-39-51-90.ngrok-free.app",
 ]
 
 MIDDLEWARE = [
@@ -90,7 +89,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'bot_data.wsgi.application'
 
-
 # Database
 
 DATABASES = {
@@ -118,7 +116,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
@@ -129,8 +126,6 @@ LANGUAGE_CODE = 'zh-hans'
 TIME_ZONE = 'Asia/Shanghai'
 
 USE_TZ = False
-
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
@@ -153,7 +148,7 @@ SIMPLEUI_CONFIG = {
     'system_keep': False,
 
     # 用于菜单排序和过滤, 不填此字段为默认排序和全部显示。空列表[] 为全部不显示.
-    'menu_display': ['用户中心', '代理中心'],
+    'menu_display': ['用户中心', '代理中心', '聊天控制器'],
 
     # 设置是否开启动态菜单, 默认为False. 如果开启, 则会在每次用户登陆时刷新展示菜单内容。
     # 一般建议关闭。
@@ -167,7 +162,7 @@ SIMPLEUI_CONFIG = {
                     'name': '用户中心',
                     # 注意url按'/admin/应用名小写/模型名小写/'命名。
                     'url': '/admin/app/user/',
-                },{
+                }, {
                     'name': '日志',
                     # 注意url按'/admin/应用名小写/模型名小写/'命名。
                     'url': '/admin/app/changemoney/',
@@ -183,7 +178,17 @@ SIMPLEUI_CONFIG = {
                     'url': '/admin/app/admin/',
                 }
             ]
-        }
+        },
+        {
+            'name': '聊天控制器',
+            'icon': 'fa fa-comments',
+            'models': [
+                {
+                    'name': '聊天控制器',
+                    'url': '/admin/app/chatcontroller/',
+                }
+            ]
+        },
     ]
 }
 

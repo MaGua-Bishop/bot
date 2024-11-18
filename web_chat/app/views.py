@@ -47,10 +47,10 @@ def upload(request):
 def get_messages(request):
     admin_username = request.GET.get('admin')
     print(f"获取历史消息 - admin_username: {admin_username}")
-    
+
     messages = Message.objects.filter(admin_username=admin_username).order_by('timestamp')
     print(f"找到 {messages.count()} 条消息")
-    
+
     data = []
     for message in messages:
         message_data = {
@@ -65,7 +65,7 @@ def get_messages(request):
         }
         print(f"消息数据: {message_data}")
         data.append(message_data)
-    
+
     return JsonResponse(data, safe=False)
 
 
@@ -75,9 +75,9 @@ def save_message(request):
         try:
             data = json.loads(request.body)
             print("接收到的消息数据:", data)
-            
+
             user = User.objects.get(uid=data['user'])
-            
+
             message = Message.objects.create(
                 user=user,
                 admin_username=data['admin_username'],
@@ -85,7 +85,7 @@ def save_message(request):
                 file_url=data.get('file_url'),
                 file_type=data.get('file_type')
             )
-            
+
             # 返回完整的消息数据，包含用户名
             return JsonResponse({
                 'status': 'success',

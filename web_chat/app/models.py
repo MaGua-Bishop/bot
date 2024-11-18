@@ -73,3 +73,12 @@ class Message(models.Model):
 
 class Admin(AbstractUser):
     available_time = models.DateTimeField(null=True, blank=True, verbose_name="可用时间")
+
+
+class ChatController(models.Model):
+    class Meta:
+        verbose_name = '聊天控制器'
+        verbose_name_plural = '聊天控制器'
+        managed = False
+        default_permissions = ()
+

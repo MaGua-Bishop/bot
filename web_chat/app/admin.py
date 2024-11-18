@@ -7,8 +7,13 @@ from django.http import HttpResponseForbidden
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
+from django.urls import path
+from django.views.generic import TemplateView
+from django.contrib.admin.views.decorators import staff_member_required
+from django.utils.decorators import method_decorator
+from django.db import models
 
-from app import models
+from app import models as app_models
 
 
 # 自定义 AdminSite
@@ -20,14 +25,14 @@ class CustomAdminSite(AdminSite):
         # 如果用户已认证
         if request.user.is_authenticated:
             try:
-                admin_user = models.Admin.objects.get(username=request.user.username)
+                admin_user = app_models.Admin.objects.get(username=request.user.username)
                 # 检查可用时间
                 if admin_user.available_time and admin_user.available_time < timezone.now():
                     # 过期则强制登出
                     from django.contrib.auth import logout
                     logout(request)
                     return HttpResponseForbidden('账号已过期')
-            except models.Admin.DoesNotExist:
+            except app_models.Admin.DoesNotExist:
                 pass
         return response
 
@@ -95,7 +100,7 @@ class UserAdmin(admin.ModelAdmin):
         # 如果是新建用户且不是超级管理员
         if not change and not request.user.is_superuser:
             # 自动设置admin为当前登录用户
-            admin_user = models.Admin.objects.get(username=request.user.username)
+            admin_user = app_models.Admin.objects.get(username=request.user.username)
             obj.admin = admin_user
         obj._request = request
         super().save_model(request, obj, form, change)
@@ -109,10 +114,10 @@ class UserFilter(SimpleListFilter):
         # 获取可选的用户列表
         if request.user.is_superuser:
             # 超级管理员可以看到所有用户
-            users = models.User.objects.all()
+            users = app_models.User.objects.all()
         else:
             # 代理只能看到自己的用户
-            users = models.User.objects.filter(admin__username=request.user.username)
+            users = app_models.User.objects.filter(admin__username=request.user.username)
         return [(user.id, user.user) for user in users]
 
     def queryset(self, request, queryset):
@@ -139,7 +144,7 @@ class ChangeMoneyAdmin(admin.ModelAdmin):
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "user" and not request.user.is_superuser:
             # 代理只能看到自己的用户
-            kwargs["queryset"] = models.User.objects.filter(admin__username=request.user.username)
+            kwargs["queryset"] = app_models.User.objects.filter(admin__username=request.user.username)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def has_add_permission(self, request):
@@ -179,7 +184,7 @@ class AdminModelAdmin(admin.ModelAdmin):
 
     def get_model_perms(self, request):
         """
-        如果不是超级管理员，返回空权限字典，这样菜单就不会显示
+        果不是超级管理员，返回空权限字典，这样菜单就不会显示
         """
         if not request.user.is_superuser:
             return {}
@@ -215,7 +220,7 @@ class AdminModelAdmin(admin.ModelAdmin):
                 )
             else:
                 return (
-                    ('基本信息', {
+                    ('本信息', {
                         'fields': ('username',)
                     }),
                     ('权限信息', {
@@ -249,10 +254,48 @@ class AdminModelAdmin(admin.ModelAdmin):
 
 
 # 注册模型
-custom_admin_site.register(models.User, UserAdmin)
-custom_admin_site.register(models.ChangeMoney, ChangeMoneyAdmin)
-custom_admin_site.register(models.Admin, AdminModelAdmin)
+custom_admin_site.register(app_models.User, UserAdmin)
+custom_admin_site.register(app_models.ChangeMoney, ChangeMoneyAdmin)
+custom_admin_site.register(app_models.Admin, AdminModelAdmin)
 
 # 设置站点标题
 custom_admin_site.site_header = '番摊机器人后台'
 custom_admin_site.site_title = '番摊机器人后台'
+
+
+@method_decorator(staff_member_required, name='dispatch')
+class ChatControllerView(TemplateView):
+    template_name = 'admin/chat_controller.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        print('user:', self.request)
+        try:
+            admin_user = app_models.Admin.objects.get(username=user.username)
+            context.update({
+                'username': user.username,
+                'available_time': admin_user.available_time,
+            })
+        except app_models.Admin.DoesNotExist:
+            pass
+        return context
+
+
+class ChatControllerAdmin(admin.ModelAdmin):
+    def get_urls(self):
+        view_name = '{}_{}_changelist'.format(
+            self.model._meta.app_label,
+            self.model._meta.model_name)
+
+        return [
+            path('', self.admin_site.admin_view(ChatControllerView.as_view()),
+                 name=view_name),
+        ]
+
+    def has_module_permission(self, request):
+        return True
+
+
+# 注册到admin站点，使用从models导入的ChatController
+custom_admin_site.register(app_models.ChatController, ChatControllerAdmin)
