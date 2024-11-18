@@ -1,10 +1,8 @@
 import json
-from urllib.parse import parse_qs
 
-from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
+
 from app import models
-from django.core.cache import cache
 from app.bot import ChatBot
 
 

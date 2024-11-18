@@ -173,27 +173,97 @@
     $(document).ready(function () {
         const userName = new URLSearchParams(window.location.search).get('user') || 'Anonymous';
         const userAvatar = "https://lh3.googleusercontent.com/a/ALm5wu2Vm-KiLrLQW9QfemC-QvUWqJpuOha8VDg7m70D=k-s48";
-        const adminId = "{{ admin_id }}";  // 从后端获取admin_id
+        const adminId = "{{ admin_id }}";
+        
+        let chatSocket = null;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        const reconnectDelay = 3000; // 3秒
 
-        console.log("初始化连接:");
-        console.log("- 用户名:", userName);
-        console.log("- Admin ID:", adminId);
+        function connectWebSocket() {
+            chatSocket = new WebSocket(
+                `${window.location.origin.replace('http', 'ws')}/ws/chat/?admin=${adminId}`
+            );
 
-        // 修改WebSocket连接URL，添加admin_id参数
-        const chatSocket = new WebSocket(
-            `${window.location.origin.replace('http', 'ws')}/ws/chat/?admin=${adminId}`
-        );
+            chatSocket.onopen = function () {
+                console.log(`WebSocket连接已建立，房间ID: chat_room_${adminId}`);
+                reconnectAttempts = 0; // 重置重连次数
+            };
 
-        chatSocket.onopen = function () {
-            console.log(`WebSocket连接已建立，房间ID: chat_room_${adminId}`);
-        };
+            chatSocket.onmessage = function (e) {
+                const data = JSON.parse(e.data);
+                console.log("收到WebSocket消息:", data);
+                displayMessage(data);
+            };
 
-        chatSocket.onmessage = function (e) {
-            const data = JSON.parse(e.data);
-            console.log("收到WebSocket消息:", data);
+            chatSocket.onclose = function(e) {
+                console.log('WebSocket连接已关闭');
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    setTimeout(function() {
+                        console.log(`尝试重新连接... (${reconnectAttempts + 1}/${maxReconnectAttempts})`);
+                        connectWebSocket();
+                        reconnectAttempts++;
+                    }, reconnectDelay);
+                } else {
+                    console.error('WebSocket重连失败，已达到最大重试次数');
+                }
+            };
 
-            displayMessage(data);
-        };
+            chatSocket.onerror = function(err) {
+                console.error('WebSocket发生错误:', err);
+            };
+        }
+
+        // 页面可见性改变时的处理
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+                if (!chatSocket || chatSocket.readyState !== WebSocket.OPEN) {
+                    console.log('页面可见，重新连接WebSocket');
+                    reconnectAttempts = 0; // 重置重连次数
+                    connectWebSocket();
+                }
+            }
+        });
+
+        // 初始连接
+        connectWebSocket();
+
+        // 修改发送消息函数
+        function sendMessage() {
+            const message = $("#chat-message-input").val().trim();
+            if (message === '') return;
+
+            const messageData = {
+                user: userName,
+                user_name: userName,
+                message: message,
+                admin_username: adminId,
+                avatar: userAvatar,
+                timestamp: getCurrentTime()
+            };
+
+            if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+                $.ajax({
+                    url: '/save_message/',
+                    type: 'POST',
+                    data: JSON.stringify(messageData),
+                    contentType: 'application/json',
+                    success: function (response) {
+                        console.log("消息已保存:", response);
+                        if (response.status === 'success') {
+                            chatSocket.send(JSON.stringify(response.message));
+                            $("#chat-message-input").val('');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("保存消息失败:", error);
+                    }
+                });
+            } else {
+                console.error("WebSocket未连接，尝试重新连接...");
+                connectWebSocket(); // 尝试重新连接
+            }
+        }
 
         function getCurrentTime() {
             return new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
@@ -252,43 +322,6 @@
                 });
             } catch (error) {
                 console.error("加载历史消息失败:", error);
-            }
-        }
-
-        function sendMessage() {
-            const message = $("#chat-message-input").val().trim();
-            if (message === '') return;
-
-            const messageData = {
-                user: userName,
-                user_name: userName,
-                message: message,
-                admin_username: adminId,
-                avatar: userAvatar,
-                timestamp: getCurrentTime()
-            };
-
-            if (chatSocket.readyState === WebSocket.OPEN) {
-                // 保存到数据库
-                $.ajax({
-                    url: '/save_message/',
-                    type: 'POST',
-                    data: JSON.stringify(messageData),
-                    contentType: 'application/json',
-                    success: function (response) {
-                        console.log("消息已保存:", response);
-                        if (response.status === 'success') {
-                            // 只发送WebSocket消息，不调用displayMessage
-                            chatSocket.send(JSON.stringify(response.message));
-                            $("#chat-message-input").val('');
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error("保存消息失败:", error);
-                    }
-                });
-            } else {
-                console.error("WebSocket未连接");
             }
         }
 
@@ -361,5 +394,4 @@
     });
 </script>
 </body>
-</html>
 </html>
