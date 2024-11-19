@@ -172,21 +172,23 @@ public class FleetService {
                     convoysInviteMapper.updateMessageIdById(execute.getMessageId(), in.getInviteId(), c.getConvoysId());
                 }
             } catch (Exception e) {
+                log.error("车队:{}发送消息失败,异常:{}", convoys.getName(), e);
                 if (e.getMessage().contains("message to delete not found")) {
-                    log.info("车队 " + convoys.getName() + " 的定时任务执行了！用户" + in.getName() + "的频道" + in.getChatId() + "无法自动删除消息，自动退出");
-                    ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, in.getInviteId()).eq(ConvoysInvite::getStatus, ConvoysInviteStatus.BOARDED.getCode()));
-                    inviteMapper.deleteById(in);
-                    convoysInviteMapper.deleteById(convoysInvite);
-                    SendMessage send2 = SendMessage.builder().chatId(in.getTgId()).text("《" + in.getName() + "》\n检测到机器人发不了消息,机器人已自动退出\n退出原因:因找不到上一条推送消息，机器人自动退出").parseMode("html").build();
-                    try {
-                        bot.execute(send2);
-                    } catch (TelegramApiException ex) {
-                        throw new RuntimeException(ex);
-                    }
+                    log.info("车队 " + convoys.getName() + " 的定时任务执行了！用户" + in.getName() + "的频道" + in.getChatId() + "无法自动删除消息");
+//                    ConvoysInvite convoysInvite = convoysInviteMapper.selectOne(new LambdaQueryWrapper<ConvoysInvite>().eq(ConvoysInvite::getInviteId, in.getInviteId()).eq(ConvoysInvite::getStatus, ConvoysInviteStatus.BOARDED.getCode()));
+//                    inviteMapper.deleteById(in);
+//                    convoysInviteMapper.deleteById(convoysInvite);
+//                    SendMessage send2 = SendMessage.builder().chatId(in.getTgId()).text("《" + in.getName() + "》\n检测到机器人删除不了消息,机器人已自动退出\n退出原因:因找不到上一条推送消息，机器人自动退出").parseMode("html").build();
+//                    try {
+//                        bot.execute(send2);
+//                    } catch (TelegramApiException ex) {
+//                        throw new RuntimeException(ex);
+//                    }
+//                    新增的
+                    convoysInviteMapper.updateMessageIdById(execute.getMessageId(), in.getInviteId(), cId);
                     continue;
                 }
                 convoysInviteMapper.updateMessageIdById(execute.getMessageId(), in.getInviteId(), cId);
-                log.error("车队:{}发送消息失败,异常:{}", convoys.getName(), e);
             }
         }
         System.out.println("车队 " + convoys.getName() + " 的定时任务执行了！当前时间：" + new java.util.Date());
