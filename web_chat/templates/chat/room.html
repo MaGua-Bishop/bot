@@ -196,10 +196,10 @@
                 displayMessage(data);
             };
 
-            chatSocket.onclose = function(e) {
+            chatSocket.onclose = function (e) {
                 console.log('WebSocket连接已关闭');
                 if (reconnectAttempts < maxReconnectAttempts) {
-                    setTimeout(function() {
+                    setTimeout(function () {
                         console.log(`尝试重新连接... (${reconnectAttempts + 1}/${maxReconnectAttempts})`);
                         connectWebSocket();
                         reconnectAttempts++;
@@ -209,13 +209,13 @@
                 }
             };
 
-            chatSocket.onerror = function(err) {
+            chatSocket.onerror = function (err) {
                 console.error('WebSocket发生错误:', err);
             };
         }
 
         // 页面可见性改变时的处理
-        document.addEventListener('visibilitychange', function() {
+        document.addEventListener('visibilitychange', function () {
             if (document.visibilityState === 'visible') {
                 if (!chatSocket || chatSocket.readyState !== WebSocket.OPEN) {
                     console.log('页面可见，重新连接WebSocket');
