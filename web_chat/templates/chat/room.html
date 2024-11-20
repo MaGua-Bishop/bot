@@ -174,7 +174,7 @@
         const userName = new URLSearchParams(window.location.search).get('user') || 'Anonymous';
         const userAvatar = "https://lh3.googleusercontent.com/a/ALm5wu2Vm-KiLrLQW9QfemC-QvUWqJpuOha8VDg7m70D=k-s48";
         const adminId = "{{ admin_id }}";
-        
+
         let chatSocket = null;
         let reconnectAttempts = 0;
         const maxReconnectAttempts = 5;
@@ -271,7 +271,7 @@
 
         function displayMessage(data) {
             console.log("显示消息:", data);  // 添加日志
-            
+
             const messageClass = data.user === userName ? 'self' : 'other';
             const avatar = data.avatar || userAvatar;
             const isImage = data.file_type && data.file_type.startsWith('image/');
@@ -337,7 +337,7 @@
                 contentType: false,
                 success: function (response) {
                     console.log("文件上传成功:", response);
-                    
+
                     const messageData = {
                         user: userName,
                         user_name: userName,

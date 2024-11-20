@@ -18,6 +18,27 @@ from app import models as app_models
 
 # 自定义 AdminSite
 class CustomAdminSite(AdminSite):
+    def admin_view(self, view, cacheable=False):
+        # 包装原始视图函数
+        original_view = super().admin_view(view, cacheable)
+
+        def check_expiry_wrapper(request, *args, **kwargs):
+            if request.user.is_authenticated:
+                try:
+                    admin_user = app_models.Admin.objects.get(username=request.user.username)
+                    # 检查是否过期（如果不是超级管理员且有设置过期时间）
+                    if not admin_user.is_superuser and admin_user.available_time:
+                        if admin_user.available_time < timezone.now():
+                            # 过期则强制登出
+                            from django.contrib.auth import logout
+                            logout(request)
+                            return HttpResponseForbidden('账号已过期')
+                except app_models.Admin.DoesNotExist:
+                    pass
+            return original_view(request, *args, **kwargs)
+
+        return check_expiry_wrapper
+
     def login(self, request, extra_context=None):
         # 执行原始登录逻辑
         response = super().login(request, extra_context)
@@ -26,12 +47,13 @@ class CustomAdminSite(AdminSite):
         if request.user.is_authenticated:
             try:
                 admin_user = app_models.Admin.objects.get(username=request.user.username)
-                # 检查可用时间
-                if admin_user.available_time and admin_user.available_time < timezone.now():
-                    # 过期则强制登出
-                    from django.contrib.auth import logout
-                    logout(request)
-                    return HttpResponseForbidden('账号已过期')
+                # 检查可用时间（如果不是超级管理员且有设置过期时间）
+                if not admin_user.is_superuser and admin_user.available_time:
+                    if admin_user.available_time < timezone.now():
+                        # 过期则强制登出
+                        from django.contrib.auth import logout
+                        logout(request)
+                        return HttpResponseForbidden('账号已过期')
             except app_models.Admin.DoesNotExist:
                 pass
         return response
@@ -178,9 +200,20 @@ class AdminForm(ModelForm):
 
 class AdminModelAdmin(admin.ModelAdmin):
     form = AdminForm  # 使用自定义表单
-    list_display = ['username', 'operate', 'available_time']
+    list_display = ['username', 'operate', 'available_time', 'status']
     list_display_links = ('username',)
     list_filter = ("username", "is_superuser")
+
+    @admin.display(description='状态')
+    def status(self, obj):
+        if obj.is_superuser:
+            return mark_safe('<span style="color: green;">永久有效</span>')
+        elif not obj.available_time:
+            return mark_safe('<span style="color: orange;">未设置</span>')
+        elif obj.available_time < timezone.now():
+            return mark_safe('<span style="color: red;">已过期</span>')
+        else:
+            return mark_safe('<span style="color: green;">正常</span>')
 
     def get_model_perms(self, request):
         """
@@ -273,9 +306,11 @@ class ChatControllerView(TemplateView):
         print('user:', self.request)
         try:
             admin_user = app_models.Admin.objects.get(username=user.username)
+            user_list = app_models.User.objects.filter(admin=admin_user, is_tou=False)
             context.update({
                 'username': user.username,
                 'available_time': admin_user.available_time,
+                'user_list': user_list
             })
         except app_models.Admin.DoesNotExist:
             pass

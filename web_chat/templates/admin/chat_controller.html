@@ -2,566 +2,1084 @@
 {% load static %}
 
 {% block extrastyle %}
-<style>
-    #header, .breadcrumbs, #footer { display: none !important; }
-    #container { padding: 0 !important; }
-    #content { padding: 0 !important; margin: 0 !important; }
+    <style>
+        #header,
+        .breadcrumbs,
+        #footer {
+            display: none !important;
+        }
 
-    /* 修改外部容器基础样式 */
-    .outer-container {
-        border: 2px solid #000000;
-        width: 95% !important;  /* 默认宽度 */
-        height: 98vh !important;
-        margin: 0 auto !important;
-        box-sizing: border-box !important;
-        display: flex !important;
-        flex-direction: column !important;
-    }
+        #container {
+            padding: 0 !important;
+        }
 
-    /* 大屏幕适配 (1920px及以上) */
-    @media screen and (min-width: 1920px) {
+        #content {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        /* 修改外部容器基础样式 */
         .outer-container {
-            width: 80% !important;
-            max-width: 2000px !important;
+            border: 2px solid #000000;
+            width: 95% !important;
+            /* 默认宽度 */
+            height: 98vh !important;
+            margin: 0 auto !important;
+            box-sizing: border-box !important;
+            display: flex !important;
+            flex-direction: column !important;
         }
 
-        /* 微信登录区域 */
-        div[style*="height: 100px"] {
-            height: 150px !important;
+        /* 大屏幕适配 (1920px及以上) */
+        @media screen and (min-width: 1920px) {
+            .outer-container {
+                width: 80% !important;
+                max-width: 2000px !important;
+            }
+
+            /* 微信登录区域 */
+            div[style*="height: 100px"] {
+                height: 150px !important;
+            }
+
+            /* 下注列表区域 */
+            div[style*="height: 410px"] {
+                height: 650px !important;
+            }
+
+            /* 右侧积分记录区域 */
+            div[style*="height: 350px"] {
+                height: 550px !important;
+            }
+
+            /* 调整文本框大小 */
+            textarea[style*="height: 150px"] {
+                height: 200px !important;
+            }
+
+            /* 调整按钮和输入框 */
+            .btn-custom {
+                padding: 5px 20px !important;
+                font-size: 16px !important;
+            }
+
+            .input-custom {
+                height: 30px !important;
+                font-size: 16px !important;
+                width: 60px !important;
+            }
+
+            .nickname-input {
+                width: 200px !important;
+            }
+
+            /* 调整字体大小 */
+            body {
+                font-size: 16px !important;
+            }
         }
 
-        /* 下注列表区域 */
-        div[style*="height: 410px"] {
-            height: 650px !important;
+        /* 中等大屏幕 (1440px - 1919px) */
+        @media screen and (min-width: 1440px) and (max-width: 1919px) {
+            .outer-container {
+                width: 85% !important;
+                max-width: 1600px !important;
+            }
+
+            div[style*="height: 410px"] {
+                height: 500px !important;
+            }
+
+            div[style*="height: 350px"] {
+                height: 450px !important;
+            }
         }
 
-        /* 右侧积分记录区域 */
-        div[style*="height: 350px"] {
-            height: 550px !important;
+        .btn-active {
+            background-color: #4CAF50 !important;
+            border-color: #45a049 !important;
+            color: white !important;
+            box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.2) !important;
         }
 
-        /* 调整文本框大小 */
-        textarea[style*="height: 150px"] {
-            height: 200px !important;
+
+        .btn-active span {
+            color: white !important;
         }
 
-        /* 调整按钮和输入框 */
-        .btn-custom {
-            padding: 5px 20px !important;
-            font-size: 16px !important;
+        .tou-type-label {
+            cursor: pointer;
+            color: #666;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .tou-type-label:hover {
+            background-color: #f0f0f0;
         }
 
-        .input-custom {
-            height: 30px !important;
-            font-size: 16px !important;
-            width: 60px !important;
+        /* 返水输入框样式 */
+        .rebate-input {
+            width: 50px !important; 
+            text-align: center;
         }
 
-        .nickname-input {
-            width: 200px !important;
+        /* 积分输入框样式 */
+        .score-input {
+            width: 120px !important;
+            text-align: left;
         }
 
-        /* 调整字体大小 */
-        body {
-            font-size: 16px !important;
+       
+        @media screen and (max-width: 1024px) {
+            .rebate-input {
+                width: 40px !important;
+            }
         }
-    }
-
-    /* 中等大屏幕 (1440px - 1919px) */
-    @media screen and (min-width: 1440px) and (max-width: 1919px) {
-        .outer-container {
-            width: 85% !important;
-            max-width: 1600px !important;
-        }
-
-        div[style*="height: 410px"] {
-            height: 500px !important;
-        }
-
-        div[style*="height: 350px"] {
-            height: 450px !important;
-        }
-    }
-</style>
+    </style>
 {% endblock %}
 
 {% block content %}
-<!-- 原有的完整HTML代码，从DOCTYPE开始 -->
-<!DOCTYPE html>
-<html lang="zh-CN">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>聊天控制器</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    <!DOCTYPE html>
+    <html lang="zh-CN">
 
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 1vh;
-        }
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>聊天控制器</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                padding: 1vh;
+            }
 
 
+            .top-header {
+                height: 6%;
+                min-height: 25px;
+                padding: 0 1%;
+                border-bottom: 1px solid #000;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
 
-        .top-header {
-            height: 6%;
-            min-height: 25px;
-            padding: 0 1%;
-            border-bottom: 1px solid #000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+            .top-header a {
+                text-decoration: none;
+            }
 
-        .top-header a {
-            text-decoration: none;
-        }
+            .logout-btn {
+                color: blue;
+                margin-right: 10px;
+            }
 
-        .logout-btn {
-            color: blue;
-            margin-right: 10px;
-        }
+            .modify-btn {
+                color: green;
+            }
 
-        .modify-btn {
-            color: green;
-        }
+            .main-container {
+                height: 94%;
+                display: flex;
+                gap: 1%;
+                padding: 1%;
+            }
 
-        .main-container {
-            height: 94%;
-            display: flex;
-            gap: 1%;
-            padding: 1%;
-        }
+            .panel {
+                flex: 1;
+                padding: 5px;
+                min-width: 0;
+            }
 
-        .panel {
-            flex: 1;
-            padding: 5px;
-            min-width: 0;
-        }
+            .panel > div {
+                width: 100%;
+            }
 
-        .panel > div {
-            width: 100%;
-        }
+            .btn-custom {
+                border-radius: 5px;
+                font-weight: bold;
+                padding: 2px 10px;
+                border: 1px solid #ccc;
+                background-color: #fff;
+                cursor: pointer;
+                margin: 0 5px;
+            }
 
-        .btn-custom {
-            border-radius: 5px;
-            font-weight: bold;
-            padding: 2px 10px;
-            border: 1px solid #ccc;
-            background-color: #fff;
-            cursor: pointer;
-            margin: 0 5px;
-        }
+            .input-custom {
+                border: 1px solid #000;
+                width: 40px;
+                padding: 0 2px;
+                font-size: 12px;
+                height: 20px;
+            }
 
-        .input-custom {
-            border: 1px solid #000;
-            width: 40px;
-            padding: 0 2px;
-            font-size: 12px;
-            height: 20px;
-        }
+            .text-red {
+                color: red;
+            }
 
-        .text-red {
-            color: red;
-        }
+            .bottom-buttons {
+                text-align: center;
+                margin-top: 5px;
+            }
 
-        .bottom-buttons {
-            text-align: center;
-            margin-top: 5px;
-        }
+            .status-box {
+                border: 1px solid #000;
+                display: inline-block;
+                padding: 0 5px;
+                min-width: 30px;
+                text-align: center;
+            }
 
-        .status-box {
-            border: 1px solid #000;
-            display: inline-block;
-            padding: 0 5px;
-            min-width: 30px;
-            text-align: center;
-        }
+            .nickname-input {
+                width: 120px !important;
+            }
 
-        .nickname-input {
-            width: 120px !important;
-        }
+            button {
+                border-radius: 5px;
+                font-weight: bold;
+                padding: 2px 10px;
+                border: 1px solid #ccc;
+                background-color: #fff;
+                cursor: pointer;
+            }
 
-        button {
-            border-radius: 5px;
-            font-weight: bold;
-            padding: 2px 10px;
-            border: 1px solid #ccc;
-            background-color: #fff;
-            cursor: pointer;
-        }
+            button:hover {
+                background-color: #f5f5f5;
+            }
 
-        button:hover {
-            background-color: #f5f5f5;
-        }
+            div[style="border: 2px solid #000000"] {
+                width: 75% !important;
+                margin: 0 auto;
+                box-sizing: border-box;
+            }
 
-        div[style="border: 2px solid #000000"] {
-            width: 75% !important;
-            margin: 0 auto;
-            box-sizing: border-box;
-        }
-
-        /* 外部容器样式 */
-        .outer-container {
-            border: 2px solid #000000;
-            width: 65% !important;
-            margin: 0 auto !important;
-            box-sizing: border-box !important;
-            max-width: 1000px !important;
-        }
-
-        /* 调整左侧微信登录区域高度 */
-        .panel > div:first-child {
-            height: 14.2vh !important;
-            min-height: 80px;
-            border: 1px solid #000;
-        }
-
-        /* 调整下注榜区域高度 */
-        .betting-list {
-            height: calc(74vh - 25px) !important;
-            border: 1px solid #000;
-        }
-
-        /* 调整右侧积分记录区域高度 */
-        .score-record {
-            height: 300px !important;
-        }
-
-        @media screen and (max-height: 800px) {
+            /* 外部容器样 */
             .outer-container {
-                height: 95vh;
-            }
-        }
-
-        /* 左侧面板 */
-        .left-panel {
-            width: 50%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* 微信登录区域 */
-        .wechat-login {
-            height: 20%; /* 微信登录框 */
-            min-height: 80px;
-            border: 1px solid #000;
-        }
-
-        /* 下注区域 */
-        .betting-area {
-            height: 80%; /* 下注列表区域 */
-            display: flex;
-            flex-direction: column;
-        }
-
-        .betting-header {
-            height: 5%;
-            min-height: 20px;
-        }
-
-        .betting-list {
-            height: 95%;
-            border: 1px solid #000;
-        }
-
-        /* 右侧面板 */
-        .right-panel {
-            width: 50%;
-            height: 100%;
-            border: 1.5px solid #000;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* 状态区域 */
-        .status-section {
-            height: 15%;
-            min-height: 60px;
-        }
-
-        /* 积分区域 */
-        .score-section {
-            height: 85%;
-            display: flex;
-            gap: 1%;
-        }
-
-        .score-list {
-            width: 50%;
-            height: 100%;
-            border: 1px solid #000;
-        }
-
-        .score-control {
-            width: 50%;
-            height: 100%;
-            border: 1px solid #000;
-        }
-
-        /* 添加响应式样式 */
-        @media screen and (min-height: 1080px) {
-            .outer-container {
-                max-width: 1400px !important;
-                height: 90vh !important;
-            }
-
-            .betting-list {
-                height: calc(80vh - 140px) !important;
-            }
-
-            .score-record {
-                height: 400px !important;
-            }
-        }
-
-        @media screen and (max-height: 1079px) and (min-height: 900px) {
-            .outer-container {
-                max-width: 1200px !important;
-                height: 90vh !important;
-            }
-
-            .betting-list {
-                height: calc(75vh - 140px) !important;
-            }
-
-            .score-record {
-                height: 350px !important;
-            }
-        }
-
-        @media screen and (max-height: 899px) and (min-height: 768px) {
-            .outer-container {
+                border: 2px solid #000000;
+                width: 65% !important;
+                margin: 0 auto !important;
+                box-sizing: border-box !important;
                 max-width: 1000px !important;
-                height: 92vh !important;
             }
 
-            .betting-list {
-                height: calc(70vh - 120px) !important;
+   
+            .panel > div:first-child {
+                height: 14.2vh !important;
+                min-height: 80px;
+                border: 1px solid #000;
             }
+
+         
+            .betting-list {
+                height: calc(74vh - 25px) !important;
+                border: 1px solid #000;
+            }
+
 
             .score-record {
                 height: 300px !important;
             }
 
-            .btn-custom {
-                padding: 1px 8px;
-                font-size: 12px;
+            @media screen and (max-height: 800px) {
+                .outer-container {
+                    height: 95vh;
+                }
             }
 
-            .input-custom {
-                height: 18px;
-                font-size: 11px;
+            /* 左侧面板 */
+            .left-panel {
+                width: 50%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
             }
-        }
 
-        @media screen and (max-height: 767px) {
-            .outer-container {
-                max-width: 900px !important;
-                height: 95vh !important;
+            /* 微信登录区域 */
+            .wechat-login {
+                height: 20%;
+
+                min-height: 80px;
+                border: 1px solid #000;
+            }
+
+            /* 下注区域 */
+            .betting-area {
+                height: 80%;
+
+                display: flex;
+                flex-direction: column;
+            }
+
+            .betting-header {
+                height: 5%;
+                min-height: 20px;
             }
 
             .betting-list {
-                height: calc(65vh - 100px) !important;
+                height: 95%;
+                border: 1px solid #000;
             }
 
-            .score-record {
-                height: 250px !important;
+            /* 右侧面板 */
+            .right-panel {
+                width: 50%;
+                height: 100%;
+                border: 1.5px solid #000;
+                display: flex;
+                flex-direction: column;
             }
 
-            .btn-custom {
-                padding: 1px 6px;
-                font-size: 11px;
+            /* 状态区域 */
+            .status-section {
+                height: 15%;
+                min-height: 60px;
             }
 
-            .input-custom {
-                height: 16px;
-                font-size: 10px;
-            }
-        }
-
-        /* 宽度响应式 */
-        @media screen and (max-width: 1600px) {
-            .outer-container {
-                width: 75% !important;
-            }
-        }
-
-        @media screen and (max-width: 1366px) {
-            .outer-container {
-                width: 85% !important;
+            /* 积分区域 */
+            .score-section {
+                height: 85%;
+                display: flex;
+                gap: 1%;
             }
 
-            .btn-custom {
-                margin: 0 3px;
+            .score-list {
+                width: 50%;
+                height: 100%;
+                border: 1px solid #000;
             }
 
-            .nickname-input {
-                width: 100px !important;
-            }
-        }
-
-        @media screen and (max-width: 1024px) {
-            .outer-container {
-                width: 95% !important;
+            .score-control {
+                width: 50%;
+                height: 100%;
+                border: 1px solid #000;
             }
 
-            .input-custom {
-                width: 35px;
+ 
+            @media screen and (min-height: 1080px) {
+                .outer-container {
+                    max-width: 1400px !important;
+                    height: 90vh !important;
+                }
+
+                .betting-list {
+                    height: calc(80vh - 140px) !important;
+                }
+
+                .score-record {
+                    height: 400px !important;
+                }
             }
 
-            .nickname-input {
-                width: 90px !important;
-            }
-        }
+            @media screen and (max-height: 1079px) and (min-height: 900px) {
+                .outer-container {
+                    max-width: 1200px !important;
+                    height: 90vh !important;
+                }
 
-        /* 确保内容不会溢出 */
-        .panel {
-            overflow: hidden;
-        }
+                .betting-list {
+                    height: calc(75vh - 140px) !important;
+                }
 
-        /* 文本溢出处理 */
-        .top-header div {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        /* 调整间距 */
-        @media screen and (max-height: 800px) {
-            .panel > div {
-                margin-bottom: 3px;
+                .score-record {
+                    height: 350px !important;
+                }
             }
 
-            .top-header {
-                min-height: 20px;
-                padding: 2px 1%;
+            @media screen and (max-height: 899px) and (min-height: 768px) {
+                .outer-container {
+                    max-width: 1000px !important;
+                    height: 92vh !important;
+                }
+
+                .betting-list {
+                    height: calc(70vh - 120px) !important;
+                }
+
+                .score-record {
+                    height: 300px !important;
+                }
+
+                .btn-custom {
+                    padding: 1px 8px;
+                    font-size: 12px;
+                }
+
+                .input-custom {
+                    height: 18px;
+                    font-size: 11px;
+                }
             }
 
-            div[style*="gap: 20px"] {
-                gap: 10px !important;
+            @media screen and (max-height: 767px) {
+                .outer-container {
+                    max-width: 900px !important;
+                    height: 95vh !important;
+                }
+
+                .betting-list {
+                    height: calc(65vh - 100px) !important;
+                }
+
+                .score-record {
+                    height: 250px !important;
+                }
+
+                .btn-custom {
+                    padding: 1px 6px;
+                    font-size: 11px;
+                }
+
+                .input-custom {
+                    height: 16px;
+                    font-size: 10px;
+                }
             }
-        }
 
-        /* 调整文本大小 */
-        @media screen and (max-height: 800px) {
-            body {
-                font-size: 12px;
+            /* 宽度响应式 */
+            @media screen and (max-width: 1600px) {
+                .outer-container {
+                    width: 75% !important;
+                }
             }
 
-            .top-header {
-                font-size: 11px;
+            @media screen and (max-width: 1366px) {
+                .outer-container {
+                    width: 85% !important;
+                }
+
+                .btn-custom {
+                    margin: 0 3px;
+                }
+
+                .nickname-input {
+                    width: 100px !important;
+                }
             }
-        }
-    </style>
-</head>
 
-<body>
-<div class="outer-container">
-    <!-- 顶部信息栏 -->
-    <div class="top-header">
-        <div>游戏仅供娱乐，请勿用于违法用途,欢迎您: {{ username }},过期时间: {{ available_time }}</div>
-        <div style="margin-left: 10px;">
-            <form method="post" action="{% url 'admin:logout' %}" style="display: inline;">
-                {% csrf_token %}
-                <button type="submit" class="logout-btn" style="background: none; border: none; color: blue; cursor: pointer;">退出登录</button>
-            </form>
-            <a href="{% url 'admin:password_change' %}" class="modify-btn">修改密码</a>
-        </div>
-    </div>
+            @media screen and (max-width: 1024px) {
+                .outer-container {
+                    width: 95% !important;
+                }
 
-    <!-- 主要内容区域 -->
-    <div style="display: flex; gap: 10px; padding: 5px;">
-        <!-- 左侧面板 -->
-        <div style="flex: 1; min-width: 0;">
-            <div style="width: 100%; height: 100px; border: 1px solid #000;">
-                微信登录暂不可用
+                .input-custom {
+                    width: 35px;
+                }
+
+                .nickname-input {
+                    width: 90px !important;
+                }
+            }
+
+            /* 内容不会溢出 */
+            .panel {
+                overflow: hidden;
+            }
+
+            /* 文本溢出处理 */
+            .top-header div {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            /* 调整间距 */
+            @media screen and (max-height: 800px) {
+                .panel > div {
+                    margin-bottom: 3px;
+                }
+
+                .top-header {
+                    min-height: 20px;
+                    padding: 2px 1%;
+                }
+
+                div[style*="gap: 20px"] {
+                    gap: 10px !important;
+                }
+            }
+
+            /* 调整文本大小 */
+            @media screen and (max-height: 800px) {
+                body {
+                    font-size: 12px;
+                }
+
+                .top-header {
+                    font-size: 11px;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+    <div class="outer-container">
+        <div class="top-header">
+            <div>游戏仅供娱乐，请勿用于违法用途,欢迎您: {{ username }},过期时间: {{ available_time }}</div>
+            <div style="margin-left: 10px;">
+                <form method="post" action="{% url 'admin:logout' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-btn"
+                            style="background: none; border: none; color: blue; cursor: pointer;">退出登录
+                    </button>
+                </form>
+                <a href="{% url 'admin:password_change' %}" class="modify-btn">修改密码</a>
             </div>
-            <div>
-                <div>下注榜: 31199721 期(普0,托7700)</div>
+        </div>
+
+        <div style="display: flex; gap: 10px; padding: 5px;">
+            <div style="flex: 1; min-width: 0;">
+                <div style="width: 100%; height: 100px; border: 1px solid #000;">
+                    微信登录暂不可用
+                </div>
                 <div>
-                    <button class="btn-custom" style="width: 50px;"><span style="color: #b1b126;">普</span></button>
-                    <button class="btn-custom" style="width: 50px;">托</button>
-                    <div style="width: 100%; height: 410px; border: 1px solid #000;"></div>
+                    <div>下注榜: 31199721 期(普0,托7700)</div>
+                    <div>
+                        <button class="btn-custom" style="width: 50px;"><span style="color: #b1b126;">普</span></button>
+                        <button class="btn-custom" style="width: 50px;">托</button>
+                        <div style="width: 100%; height: 410px; border: 1px solid #000;margin-top: 5px"></div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- 右侧面板 -->
-        <div style="flex: 1; min-width: 0;">
-            <div>
-                <span style="font-size: 15px;font-weight: 900;">当前状态:</span>
-                <button class="btn-custom">开盘</button>
-                赔率: <input type="text" class="input-custom" placeholder="100"> <span class="logout-btn">1赔x</span>
-                积分: 108600
-            </div>
-            <div style="border-top: 1px solid #000; padding-top: 5px;">
-                （预留封盘: <span>5</span>分盘<input type="text" class="input-custom" placeholder="60">秒）
-                （返水: <input type="text" class="input-custom" placeholder="0">）
-            </div>
-            <div style="border-top: 1px solid #000; padding-top: 5px;">
-                <div class="text-red">上下分确认: 声音1</div>
-                <div style="border: 1px solid #000;width: 100%;height: 100px;"></div>
-            </div>
-            <div style="margin-top: 5px;margin-left: 20px;">
-                <span>积分榜：</span>
-                <button class="btn-custom"><span style="color: #b1b126;">普</span></button>
-                <button class="btn-custom">托</button>
-                <button class="btn-custom">刷新积分排序</button>
-                <button class="btn-custom">报警</button>
-                <span class="logout-btn">积分记录</span>
-            </div>
-            <div style="display: flex; gap: 20px;margin-top: 5px;">
-                <div style="flex: 1;">
-                    <div style="width: 100%; height: 350px; border: 1px solid #000;">
-                        @0025.0025新客户: 2000
-                        <button class="btn-custom text-red">删除</button>
-                    </div>
+
+            <div style="flex: 1; min-width: 0;">
+                <div>
+                    <span style="font-size: 15px;font-weight: 900;">当前状态:</span>
+                    <button class="btn-custom">开盘</button>
+                    赔率: <input type="text" class="input-custom" placeholder="100"> <span
+                        class="logout-btn">1赔x</span>
+                    积分: {{ 积分 }}
                 </div>
-                <div style="flex: 1">
-                    <span>修改积分</span>
-                    <div>
-                        <button class="btn-custom">创建托</button>
-                        <button class="btn-custom">创建会员</button>
-                    </div>
-                    <div>会员ID: <span class="logout-btn">@0025</span></div>
-                    <div>
-                        昵称: <input type="text" class="input-custom nickname-input" value="0025新客户">
-                    </div>
-                    <div>
-                        <button class="btn-custom">改名</button>
-                        <button class="btn-custom">拉黑</button>
-                    </div>
-                    <div>
-                        积分: 2000
-                        <input type="text" placeholder="0">
-                        <div>
-                            <button class="btn-custom">上分</button>
-                            <button class="btn-custom">下分</button>
+                <div style="border-top: 1px solid #000; padding-top: 5px;">
+                    （预留封盘: <span>5</span>分盘<input type="text" class="input-custom" placeholder="60">秒）
+                    （返水: <input type="text" class="input-custom rebate-input" placeholder="0">）
+                </div>
+                <div style="border-top: 1px solid #000; padding-top: 5px;">
+                    <div class="text-red">上下分确认: 声音1</div>
+                    <div style="border: 1px solid #000;width: 100%;height: 100px;"></div>
+                </div>
+                <div style="margin-top: 5px;margin-left: 20px;">
+                    <span>积分榜：</span>
+                    <button class="btn-custom score-type-btn" data-type="normal" onclick="queryUsers(false)">
+                        <span style="color: #b1b126;">普</span>
+                    </button>
+                    <button class="btn-custom score-type-btn" data-type="tou" onclick="queryUsers(true)">托</button>
+                    <button class="btn-custom" onclick="refreshScoreList()">刷新积分排序</button>
+                    <button class="btn-custom">报警</button>
+                    <span class="logout-btn">积分记录</span>
+                </div>
+                <div style="display: flex; gap: 20px;margin-top: 5px;">
+                    <div style="flex: 1;">
+                        <div style="width: 100%; height: 350px; border: 1px solid #000; overflow-y: auto;">
+                            <div class="user-list"></div>
                         </div>
                     </div>
-                    <div style="margin-top: 10px;">
-                        <button>生成链接</button>
-                        <button class="btn-custom">复制链接</button>
+                    <div style="flex: 1">
+                        <span>修改积分</span>
+                        <div>
+                            <button class="btn-custom" onclick="createUser(0)">创建托</button>
+                            <button class="btn-custom" onclick="createUser(1)">创建会员</button>
+                        </div>
+                        <div>会员ID: <span class="logout-btn member-id">-</span></div>
+                        <div>
+                            昵称: <input type="text" class="input-custom nickname-input" value="">
+                        </div>
+                        <div>
+                            <button class="btn-custom" onclick="changeNickname()">改名</button>
+                            <button class="btn-custom block-btn" onclick="blockUser()">拉黑</button>
+                        </div>
+                        <div>
+                            积分: <span class="money-display">0</span>
+                        </div>
+                        <div style="margin-top: 5px;">
+                            <input type="text" class="input-custom score-input" placeholder="0" style="width: 120px !important;">
+                            <div style="margin-top: 5px;">
+                                <button class="btn-custom" onclick="updateScore(true)">上分</button>
+                                <button class="btn-custom" onclick="updateScore(false)">下分</button>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <button class="btn-custom" onclick="generateLink()">生成链接</button>
+                            <button class="btn-custom" onclick="copyLink()">复制链接</button>
+                        </div>
+                        <textarea class="link-textarea" style="width: 100%;height: 150px;margin-top: 20px;" readonly></textarea>
                     </div>
-                    <textarea style="width: 100%;height: 150px;margin-top: 20px;" readonly>https://k8.xyz...</textarea>
                 </div>
             </div>
         </div>
     </div>
-</div>
-</body>
+    </body>
+    <script>
+        //创建会员
+        function createUser(type) {
+            const nickname = prompt('请输入会员昵称：');
+            if (nickname) {
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'app:create_user' %}",
+                    data: {
+                        nickname: nickname,
+                        type: type,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function(data) {
+                        if (data.status === 'success') {
+                            alert('创建成功');
+                            location.reload();
+                        } else {
+                            alert('创建失败：' + data.message);
+                        }
+                    },
+                    error: function(data) {
+                        alert('创建失败：' + (data.responseJSON?.message || '未知错误'));
+                    }
+                });
+            }
+        }
+        //删除玩家
+        function deleteUser(userId) {
+            if (confirm('确定要删除该玩家吗？')) {
+                $.ajax({
+                    type: 'POST',
+                  
+                    url: "{% url 'app:delete_user' %}",
+                    data: {
+                        user_id: userId,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function (data) {
+                        if (data.status === 'success') {
+                            alert('删除成功')
+                            location.reload()
+                        } else {
+                            alert('删除失败')
+                        }
+                    },
+                    error: function (data) {
+                        alert('删除失败：' + data.responseJSON?.message || '未知错误')
+                    }
+                })
+            }
+        }
+        //查询会员或托
+        function queryUsers(isTou) {
+            $.ajax({
+                type: 'GET',
+                url: "{% url 'app:query_users' %}",
+                data: {
+                    is_tou: isTou
+                },
+                success: function(data) {
+                    if (data.status === 'success') {
+                        const userList = $('.user-list');
+                        userList.empty();
+                        
+                        if (data.users.length > 0) {
+                            data.users.forEach(user => {
+                                let touTypeLabel = '';
+                                if (isTou) {
+                                    touTypeLabel = `<span class="tou-type-label" onclick="toggleTouType(${user.id}, ${user.is_auto_tou}); event.stopPropagation();">[${user.is_auto_tou ? '自动' : '手动'}]</span>`;
+                                }
+                                
+                                userList.append(`
+                                    <div class="user-item" style="display: flex; justify-content: space-between; align-items: center; padding: 5px; border-bottom: 1px solid #eee; cursor: pointer;" 
+                                        data-id="${user.id}" 
+                                        data-nickname="${user.user}" 
+                                        data-money="${user.money}"
+                                        data-is-black="${user.is_black}"
+                                        onclick="selectUser(this)">
+                                        <span>${touTypeLabel}@${user.id}.${user.user}： ${user.money}</span>
+                                        <button class="btn-custom text-red" onclick="deleteUser('${user.id}'); event.stopPropagation();">删除</button>
+                                    </div>
+                                `);
+                            });
+                        } else {
+                            userList.append('<div style="text-align: center; padding: 10px;">暂无玩家</div>');
+                        }
+                        
+                        $('.score-type-btn').removeClass('btn-active');
+                        $(`.score-type-btn[data-type="${isTou ? 'tou' : 'normal'}"]`).addClass('btn-active');
+                    }
+                },
+                error: function(error) {
+                    console.error('查询用户失败:', error);
+                }
+            });
+        }
 
-</html>
+        // 换托类型函数
+        function toggleTouType(userId, currentIsAuto) {
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'app:toggle_tou_type' %}",
+                data: {
+                    user_id: userId,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function(data) {
+                    if (data.status === 'success') {
+
+                        refreshScoreList();
+                    } else {
+                        alert('修改失败：' + data.message);
+                    }
+                },
+                error: function(error) {
+                    alert('修改失败：' + (error.responseJSON?.message || '未知错误'));
+                }
+            });
+        }
+
+        // 页面加载时默认显示普通用户
+        $(document).ready(function() {
+            // 初始化加载设置
+            loadAdminSettings();
+            queryUsers(false);
+
+            $(document).on('click', '.btn-custom:contains("开盘"), .btn-custom:contains("封盘")', function() {
+                const isOpen = $(this).text() === '开盘';
+                updateSetting('is_open', isOpen);
+            });
+
+            // 赔率输入框变更事件
+            $('input[placeholder="100"]').change(function() {
+                const value = $(this).val();
+                // 验证是否为有效数字且最多两位小数
+                if (!/^\d+(\.\d{0,2})?$/.test(value)) {
+                    alert('请输入有效数字，最多支持两位小数');
+                    loadAdminSettings();
+                    return;
+                }
+                // 转换为两位小数
+                const formattedValue = parseFloat(value).toFixed(2);
+                $(this).val(formattedValue);
+                updateSetting('odds', formattedValue);
+            });
+
+            // 预留封盘秒数输入框变更事件
+            $('input[placeholder="60"]').change(function() {
+                const value = $(this).val();
+                // 验证是否为正整数
+                if (!/^\d+$/.test(value) || parseInt(value) <= 0) {
+                    alert('请输入有效的秒数');
+                    loadAdminSettings();
+                    return;
+                }
+                updateSetting('close_seconds', value);
+            });
+
+            // 返水比例输入框变更事件
+            $('.rebate-input').change(function() {
+                const value = $(this).val();
+                // 验证是否为有效数字且最多两位小数
+                if (!/^\d+(\.\d{0,2})?$/.test(value)) {
+                    alert('请输入有效数字，最多支持两位小数');
+                    loadAdminSettings();
+                    return;
+                }
+                // 返水比例范围
+                const numValue = parseFloat(value);
+                if (numValue < 0 || numValue > 100) {
+                    alert('返水比例必须在0-100之间');
+                    loadAdminSettings();
+                    return;
+                }
+                const formattedValue = numValue.toFixed(2);
+                $(this).val(formattedValue);
+                updateSetting('rebate', formattedValue);
+            });
+        });
+
+        // 刷新积分排序
+        function refreshScoreList() {
+
+            const activeBtnType = $('.score-type-btn.btn-active').data('type');
+      
+            queryUsers(activeBtnType === 'tou');
+        }
+
+        // 选择用户
+        function selectUser(element) {
+       
+            $('.user-item').css('background-color', '');
+   
+            $(element).css('background-color', '#f0f0f0');
+            
+
+            const userId = $(element).data('id');
+            const nickname = $(element).data('nickname');
+            const money = $(element).data('money');
+            const isBlack = $(element).data('is-black');
+            
+            $('.member-id').text(userId); 
+            $('.nickname-input').val(nickname); 
+            $('.money-display').text(money);  
+            
+            const blockBtn = $('.block-btn');
+            if (isBlack) {
+                blockBtn.text('取消拉黑').attr('onclick', 'unblockUser()');
+            } else {
+                blockBtn.text('拉黑').attr('onclick', 'blockUser()');
+            }
+        }
+
+        // 改名
+        function changeNickname() {
+            const userId = $('.member-id').text();
+            if (userId === '-') {
+                alert('请先选择用户');
+                return;
+            }
+            
+            const newNickname = $('.nickname-input').val().trim();
+            if (!newNickname) {
+                alert('昵称不能为空');
+                return;
+            }
+            
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'app:change_nickname' %}",
+                data: {
+                    user_id: userId,
+                    new_nickname: newNickname,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function(data) {
+                    if (data.status === 'success') {
+                        alert('修改成功');
+                    
+                        refreshScoreList();
+                    } else {
+                        alert('修改失败：' + data.message);
+                    }
+                },
+                error: function(error) {
+                    alert('修改失败：' + (error.responseJSON?.message || '未知错误'));
+                }
+            });
+        }
+
+        // 拉黑函数
+        function blockUser() {
+            const userId = $('.member-id').text();
+            if (userId === '-') {
+                alert('请先选择用户');
+                return;
+            }
+            
+            if (confirm('确定要拉黑该用户吗？')) {
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'app:block_user' %}",
+                    data: {
+                        user_id: userId,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function(data) {
+                        if (data.status === 'success') {
+                            alert('拉黑成功');
+                           
+                            $('.block-btn').text('取消拉黑').attr('onclick', 'unblockUser()');
+                           
+                            $('.user-item[data-id="' + userId + '"]').data('is-black', true);
+                          
+                            refreshScoreList();
+                        } else {
+                            alert('拉黑失败：' + data.message);
+                        }
+                    },
+                    error: function(error) {
+                        alert('拉黑失败：' + (error.responseJSON?.message || '未知错误'));
+                    }
+                });
+            }
+        }
+
+        // 取消拉黑函数
+        function unblockUser() {
+            const userId = $('.member-id').text();
+            if (userId === '-') {
+                alert('请先选择用户');
+                return;
+            }
+            
+            if (confirm('确定要取消拉黑该用户吗？')) {
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'app:unblock_user' %}",
+                    data: {
+                        user_id: userId,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function(data) {
+                        if (data.status === 'success') {
+                            alert('取消拉黑成功');
+                           
+                            $('.block-btn').text('拉黑').attr('onclick', 'blockUser()');
+                       
+                            $('.user-item[data-id="' + userId + '"]').data('is-black', false);
+                  
+                            refreshScoreList();
+                        } else {
+                            alert('取消拉黑失败：' + data.message);
+                        }
+                    },
+                    error: function(error) {
+                        alert('取消拉黑失败：' + (error.responseJSON?.message || '未知错误'));
+                    }
+                });
+            }
+        }
+
+        // 积分更新函数
+        function updateScore(isAdd) {
+            const userId = $('.member-id').text();
+            if (userId === '-') {
+                alert('请先选择用户');
+                return;
+            }
+            
+            const scoreInput = $('.score-input').val().trim();
+            if (!scoreInput || parseFloat(scoreInput) <= 0) {
+                alert('请输入有效的积分数值');
+                return;
+            }
+            
+            const action = isAdd ? '上分' : '下分';
+            if (confirm(`确定要${action} ${scoreInput} 积分吗？`)) {
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'app:update_score' %}",
+                    data: {
+                        user_id: userId,
+                        score_change: scoreInput,
+                        is_add: isAdd, 
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function(data) {
+                        if (data.status === 'success') {
+                            alert(`${action}成功`);
+                            $('.money-display').text(data.current_money);
+                            $('.score-input').val('');
+                            refreshScoreList();
+                        } else {
+                            alert(`${action}失败：` + data.message);
+                        }
+                    },
+                    error: function(error) {
+                        alert(`${action}失败：` + (error.responseJSON?.message || '未知错误'));
+                    }
+                });
+            }
+        }
+
+        // 生成链函数
+        function generateLink() {
+            const userId = $('.member-id').text();
+            if (userId === '-') {
+                alert('请先选择用户');
+                return;
+            }
+            
+            $.ajax({
+                type: 'POST', 
+                url: "{% url 'app:admin_reset_link' %}",
+                data: {
+                    user_id: userId,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function(data) {
+                    if (data.code === 0) {
+   
+                        const link = `${data.uid}`;
+                        $('.link-textarea').val(link);
+                        alert('链接已生成');
+                    } else {
+                        alert('生成链接失败');
+                    }
+                },
+                error: function(error) {
+                    alert('生成链接失败：' + (error.responseJSON?.message || '未知错误'));
+                }
+            });
+        }
+
+        // 复制链接函数
+        function copyLink() {
+            const link = $('.link-textarea').val();
+            if (link) {
+                const tempInput = document.createElement('input');
+                tempInput.value = link;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                alert('链接已复制到剪贴板');
+            } else {
+                alert('链接为空');
+            }
+        }
+
+        // 加载设置
+        function loadAdminSettings() {
+            $.ajax({
+                type: 'GET',
+                url: "{% url 'app:get_admin_settings' %}",
+                success: function(data) {
+                    if (data.status === 'success') {
+                        // 更新开盘状态
+                        const openBtn = $('.btn-custom:contains("开盘"), .btn-custom:contains("封盘")');
+                        if (data.data.is_open) {
+                            openBtn.text('封盘').addClass('btn-active');
+                        } else {
+                            openBtn.text('开盘').removeClass('btn-active');
+                        }
+                        
+
+                        $('input[placeholder="100"]').val(parseFloat(data.data.odds).toFixed(2));
+                        $('input[placeholder="60"]').val(data.data.close_seconds);
+                        $('.rebate-input').val(parseFloat(data.data.rebate).toFixed(2));
+                        $('.total-score').text(parseFloat(data.data.total_score).toFixed(2));
+                    }
+                }
+            });
+        }
+
+        // 更新设置
+        function updateSetting(type, value) {
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'app:update_admin_settings' %}",
+                data: {
+                    type: type,
+                    value: value,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function(data) {
+                    if (data.status === 'success') {
+                        loadAdminSettings();
+                    } else {
+                        alert('更新失败：' + data.message);
+                    }
+                },
+                error: function(error) {
+                    alert('更新失败：' + (error.responseJSON?.message || '未知错误'));
+                }
+            });
+        }
+    </script>
+
+    </html>
 {% endblock %}

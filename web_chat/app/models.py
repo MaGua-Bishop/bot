@@ -6,6 +6,7 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.contrib.auth.models import AbstractUser
 from django.contrib import admin
+from decimal import Decimal
 
 
 def generate_random_string(length=18):
@@ -14,9 +15,12 @@ def generate_random_string(length=18):
 
 class User(models.Model):
     user = models.CharField(max_length=255, verbose_name="用户名")
-    money = models.FloatField(verbose_name="余额", default=0)
+    money = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     uid = models.CharField(max_length=255, verbose_name="uid", default=generate_random_string)
     admin = models.ForeignKey('Admin', on_delete=models.SET_NULL, null=True, verbose_name="创建人")
+    is_black = models.BooleanField(default=False, verbose_name="是否拉黑")
+    is_tou = models.BooleanField(default=False, verbose_name="是否托")
+    is_auto_tou = models.BooleanField(default=False, verbose_name="是否自动托")
 
     def __str__(self):
         return str(self.user)
@@ -41,18 +45,25 @@ def user_before_save(sender, instance, **kwargs):
                 user=instance,
                 last_money=old_money,
                 money=new_money - old_money,
-                now_money=new_money
+                now_money=new_money,
             )
 
 
 class ChangeMoney(models.Model):
+    CHANGE_TYPES = [
+        ('管理员修改', '管理员修改'),
+        ('管理员上分', '管理员上分'),
+        ('管理员下分', '管理员下分'),
+        ('下注扣除', '下注扣除'),
+        ('中奖增加', '中奖增加')
+    ]
+    
     user = models.ForeignKey("User", on_delete=models.CASCADE)
-    last_money = models.FloatField(verbose_name="原金额")
-    money = models.FloatField(verbose_name="变更金额")
-    now_money = models.FloatField(verbose_name="现金额")
+    last_money = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), verbose_name="原金额")
+    money = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), verbose_name="变更金额")
+    now_money = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), verbose_name="现金额")
     change_type = models.CharField(max_length=255, verbose_name="变更原因", default="管理员修改",
-                                   choices=[('管理员修改', '管理员修改'), ("下注扣除", '下注扣除'),
-                                            ("中奖增加", '中奖增加')])
+                                 choices=CHANGE_TYPES)
     create_time = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
 
     def __str__(self):
@@ -67,12 +78,30 @@ class Message(models.Model):
     file_type = models.CharField(max_length=50, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     is_bot = models.BooleanField(default=False, verbose_name="是否机器人消息")  # 新增字段
+
     def __str__(self):
         return f"{self.user} - {self.timestamp}"
 
 
 class Admin(AbstractUser):
-    available_time = models.DateTimeField(null=True, blank=True, verbose_name="可用时间")
+    # 继承了 AbstractUser 的字段：username, password, is_superuser, is_staff 等
+
+    available_time = models.DateTimeField(null=True, blank=True)
+    is_open = models.BooleanField(default=False)
+    odds = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('100'))
+    total_score = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    close_seconds = models.IntegerField(default=60)
+    rebate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0'))
+
+    # 设置必需字段
+    REQUIRED_FIELDS = []  # username 和 password 已经是必需的了
+
+    class Meta:
+        verbose_name = '管理员'
+        verbose_name_plural = '管理员'
+
+    def __str__(self):
+        return self.username
 
 
 class ChatController(models.Model):
@@ -81,4 +110,3 @@ class ChatController(models.Model):
         verbose_name_plural = '聊天控制器'
         managed = False
         default_permissions = ()
-
