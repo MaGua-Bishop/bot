@@ -57,13 +57,13 @@ class ChangeMoney(models.Model):
         ('下注扣除', '下注扣除'),
         ('中奖增加', '中奖增加')
     ]
-    
+
     user = models.ForeignKey("User", on_delete=models.CASCADE)
     last_money = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), verbose_name="原金额")
     money = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), verbose_name="变更金额")
     now_money = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), verbose_name="现金额")
     change_type = models.CharField(max_length=255, verbose_name="变更原因", default="管理员修改",
-                                 choices=CHANGE_TYPES)
+                                   choices=CHANGE_TYPES)
     create_time = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
 
     def __str__(self):
@@ -110,3 +110,55 @@ class ChatController(models.Model):
         verbose_name_plural = '聊天控制器'
         managed = False
         default_permissions = ()
+
+
+class LotteryRecord(models.Model):
+    """开奖记录"""
+    issue = models.CharField(max_length=20, unique=True, verbose_name='期号')
+    code = models.CharField(max_length=100, blank=True, verbose_name='开奖号码')
+    time = models.CharField(max_length=20, blank=True, verbose_name='开奖时间')
+    sum_num = models.IntegerField(default=0, verbose_name='总和')
+    sum_single_double = models.IntegerField(default=0, choices=(
+        (0, '单'),
+        (1, '双'),
+    ), verbose_name='总和单双')
+    sum_big_small = models.IntegerField(default=0, choices=(
+        (0, '大'),
+        (1, '小'),
+    ), verbose_name='总和大小')
+    last_big_small = models.IntegerField(default=0, choices=(
+        (0, '尾大'),
+        (1, '尾小'),
+    ), verbose_name='尾数大小')
+    first_dragon_tiger = models.IntegerField(default=0, choices=(
+        (0, '龙'),
+        (1, '虎'),
+    ), verbose_name='第一龙虎')
+    second_dragon_tiger = models.IntegerField(default=0, choices=(
+        (0, '龙'),
+        (1, '虎'),
+    ), verbose_name='第二龙虎')
+    third_dragon_tiger = models.IntegerField(default=0, choices=(
+        (0, '龙'),
+        (1, '虎'),
+    ), verbose_name='第三龙虎')
+    fourth_dragon_tiger = models.IntegerField(default=0, choices=(
+        (0, '龙'),
+        (1, '虎'),
+    ), verbose_name='第四龙虎')
+
+    status = models.IntegerField(default=0, choices=(
+        (0, '可下注'),
+        (1, '停止下注'),
+        (2, '已开奖'),
+    ), verbose_name='开奖状态')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
+
+    class Meta:
+        verbose_name = '开奖记录'
+        verbose_name_plural = verbose_name
+        ordering = ['-issue']
+
+    def __str__(self):
+        return f"{self.issue} - {self.get_status_display()}"

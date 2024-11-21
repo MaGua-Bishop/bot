@@ -3,6 +3,8 @@ import logging
 import datetime
 from channels.db import database_sync_to_async
 from app.models import Message, Admin
+from channels.layers import get_channel_layer
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -103,21 +105,18 @@ class ChatBot:
             logger.error(f"获取管理员列表时出错: {str(e)}")
             return []
 
-    async def broadcast_message(self, message: str, consumer):
+    async def broadcast_message(self, message: str):
         """
         向所有聊天室广播消息
-
-        Args:
-            message (str): 要广播的消息内容
-            consumer: 当前的consumer实例
         """
         try:
-            # 获取所有聊天室
             admin_usernames = await self.get_all_admins()
+            if not admin_usernames:
+                logger.warning("没有找到任何管理员聊天室")
+                return
 
+            channel_layer = get_channel_layer()
             current_time = datetime.datetime.now()
-
-            # 构造广播消息数据
             broadcast_data = {
                 'type': 'chat_message',
                 'message': {
@@ -128,27 +127,28 @@ class ChatBot:
                 }
             }
 
-            # 向每个聊天室发送消息
             for admin_username in admin_usernames:
                 try:
+                    ws_group = f'chat_{admin_username}'
                     broadcast_data['message']['admin_username'] = admin_username
 
-                    # 发送消息到聊天室
-                    await consumer.channel_layer.group_send(
-                        f"chat_{admin_username}",
-                        broadcast_data
+                    # 发送消息
+                    await channel_layer.group_send(
+                        ws_group,
+                        broadcast_data.copy()
                     )
-                    logger.info(f"广播消息已发送到 {admin_username}")
-                    # 保存消息到数据库
+
+                    logger.info(f"消息已发送到聊天室 {admin_username}")
                     await self.save_message(admin_username, message)
 
                 except Exception as e:
-                    logger.error(f"向聊天室 {admin_username} 发送消息时出错: {str(e)}")
+                    logger.error(f"向聊天室 {admin_username} 发送消息失败: {str(e)}")
+
                     continue
 
-            logger.info("消息发送完成")
+            logger.info("广播消息处理完成")
 
         except Exception as e:
-            logger.error(f"消息时出错: {str(e)}")
-            import traceback
-            logger.error(traceback.format_exc())
+            logger.error(f"广播消息时出错: {str(e)}")
+
+

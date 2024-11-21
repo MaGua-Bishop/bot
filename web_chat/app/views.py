@@ -14,6 +14,8 @@ import decimal
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from app.consumers import ChatConsumer
+from app.bot import ChatBot
+
 
 
 def page_not_found(request, exception):
@@ -525,22 +527,14 @@ def send_broadcast(request):
                 'message': '消息不能为空'
             }, status=400)
 
-        # 获取channel layer
-        channel_layer = get_channel_layer()
-
-        # 创建consumer实例
-        consumer = ChatConsumer()
-        consumer.channel_layer = channel_layer
-
-        # 发送广播消息
-        async_to_sync(consumer.broadcast_message)(message)
+        bot = ChatBot()
+        async_to_sync(bot.broadcast_message)(message)
 
         return JsonResponse({
             'status': 'success',
             'message': '广播消息已发送'
         })
     except Exception as e:
-        print(f"发送广播消息时出错: {str(e)}")
         return JsonResponse({
             'status': 'error',
             'message': str(e)

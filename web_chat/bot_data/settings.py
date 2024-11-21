@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-058bg2-lbs+(@as193k74bn_0u0s)imz-9wz#5qs1$t*1h#86@
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
-HOST = "https://bdcb-119-39-51-90.ngrok-free.app"
+HOST = "https://fbf0-119-39-51-90.ngrok-free.app"
 
 # Application definition
 
@@ -55,7 +55,7 @@ CHANNEL_LAYERS = {
     },
 }
 CSRF_TRUSTED_ORIGINS = [
-    "https://bdcb-119-39-51-90.ngrok-free.app",
+    "https://fbf0-119-39-51-90.ngrok-free.app",
 ]
 
 MIDDLEWARE = [
