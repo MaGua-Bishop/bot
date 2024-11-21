@@ -28,7 +28,7 @@ class ChatBot:
             self.keywords = {
                 "您好": "您也好",
             }
-            # 修改正则表达式以支持小数
+            # 正则表达式
             self.bet_patterns = {
                 '总和大': r'大\s*(\d+\.?\d*)',
                 '总和小': r'小\s*(\d+\.?\d*)',
@@ -72,6 +72,10 @@ class ChatBot:
             bet_info = self.parse_bet_command(message)
             if bet_info:
                 bet_type, amount = bet_info
+
+                if amount <= 0:
+                    logger.warning(f"下注金额必须大于0: {amount}")
+                    return
 
                 # 检查用户余额
                 user_balance = await self.get_user_balance(user_id)
