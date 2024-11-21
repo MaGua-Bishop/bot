@@ -162,3 +162,18 @@ class LotteryRecord(models.Model):
 
     def __str__(self):
         return f"{self.issue} - {self.get_status_display()}"
+
+
+class BetRecord(models.Model):
+    user_id = models.CharField(max_length=100)
+    admin_username = models.CharField(max_length=100)
+    issue = models.CharField(max_length=20)
+    bet_type = models.CharField(max_length=20)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    status = models.IntegerField(default=0)  # 0-未开奖, 1-已开奖
+    win_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'bet_records'

@@ -1,5 +1,6 @@
 import json
 
+from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 from app import models
@@ -45,6 +46,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
             logger.info(f"WebSocket断开连接: group={self.room_group_name}")
 
+    async def get_user_id_by_uid(self, uid: str) -> int:
+        """根据uid获取用户ID"""
+        from app.models import User
+        try:
+            user = await database_sync_to_async(User.objects.get)(uid=uid)
+            return user.id
+        except User.DoesNotExist:
+            logger.error(f"用户不存在: uid={uid}")
+            return None
+        except Exception as e:
+            logger.error(f"获取用户ID时出错: {str(e)}")
+            return None
+
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         logger.info(f"收到消息: {text_data_json}")
@@ -80,10 +94,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             # 处理机器人消息
             if 'message' in text_data_json:
-                user = text_data_json.get('user', 'anonymous')
+                uid = text_data_json.get('user', 'anonymous')
+                user_id = await self.get_user_id_by_uid(uid)
                 await self.bot.handle_message(
                     room_id=room_id,
-                    user_id=user,
+                    user_id=user_id,
                     message=text_data_json['message'],
                     consumer=self
                 )
