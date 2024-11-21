@@ -6,13 +6,16 @@ import os
 import django
 from channels.db import database_sync_to_async
 from datetime import datetime, timedelta
+from collections import defaultdict
+from decimal import Decimal
+from django.db import transaction
 
 # 设置 Django 环境
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bot_data.settings')
 django.setup()
 
 from app.bot import ChatBot
-from app.models import LotteryRecord
+from app.models import LotteryRecord, BetRecord, User
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +37,7 @@ class LotteryMonitor:
             latest_record = LotteryRecord.objects.order_by('-issue').first()
             if latest_record:
                 if latest_record.status == 0:
-                    # 如果最新记录未开奖，设置为当前可下注期号
+                    # 如果最新记录未开奖，设置为当可下注期号
                     self.current_betting_issue = latest_record.issue
                 else:
                     # 如果最新记录已开奖，设置为下一期
@@ -173,6 +176,17 @@ class LotteryMonitor:
                             await self.bot.broadcast_message(draw_message)
                             logger.info(f"开奖通知已发送: {current_draw_issue}")
 
+                            # 处理下注记录并发送中奖通知
+                            messages_to_send = await self.process_bet_records(record)
+                            logger.info(f"获取到需要发送的中奖消息: {len(messages_to_send)} 条")
+
+                            for room_id, message in messages_to_send:
+                                try:
+                                    await self.bot.broadcast_message(message, room_id)
+                                    logger.info(f"中奖通知已发送到聊天室 {room_id}")
+                                except Exception as e:
+                                    logger.error(f"发送消息到聊天室 {room_id} 时出错: {str(e)}")
+
                             await self.update_record_status(record, 2)
 
                             # 更新最新开奖期号
@@ -259,9 +273,9 @@ class LotteryMonitor:
             'time': time,
             'sum_num': int(sum_num) if sum_num != '' else 0,
             'sum_single_double': int(sum_single_double) if sum_single_double != '' else 0,  # 0-单,1-双
-            'sum_big_small': int(sum_big_small) if sum_big_small != '' else 0,             # 0-大,1-小
-            'last_big_small': int(last_big_small) if last_big_small != '' else 0,          # 0-尾大,1-尾小
-            'first_dragon_tiger': int(first_dragon_tiger) if first_dragon_tiger != '' else 0,   # 0-龙,1-虎
+            'sum_big_small': int(sum_big_small) if sum_big_small != '' else 0,  # 0-大,1-小
+            'last_big_small': int(last_big_small) if last_big_small != '' else 0,  # 0-尾大,1-尾小
+            'first_dragon_tiger': int(first_dragon_tiger) if first_dragon_tiger != '' else 0,  # 0-龙,1-虎
             'second_dragon_tiger': int(second_dragon_tiger) if second_dragon_tiger != '' else 0,
             'third_dragon_tiger': int(third_dragon_tiger) if third_dragon_tiger != '' else 0,
             'fourth_dragon_tiger': int(fourth_dragon_tiger) if fourth_dragon_tiger != '' else 0
@@ -309,6 +323,107 @@ class LotteryMonitor:
             return LotteryRecord.objects.get(issue=issue)
         except LotteryRecord.DoesNotExist:
             return None
+
+    @database_sync_to_async
+    def process_bet_records(self, lottery_record):
+        """处理该期所有下注记录"""
+        from decimal import Decimal
+        from django.db import transaction
+
+        try:
+            messages_to_send = []
+
+            # 使用事务确保数据一致性
+            with transaction.atomic():
+                # 获取该期所有未结算的下注记录
+                bet_records = BetRecord.objects.filter(
+                    issue=lottery_record.issue,
+                    status=0
+                ).select_for_update()
+
+                # 添加日志来检查查询条件
+                logger.info(f"查询条件 - 期号: {lottery_record.issue}")
+                logger.info(f"查询条件 - 状态: 0")
+                logger.info(f"找到 {bet_records.count()} 条待处理的下注记录")
+
+                # 如果没有找到记录，检查是否有任何下注记录（不考虑状态）
+                all_records = BetRecord.objects.filter(issue=lottery_record.issue)
+                logger.info(f"该期总共有 {all_records.count()} 条下注记录")
+                logger.info(
+                    f"各状态下注记录数量: {[(status, BetRecord.objects.filter(issue=lottery_record.issue, status=status).count()) for status in [0, 1, 2]]}")
+
+                # 用于存储每个聊天室的中奖消息
+                room_messages = defaultdict(list)
+
+                for bet in bet_records:
+                    win = False
+                    # 根据不同的下注类型判断是否中奖
+                    if bet.bet_type == '总和单' and lottery_record.sum_single_double == 0:
+                        win = True
+                    elif bet.bet_type == '总和双' and lottery_record.sum_single_double == 1:
+                        win = True
+                    elif bet.bet_type == '总和大' and lottery_record.sum_big_small == 0:
+                        win = True
+                    elif bet.bet_type == '总和小' and lottery_record.sum_big_small == 1:
+                        win = True
+                    elif bet.bet_type == '尾大' and lottery_record.last_big_small == 0:
+                        win = True
+                    elif bet.bet_type == '尾小' and lottery_record.last_big_small == 1:
+                        win = True
+                    elif bet.bet_type == '1龙' and lottery_record.first_dragon_tiger == 0:
+                        win = True
+                    elif bet.bet_type == '1虎' and lottery_record.first_dragon_tiger == 1:
+                        win = True
+
+                    logger.info(f"处理下注记录 ID: {bet.id}, 用户: {bet.user_id}, 类型: {bet.bet_type}, 中奖: {win}")
+
+                    # 更新下注记录状态
+                    bet.status = 1  # 已结算
+                    bet.win = win
+                    if win:
+                        bet.win_amount = bet.amount * Decimal('1.95')
+                        try:
+                            user = User.objects.select_for_update().get(id=bet.user_id)
+                            user.money += bet.win_amount
+                            user.save()
+                            logger.info(f"用户 {bet.user_id} 余额已更新，中奖金额: {bet.win_amount}")
+
+                            # 将中奖消息添加到对应聊天室的列表中
+                            win_message = (
+                                f"🎊 用户{bet.user_id} 中奖\n"
+                                # f"玩法: {bet.bet_type}\n"
+                                f"下注金额: {bet.amount:.2f}\n"
+                                f"中奖金额: {bet.win_amount:.2f}"
+                            )
+                            room_messages[bet.admin_username].append(win_message)
+                            logger.info(f"添加中奖消息到聊天室 {bet.admin_username}")
+
+                        except User.DoesNotExist:
+                            logger.error(f"用户不存在: {bet.user_id}")
+                    else:
+                        bet.win_amount = -bet.amount
+
+                    bet.save()
+                    logger.info(f"下注记录 {bet.id} 已更新")
+
+                # 准备发送的消息
+                for room_id, messages in room_messages.items():
+                    if messages:
+                        combined_message = (
+                            f"🎊 中奖通知\n"
+                            f"期号: {lottery_record.issue}\n"
+                            f"------------------------\n"
+                            f"{chr(10).join(messages)}"
+                        )
+                        messages_to_send.append((room_id, combined_message))
+                        logger.info(f"准备发送消息到聊天室 {room_id}: {combined_message}")
+
+            logger.info(f"所有下注记录处理完成，准备发送 {len(messages_to_send)} 条中奖通知")
+            return messages_to_send
+
+        except Exception as e:
+            logger.error(f"处理下注记录时出错: {str(e)}")
+            return []
 
 
 async def start_monitoring():

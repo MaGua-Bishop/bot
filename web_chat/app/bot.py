@@ -236,16 +236,13 @@ class ChatBot:
             logger.error(f"获取管理员列表时出错: {str(e)}")
             return []
 
-    async def broadcast_message(self, message: str):
+    async def broadcast_message(self, message: str, room_id: str = None):
         """
-        向所有聊天室广播消息
+        向聊天室广播消息
+        :param message: 消息内容
+        :param room_id: 可选的聊天室ID，如果指定则只发送到特定聊天室
         """
         try:
-            admin_usernames = await self.get_all_admins()
-            if not admin_usernames:
-                logger.warning("没有找到任何管理员聊天室")
-                return
-
             channel_layer = get_channel_layer()
             current_time = datetime.datetime.now()
             broadcast_data = {
@@ -258,24 +255,43 @@ class ChatBot:
                 }
             }
 
-            for admin_username in admin_usernames:
-                try:
-                    ws_group = f'chat_{admin_username}'
-                    broadcast_data['message']['admin_username'] = admin_username
+            if room_id:
+                # 发送到指定聊天室
+                ws_group = f'chat_{room_id}'
+                broadcast_data['message']['admin_username'] = room_id
 
-                    # 发送消息
-                    await channel_layer.group_send(
-                        ws_group,
-                        broadcast_data.copy()
-                    )
+                # 发送消息
+                await channel_layer.group_send(
+                    ws_group,
+                    broadcast_data
+                )
 
-                    logger.info(f"消息已发送到聊天室 {admin_username}")
-                    await self.save_message(admin_username, message)
+                logger.info(f"消息已发送到聊天室 {room_id}")
+                await self.save_message(room_id, message)
+            else:
+                # 原有的广播到所有聊天室的逻辑
+                admin_usernames = await self.get_all_admins()
+                if not admin_usernames:
+                    logger.warning("没有找到任何管理员聊天室")
+                    return
 
-                except Exception as e:
-                    logger.error(f"向聊天室 {admin_username} 发送消息失败: {str(e)}")
+                for admin_username in admin_usernames:
+                    try:
+                        ws_group = f'chat_{admin_username}'
+                        broadcast_data['message']['admin_username'] = admin_username
 
-                    continue
+                        # 发送消息
+                        await channel_layer.group_send(
+                            ws_group,
+                            broadcast_data.copy()
+                        )
+
+                        logger.info(f"消息已发送到聊天室 {admin_username}")
+                        await self.save_message(admin_username, message)
+
+                    except Exception as e:
+                        logger.error(f"向聊天室 {admin_username} 发送消息失败: {str(e)}")
+                        continue
 
             logger.info("广播消息处理完成")
 
