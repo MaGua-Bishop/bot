@@ -61,7 +61,6 @@ class LotteryMonitor:
         # 判断是否在每5分钟的第3分40秒
         is_draw_minute = current_minute % 5 == 3
         # 开奖前30秒发送停止下注通知
-        # is_near_draw = current_second >= 10 and current_second <= 40
         is_near_draw = current_second >= 30 and current_second <= 40
 
         return is_draw_minute and is_near_draw

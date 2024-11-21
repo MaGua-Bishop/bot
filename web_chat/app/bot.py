@@ -132,27 +132,27 @@ class ChatBot:
         from app.models import LotteryRecord
         from django.utils import timezone
         from datetime import timedelta
-        
+
         try:
             # 获取当前时间
             now = timezone.now()
             # 计算5分钟前的时间
             five_minutes_ago = now - timedelta(minutes=5)
-            
+
             # 查找最新的可下注期号（状态为0且创建时间在5分钟内）
             record = (LotteryRecord.objects
                      .filter(status=0)
                      .filter(created_at__gte=five_minutes_ago)  # 创建时间不早于5分钟前
                      .order_by('-issue')
                      .first())
-            
+
             if record:
                 logger.info(f"获取到当前可下注期号: {record.issue}, 创建时间: {record.created_at}")
                 return record.issue
             else:
                 logger.warning("未找到符合条件的可下注期号")
                 return None
-                
+
         except Exception as e:
             logger.error(f"获取当前可下注期号时出错: {str(e)}")
             return None
@@ -303,19 +303,19 @@ class ChatBot:
                 # 转换为 Decimal 进行比较，保留两位小数
                 current_balance = Decimal(str(user.money)).quantize(Decimal('0.01'))
                 amount = amount.quantize(Decimal('0.01'))
-                
+
                 if current_balance < amount:
                     return False
 
                 # 记录旧余额
                 old_money = current_balance
-                
+
                 # 计算新余额
                 new_money = (current_balance - amount).quantize(Decimal('0.01'))
-                
+
                 # 更新用户余额（跳过信号处理）
                 User.objects.filter(id=user_id).update(money=new_money)
-                
+
                 # 手动创建 ChangeMoney 记录
                 ChangeMoney.objects.create(
                     user_id=user_id,
@@ -334,5 +334,3 @@ class ChatBot:
         except Exception as e:
             logger.error(f"扣除用户余额时出错: {str(e)}")
             return False
-
-
