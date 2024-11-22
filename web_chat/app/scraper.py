@@ -251,7 +251,7 @@ class LotteryMonitor:
                 next_message = (
                     f"🔥 下一期开始\n"
                     f"期号: {next_draw_issue}\n"
-                    f"开奖时间: {next_draw_time}\n"
+                    # f"开奖时间: {next_draw_time}\n"
                     f"请各位玩家下注"
                 )
                 await self.bot.broadcast_message(next_message)
@@ -392,7 +392,7 @@ class LotteryMonitor:
                             win_message = (
                                 f"🎊 用户{bet.user_id} 中奖\n"
                                 # f"玩法: {bet.bet_type}\n"
-                                f"下注金额: {bet.amount:.2f}\n"
+                                # f"下注金额: {bet.amount:.2f}\n"
                                 f"中奖金额: {bet.win_amount:.2f}"
                             )
                             room_messages[bet.admin_username].append(win_message)
