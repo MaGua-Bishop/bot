@@ -29,5 +29,7 @@ urlpatterns = [
     path('get_admin_settings/', views.get_admin_settings, name='get_admin_settings'),
     # 发送广播
     path('send_broadcast/', views.send_broadcast, name='send_broadcast'),
+    # 获取当前下注情况
+    path('get_current_bets/', views.get_current_bets, name='get_current_bets'),
 ]
 

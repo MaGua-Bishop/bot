@@ -2,7 +2,9 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.core.files.storage import default_storage
 from django.conf import settings
-from app.models import Message, User, generate_random_string, Admin, ChangeMoney
+
+from app import bot
+from app.models import Message, User, generate_random_string, Admin, ChangeMoney,BetRecord
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.views.decorators.http import require_POST, require_GET
@@ -15,8 +17,17 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from app.consumers import ChatConsumer
 from app.bot import ChatBot
+from django.contrib.auth.decorators import login_required
+from asgiref.sync import sync_to_async
+from django.db.models import F
+from channels.db import database_sync_to_async
+from functools import partial
+from django.utils import timezone
+from datetime import timedelta
+from app.models import LotteryRecord, BetRecord
 
-
+# 创建一个异步的JsonResponse
+async_json_response = sync_to_async(JsonResponse)
 
 def page_not_found(request, exception):
     return render(request, '404.html')
@@ -108,7 +119,7 @@ def save_message(request):
                 file_type=data.get('file_type')
             )
 
-            # 返回完整的消息数据，包含用户名
+            # 返回完整的消息数，包含用户名
             return JsonResponse({
                 'status': 'success',
                 'message': {
@@ -139,7 +150,7 @@ def create_user(request):
                 'message': '昵称不能为空'
             }, status=400)
 
-        # 获取当前管理员
+        # 获当前管理员
         admin = request.user
         admin_user = Admin.objects.get(username=admin.username)
 
@@ -539,3 +550,58 @@ def send_broadcast(request):
             'status': 'error',
             'message': str(e)
         }, status=500)
+
+
+@login_required
+@require_GET
+def get_current_bets(request):
+    """获取当前期下注记录"""
+    try:
+        # 获取当前管理员用户名
+        admin_username = request.user.username
+
+        # 获取当前时间
+        now = timezone.now()
+        # 计算5分钟前的时间
+        five_minutes_ago = now - timedelta(minutes=5)
+
+        # 查找最新的可下注期号（状态为0且创建时间在5分钟内）
+        record = (LotteryRecord.objects
+                 .filter(status=0)
+                 .filter(created_at__gte=five_minutes_ago)  # 创建时间不早于5分钟前
+                 .order_by('-issue')
+                 .first())
+
+        if not record:
+            return JsonResponse({
+                'status': 'error',
+                'message': '无法获取当前期号'
+            })
+
+        # 获取下注记录
+        bets = list(BetRecord.objects.filter(
+            issue=record.issue,
+            admin_username=admin_username,
+            status=0
+        ).values('user_name', 'bet_type', 'amount').order_by('-id'))
+
+        # 格式化金额
+        formatted_bets = [{
+            'user_name': bet['user_name'],  # 使用user_name作为显示名称
+            'bet_type': bet['bet_type'],
+            'amount': float(bet['amount'])
+        } for bet in bets]
+
+        return JsonResponse({
+            'status': 'success',
+            'issue': record.issue,
+            'bets': formatted_bets
+        })
+
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())  # 打印完整错误堆栈
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        })

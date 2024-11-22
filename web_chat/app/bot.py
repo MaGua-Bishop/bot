@@ -175,10 +175,15 @@ class ChatBot:
     @database_sync_to_async
     def create_bet_record(self, user_id, admin_username, issue, bet_type, amount):
         """创建下注记录"""
-        from app.models import BetRecord
+        from app.models import BetRecord, User
         try:
+            # 获取用户名
+            user = User.objects.get(id=user_id)
+            user_name = user.user  # 获取用户名
+
             bet_record = BetRecord(
                 user_id=user_id,
+                user_name=user_name,  # 添加用户名
                 admin_username=admin_username,
                 issue=issue,
                 bet_type=bet_type,
@@ -186,8 +191,11 @@ class ChatBot:
                 status=0
             )
             bet_record.save()
-            logger.info(f"创建下注记录成功: {user_id} - {admin_username} - {issue} - {bet_type} - {amount}")
+            logger.info(f"创建下注记录成功: {user_name}({user_id}) - {admin_username} - {issue} - {bet_type} - {amount}")
             return True
+        except User.DoesNotExist:
+            logger.error(f"用户 {user_id} 不存在")
+            return False
         except Exception as e:
             logger.error(f"创建下注记录时出错: {str(e)}")
             return False

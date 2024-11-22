@@ -166,6 +166,7 @@ class LotteryRecord(models.Model):
 
 class BetRecord(models.Model):
     user_id = models.CharField(max_length=100)
+    user_name = models.CharField(max_length=255, verbose_name="用户名", default='Unknown')
     admin_username = models.CharField(max_length=100)
     issue = models.CharField(max_length=20)
     bet_type = models.CharField(max_length=20)

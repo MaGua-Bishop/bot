@@ -9,13 +9,14 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 from decimal import Decimal
 from django.db import transaction
+from django.db.models import F
 
 # 设置 Django 环境
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bot_data.settings')
 django.setup()
 
 from app.bot import ChatBot
-from app.models import LotteryRecord, BetRecord, User
+from app.models import LotteryRecord, BetRecord, User, ChangeMoney, Admin
 
 logger = logging.getLogger(__name__)
 
@@ -346,7 +347,7 @@ class LotteryMonitor:
                 logger.info(f"查询条件 - 状态: 0")
                 logger.info(f"找到 {bet_records.count()} 条待处理的下注记录")
 
-                # 如果没有找到记录，检查是否有任何下注记录（不考虑状态）
+                # 如果没有找到记录检查是否有任何下注记录（不考虑状态）
                 all_records = BetRecord.objects.filter(issue=lottery_record.issue)
                 logger.info(f"该期总共有 {all_records.count()} 条下注记录")
                 logger.info(
@@ -381,16 +382,26 @@ class LotteryMonitor:
                     bet.status = 1  # 已结算
                     bet.win = win
                     if win:
-                        bet.win_amount = bet.amount * Decimal('1.95')
+                        # 获取对应管理员的赔率设置并计算中奖金额
+                        admin = Admin.objects.get(username=bet.admin_username)
+                        bet.win_amount = bet.amount * admin.odds  # 直接使用odds值
+                        logger.info(f"中奖计算 - 管理员: {bet.admin_username}, 赔率: {admin.odds}, 下注金额: {bet.amount}, 中奖金额: {bet.win_amount}")
+
                         try:
                             user = User.objects.select_for_update().get(id=bet.user_id)
-                            user.money += bet.win_amount
-                            user.save()
-                            logger.info(f"用户 {bet.user_id} 余额已更新，中奖金额: {bet.win_amount}")
+                            User.objects.filter(id=bet.user_id).update(money=F('money') + bet.win_amount)
+                            ChangeMoney.objects.create(
+                                user_id=bet.user_id,
+                                last_money=user.money,  # 使用更新前的余额
+                                money=bet.win_amount,  # 中奖金额
+                                now_money=user.money + bet.win_amount,  # 更新后的余额
+                                change_type='中奖增加'
+                            )
+                            logger.info(f"用户 {bet.user_id} 余额已更新 - 原余额: {user.money}, 中奖金额: {bet.win_amount}, 新余额: {user.money + bet.win_amount}")
 
                             # 将中奖消息添加到对应聊天室的列表中
                             win_message = (
-                                f"🎊 用户{bet.user_id} 中奖\n"
+                                f"🎊 用户{bet.user_name} 中奖\n"
                                 # f"玩法: {bet.bet_type}\n"
                                 # f"下注金额: {bet.amount:.2f}\n"
                                 f"中奖金额: {bet.win_amount:.2f}"

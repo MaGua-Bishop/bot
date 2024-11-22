@@ -113,14 +113,14 @@
             padding: 2px 5px;
             border-radius: 3px;
         }
-        
+
         .tou-type-label:hover {
             background-color: #f0f0f0;
         }
 
         /* 返水输入框样式 */
         .rebate-input {
-            width: 50px !important; 
+            width: 50px !important;
             text-align: center;
         }
 
@@ -130,7 +130,7 @@
             text-align: left;
         }
 
-       
+
         @media screen and (max-width: 1024px) {
             .rebate-input {
                 width: 40px !important;
@@ -273,14 +273,14 @@
                 max-width: 1000px !important;
             }
 
-   
+
             .panel > div:first-child {
                 height: 14.2vh !important;
                 min-height: 80px;
                 border: 1px solid #000;
             }
 
-         
+
             .betting-list {
                 height: calc(74vh - 25px) !important;
                 border: 1px solid #000;
@@ -365,7 +365,7 @@
                 border: 1px solid #000;
             }
 
- 
+
             @media screen and (min-height: 1080px) {
                 .outer-container {
                     max-width: 1400px !important;
@@ -543,11 +543,13 @@
                     微信登录暂不可用
                 </div>
                 <div>
-                    <div>下注榜: 31199721 期(普0,托7700)</div>
+                    <div>下注榜: <span class="current-issue">等待开始</span> 期</div>
                     <div>
-                        <button class="btn-custom" style="width: 50px;"><span style="color: #b1b126;">普</span></button>
-                        <button class="btn-custom" style="width: 50px;">托</button>
-                        <div style="width: 100%; height: 410px; border: 1px solid #000;margin-top: 5px"></div>
+{#                        <button class="btn-custom" style="width: 50px;"><span style="color: #b1b126;">普</span></button>#}
+{#                        <button class="btn-custom" style="width: 50px;">托</button>#}
+                        <div class="betting-list" style="width: 100%; height: 410px; border: 1px solid #000; margin-top: 5px; overflow-y: auto; padding: 10px;">
+                            <!-- 下注记录将在这里动态显示 -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -652,7 +654,7 @@
             if (confirm('确定要删除该玩家吗？')) {
                 $.ajax({
                     type: 'POST',
-                  
+
                     url: "{% url 'app:delete_user' %}",
                     data: {
                         user_id: userId,
@@ -684,18 +686,18 @@
                     if (data.status === 'success') {
                         const userList = $('.user-list');
                         userList.empty();
-                        
+
                         if (data.users.length > 0) {
                             data.users.forEach(user => {
                                 let touTypeLabel = '';
                                 if (isTou) {
                                     touTypeLabel = `<span class="tou-type-label" onclick="toggleTouType(${user.id}, ${user.is_auto_tou}); event.stopPropagation();">[${user.is_auto_tou ? '自动' : '手动'}]</span>`;
                                 }
-                                
+
                                 userList.append(`
-                                    <div class="user-item" style="display: flex; justify-content: space-between; align-items: center; padding: 5px; border-bottom: 1px solid #eee; cursor: pointer;" 
-                                        data-id="${user.id}" 
-                                        data-nickname="${user.user}" 
+                                    <div class="user-item" style="display: flex; justify-content: space-between; align-items: center; padding: 5px; border-bottom: 1px solid #eee; cursor: pointer;"
+                                        data-id="${user.id}"
+                                        data-nickname="${user.user}"
                                         data-money="${user.money}"
                                         data-is-black="${user.is_black}"
                                         onclick="selectUser(this)">
@@ -707,7 +709,7 @@
                         } else {
                             userList.append('<div style="text-align: center; padding: 10px;">暂无玩家</div>');
                         }
-                        
+
                         $('.score-type-btn').removeClass('btn-active');
                         $(`.score-type-btn[data-type="${isTou ? 'tou' : 'normal'}"]`).addClass('btn-active');
                     }
@@ -799,33 +801,39 @@
                 $(this).val(formattedValue);
                 updateSetting('rebate', formattedValue);
             });
+
+            // 初始化时先执行一次
+            refreshBettingList();
+
+            // 每5秒刷新一次下注榜
+            setInterval(refreshBettingList, 5000);
         });
 
         // 刷新积分排序
         function refreshScoreList() {
 
             const activeBtnType = $('.score-type-btn.btn-active').data('type');
-      
+
             queryUsers(activeBtnType === 'tou');
         }
 
         // 选择用户
         function selectUser(element) {
-       
+
             $('.user-item').css('background-color', '');
-   
+
             $(element).css('background-color', '#f0f0f0');
-            
+
 
             const userId = $(element).data('id');
             const nickname = $(element).data('nickname');
             const money = $(element).data('money');
             const isBlack = $(element).data('is-black');
-            
-            $('.member-id').text(userId); 
-            $('.nickname-input').val(nickname); 
-            $('.money-display').text(money);  
-            
+
+            $('.member-id').text(userId);
+            $('.nickname-input').val(nickname);
+            $('.money-display').text(money);
+
             const blockBtn = $('.block-btn');
             if (isBlack) {
                 blockBtn.text('取消拉黑').attr('onclick', 'unblockUser()');
@@ -841,13 +849,13 @@
                 alert('请先选择用户');
                 return;
             }
-            
+
             const newNickname = $('.nickname-input').val().trim();
             if (!newNickname) {
                 alert('昵称不能为空');
                 return;
             }
-            
+
             $.ajax({
                 type: 'POST',
                 url: "{% url 'app:change_nickname' %}",
@@ -859,7 +867,7 @@
                 success: function(data) {
                     if (data.status === 'success') {
                         alert('修改成功');
-                    
+
                         refreshScoreList();
                     } else {
                         alert('修改失败：' + data.message);
@@ -878,7 +886,7 @@
                 alert('请先选择用户');
                 return;
             }
-            
+
             if (confirm('确定要拉黑该用户吗？')) {
                 $.ajax({
                     type: 'POST',
@@ -890,11 +898,11 @@
                     success: function(data) {
                         if (data.status === 'success') {
                             alert('拉黑成功');
-                           
+
                             $('.block-btn').text('取消拉黑').attr('onclick', 'unblockUser()');
-                           
+
                             $('.user-item[data-id="' + userId + '"]').data('is-black', true);
-                          
+
                             refreshScoreList();
                         } else {
                             alert('拉黑失败：' + data.message);
@@ -914,7 +922,7 @@
                 alert('请先选择用户');
                 return;
             }
-            
+
             if (confirm('确定要取消拉黑该用户吗？')) {
                 $.ajax({
                     type: 'POST',
@@ -926,11 +934,11 @@
                     success: function(data) {
                         if (data.status === 'success') {
                             alert('取消拉黑成功');
-                           
+
                             $('.block-btn').text('拉黑').attr('onclick', 'blockUser()');
-                       
+
                             $('.user-item[data-id="' + userId + '"]').data('is-black', false);
-                  
+
                             refreshScoreList();
                         } else {
                             alert('取消拉黑失败：' + data.message);
@@ -950,13 +958,13 @@
                 alert('请先选择用户');
                 return;
             }
-            
+
             const scoreInput = $('.score-input').val().trim();
             if (!scoreInput || parseFloat(scoreInput) <= 0) {
                 alert('请输入有效的积分数值');
                 return;
             }
-            
+
             const action = isAdd ? '上分' : '下分';
             if (confirm(`确定要${action} ${scoreInput} 积分吗？`)) {
                 $.ajax({
@@ -965,7 +973,7 @@
                     data: {
                         user_id: userId,
                         score_change: scoreInput,
-                        is_add: isAdd, 
+                        is_add: isAdd,
                         csrfmiddlewaretoken: '{{ csrf_token }}'
                     },
                     success: function(data) {
@@ -992,9 +1000,9 @@
                 alert('请先选择用户');
                 return;
             }
-            
+
             $.ajax({
-                type: 'POST', 
+                type: 'POST',
                 url: "{% url 'app:admin_reset_link' %}",
                 data: {
                     user_id: userId,
@@ -1002,7 +1010,7 @@
                 },
                 success: function(data) {
                     if (data.code === 0) {
-   
+
                         const link = `${data.uid}`;
                         $('.link-textarea').val(link);
                         alert('链接已生成');
@@ -1046,7 +1054,7 @@
                         } else {
                             openBtn.text('开盘').removeClass('btn-active');
                         }
-                        
+
 
                         $('input[placeholder="100"]').val(parseFloat(data.data.odds).toFixed(2));
                         $('input[placeholder="60"]').val(data.data.close_seconds);
@@ -1079,7 +1087,92 @@
                 }
             });
         }
+
+        // 刷新下注榜函数
+        function refreshBettingList() {
+            $.ajax({
+                type: 'GET',
+                url: "{% url 'app:get_current_bets' %}",
+                success: function(data) {
+                    if (data.status === 'success') {
+                        // 更新期号显示
+                        $('.current-issue').text(data.issue);
+
+                        // 清空并重新填充下注列表
+                        const bettingList = $('.betting-list');
+                        bettingList.empty();
+
+                        // 如果有下注记录
+                        if (data.bets && data.bets.length > 0) {
+                            data.bets.forEach(bet => {
+                                const betItem = `
+                                    <div class="bet-item" style="padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">
+                                        <div>
+                                            <span style="margin-right: 15px; color: #666;">${bet.user_name}</span>
+                                            <span style="color: #333;">${bet.bet_type}</span>
+                                        </div>
+                                        <span style="color: #e4393c;">${bet.amount.toFixed(2)}</span>
+                                    </div>
+                                `;
+                                bettingList.append(betItem);
+                            });
+                        } else {
+                            bettingList.append('<div style="text-align: center; padding: 20px; color: #999;">暂无下注记录</div>');
+                        }
+                    } else {
+                        console.error('获取下注记录失败:', data.message);
+                        $('.betting-list').html('<div style="text-align: center; padding: 20px; color: #999;">获取数据失败，请稍后再试</div>');
+                    }
+                },
+                error: function(error) {
+                    console.error('获取下注记录失败:', error);
+                    $('.betting-list').html('<div style="text-align: center; padding: 20px; color: #999;">获取数据失败，请稍后再试</div>');
+                }
+            });
+        }
+
+        // 页面加载完成后启动定时刷新
+        $(document).ready(function() {
+            // 立即执行一次
+            refreshBettingList();
+
+            // 每5秒刷新一次
+            setInterval(refreshBettingList, 5000);
+        });
     </script>
+
+    <style>
+    .betting-list {
+        background-color: #fff;
+        box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    .bet-item {
+        transition: background-color 0.2s;
+    }
+
+    .bet-item:hover {
+        background-color: #f9f9f9;
+    }
+
+    /* 自定义滚动条样式 */
+    .betting-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .betting-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .betting-list::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+
+    .betting-list::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+    </style>
 
     </html>
 {% endblock %}
