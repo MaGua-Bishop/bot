@@ -25,6 +25,8 @@ from functools import partial
 from django.utils import timezone
 from datetime import timedelta
 from app.models import LotteryRecord, BetRecord
+from django.db.models import Sum, Case, When, DecimalField
+from decimal import Decimal
 
 # 创建一个异步的JsonResponse
 async_json_response = sync_to_async(JsonResponse)
@@ -528,7 +530,7 @@ def get_admin_settings(request):
 
 @require_POST
 def send_broadcast(request):
-    """发送广播消息"""
+    """发送广播"""
     try:
         data = json.loads(request.body)
         message = data.get('message')
@@ -601,6 +603,62 @@ def get_current_bets(request):
     except Exception as e:
         import traceback
         print(traceback.format_exc())  # 打印完整错误堆栈
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        })
+
+
+@login_required
+def change_money_records(request):
+    """查看积分变更记录"""
+    try:
+        admin_username = request.user.username
+        
+        # 获取日期参数，默认为今天
+        date_str = request.GET.get('date', timezone.now().strftime('%Y-%m-%d'))
+        selected_date = timezone.datetime.strptime(date_str, '%Y-%m-%d').date()
+
+        # 获取该管理员下的所有用户ID
+        user_ids = User.objects.filter(admin__username=admin_username).values_list('id', flat=True)
+        
+        # 获取这些用户的所有金额变更记录，过滤日期
+        records = ChangeMoney.objects.filter(
+            user_id__in=user_ids,
+            create_time__date=selected_date
+        ).select_related('user').order_by('-create_time')
+        
+        # 计算统计数据
+        stats = records.aggregate(
+            total_win = Sum(Case(
+                When(change_type='中奖增加', then='money'),
+                default=0,
+                output_field=DecimalField()
+            )),
+            total_bet = Sum(Case(
+                When(change_type='下注扣除', then=Decimal('-1.0') * F('money')),
+                default=0,
+                output_field=DecimalField()
+            ))
+        )
+        
+        # 计算总盈亏（下注总额 - 中奖总额）
+        total_profit = (stats['total_bet'] or Decimal('0.00')) - (stats['total_win'] or Decimal('0.00'))
+        
+        context = {
+            'records': records,
+            'admin_username': admin_username,
+            'stats': {
+                'total_win': stats['total_win'] or Decimal('0.00'),
+                'total_bet': stats['total_bet'] or Decimal('0.00'),
+                'total_profit': total_profit
+            },
+            'selected_date': selected_date
+        }
+        
+        return render(request, 'admin/change_money_records.html', context)
+        
+    except Exception as e:
         return JsonResponse({
             'status': 'error',
             'message': str(e)

@@ -579,7 +579,7 @@
                     <button class="btn-custom score-type-btn" data-type="tou" onclick="queryUsers(true)">托</button>
                     <button class="btn-custom" onclick="refreshScoreList()">刷新积分排序</button>
                     <!-- <button class="btn-custom" >报警</button> -->
-                    <span class="logout-btn">积分记录</span>
+                    <a href="{% url 'app:change_money_records' %}" class="logout-btn" target="_blank">积分记录</a>
                 </div>
                 <div style="display: flex; gap: 20px;margin-top: 5px;">
                     <div style="flex: 1;">
@@ -915,7 +915,7 @@
             }
         }
 
-        // 取消拉黑函数
+        // 取消拉黑函��
         function unblockUser() {
             const userId = $('.member-id').text();
             if (userId === '-') {

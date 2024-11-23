@@ -371,10 +371,10 @@ class LotteryMonitor:
                         win = True
                     elif bet.bet_type == '尾小' and lottery_record.last_big_small == 1:
                         win = True
-                    elif bet.bet_type == '1龙' and lottery_record.first_dragon_tiger == 0:
-                        win = True
-                    elif bet.bet_type == '1虎' and lottery_record.first_dragon_tiger == 1:
-                        win = True
+                    # elif bet.bet_type == '1龙' and lottery_record.first_dragon_tiger == 0:
+                    #     win = True
+                    # elif bet.bet_type == '1虎' and lottery_record.first_dragon_tiger == 1:
+                    #     win = True
 
                     logger.info(f"处理下注记录 ID: {bet.id}, 用户: {bet.user_id}, 类型: {bet.bet_type}, 中奖: {win}")
 

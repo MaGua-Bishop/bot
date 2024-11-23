@@ -31,5 +31,7 @@ urlpatterns = [
     path('send_broadcast/', views.send_broadcast, name='send_broadcast'),
     # 获取当前下注情况
     path('get_current_bets/', views.get_current_bets, name='get_current_bets'),
+    # 查看积分变更记录
+    path('change_money_records/', views.change_money_records, name='change_money_records'),
 ]
 
