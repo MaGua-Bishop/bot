@@ -10,6 +10,7 @@ from collections import defaultdict
 from decimal import Decimal
 from django.db import transaction
 from django.db.models import F
+from django.conf import settings
 
 # 设置 Django 环境
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bot_data.settings')
@@ -174,8 +175,16 @@ class LotteryMonitor:
                                 f"{record.get_third_dragon_tiger_display()} "
                                 f"{record.get_fourth_dragon_tiger_display()}"
                             )
-                            await self.bot.broadcast_message(draw_message)
-                            logger.info(f"开奖通知已发送: {current_draw_issue}")
+                            
+                            # 使用HTTP请求调用views中的send_broadcast
+                            response = requests.post(
+                                'http://localhost:8000/app/send_broadcast/',  # 修改为实际的URL
+                                json={'message': draw_message}
+                            )
+                            if response.status_code == 200:
+                                logger.info(f"开奖通知已发送: {current_draw_issue}")
+                            else:
+                                logger.error(f"发送开奖通知失败: {response.text}")
 
                             # 处理下注记录并发送中奖通知
                             messages_to_send = await self.process_bet_records(record)
@@ -183,8 +192,14 @@ class LotteryMonitor:
 
                             for room_id, message in messages_to_send:
                                 try:
-                                    await self.bot.broadcast_message(message, room_id)
-                                    logger.info(f"中奖通知已发送到聊天室 {room_id}")
+                                    response = requests.post(
+                                        'http://localhost:8000/app/send_broadcast/',  # 修改为实际的URL
+                                        json={'message': message, 'room_id': room_id}
+                                    )
+                                    if response.status_code == 200:
+                                        logger.info(f"中奖通知已发送到聊天室 {room_id}")
+                                    else:
+                                        logger.error(f"发送中奖通知到聊天室 {room_id} 失败: {response.text}")
                                 except Exception as e:
                                     logger.error(f"发送消息到聊天室 {room_id} 时出错: {str(e)}")
 
@@ -210,7 +225,14 @@ class LotteryMonitor:
                             f"期号: {self.current_betting_issue}\n"
                             f"本期已停止下注，请等待开奖"
                         )
-                        await self.bot.broadcast_message(stop_message)
+                        response = requests.post(
+                            'http://localhost:8000/app/send_broadcast/',  # 修改为实际的URL
+                            json={'message': stop_message}
+                        )
+                        if response.status_code == 200:
+                            logger.info("停止下注通知已发送")
+                        else:
+                            logger.error(f"发送停止下注通知失败: {response.text}")
 
                         # 更新当前期号状态为停止下注(1)
                         current_record = await self.get_record_by_issue(self.current_betting_issue)
@@ -255,7 +277,16 @@ class LotteryMonitor:
                     # f"开奖时间: {next_draw_time}\n"
                     f"请各位玩家下注"
                 )
-                await self.bot.broadcast_message(next_message)
+
+                # 使用HTTP请求调用views中的send_broadcast
+                response = requests.post(
+                    'http://localhost:8000/app/send_broadcast/',  # 修改为实际的URL
+                    json={'message': next_message}
+                )
+                if response.status_code == 200:
+                    logger.info(f"下一期通知已发送: {next_draw_issue}")
+                else:
+                    logger.error(f"发送下一期通知失败: {response.text}")
 
                 # 更新当前可下注期号
                 self.current_betting_issue = next_draw_issue

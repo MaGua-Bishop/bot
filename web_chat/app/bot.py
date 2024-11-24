@@ -68,6 +68,15 @@ class ChatBot:
                 logger.warning("未找到当前可下注期号")
                 return
 
+            # 检查管理员是否开盘
+            admin_is_open = await self.check_admin_open_status(room_id)
+            if not admin_is_open:
+                await self.send_response(room_id, "❌ 当前未开盘，无法下注", consumer)
+                return
+
+            # 获取管理员的最大下注金额
+            max_bet_amount = await self.get_admin_max_bet_amount(room_id)
+
             # 检查是否是下注指令
             bet_info = self.parse_bet_command(message)
             if bet_info:
@@ -75,6 +84,11 @@ class ChatBot:
 
                 if amount <= 0:
                     logger.warning(f"下注金额必须大于0: {amount}")
+                    return
+
+                # 检查下注金额是否超过最大下注金额
+                if amount > max_bet_amount:
+                    await self.send_response(room_id, f"❌ 下注金额超过最大限制\n最大下注金额: {max_bet_amount:.2f}", consumer)
                     return
 
                 # 检查用户余额
@@ -362,3 +376,31 @@ class ChatBot:
         except Exception as e:
             logger.error(f"扣除用户余额时出错: {str(e)}")
             return False
+
+    @database_sync_to_async
+    def check_admin_open_status(self, admin_username: str) -> bool:
+        """检查管理员是否开盘"""
+        from app.models import Admin
+        try:
+            admin = Admin.objects.get(username=admin_username)
+            return admin.is_open
+        except Admin.DoesNotExist:
+            logger.error(f"管理员 {admin_username} 不存在")
+            return False
+        except Exception as e:
+            logger.error(f"检查管理员开盘状态时出错: {str(e)}")
+            return False
+
+    @database_sync_to_async
+    def get_admin_max_bet_amount(self, admin_username: str) -> Decimal:
+        """获取管理员的最大下注金额"""
+        from app.models import Admin
+        try:
+            admin = Admin.objects.get(username=admin_username)
+            return admin.max_bet_amount
+        except Admin.DoesNotExist:
+            logger.error(f"管理员 {admin_username} 不存在")
+            return Decimal('0')
+        except Exception as e:
+            logger.error(f"获取管理员最大下注金额时出错: {str(e)}")
+            return Decimal('0')

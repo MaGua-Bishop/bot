@@ -92,6 +92,7 @@ class Admin(AbstractUser):
     total_score = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
     close_seconds = models.IntegerField(default=60)
     rebate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0'))
+    max_bet_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
 
     # 设置必需字段
     REQUIRED_FIELDS = []  # username 和 password 已经是必需的了

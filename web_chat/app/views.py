@@ -477,6 +477,8 @@ def update_admin_settings(request):
                     'message': '返水比例必须在0-100之间'
                 }, status=400)
             admin.rebate = rebate
+        elif setting_type == 'max_bet_amount':
+            admin.max_bet_amount = Decimal(value)
         else:
             return JsonResponse({
                 'status': 'error',
@@ -493,6 +495,7 @@ def update_admin_settings(request):
                 'close_seconds': admin.close_seconds,
                 'rebate': str(admin.rebate),
                 'total_score': str(admin.total_score)
+                , 'max_bet_amount': str(admin.max_bet_amount)
             }
         })
     except Exception as e:
@@ -514,6 +517,7 @@ def get_admin_settings(request):
                 'total_score': format(admin.total_score, '.2f'),
                 'close_seconds': admin.close_seconds,
                 'rebate': format(admin.rebate, '.2f')  # 格式化为两位小数
+                , 'max_bet_amount': format(admin.max_bet_amount, '.2f')
             }
         })
     except Admin.DoesNotExist:
@@ -534,6 +538,8 @@ def send_broadcast(request):
     try:
         data = json.loads(request.body)
         message = data.get('message')
+        room_id = data.get('room_id')  # 获取可选的room_id参数
+
         if not message:
             return JsonResponse({
                 'status': 'error',
@@ -541,7 +547,13 @@ def send_broadcast(request):
             }, status=400)
 
         bot = ChatBot()
-        async_to_sync(bot.broadcast_message)(message)
+
+        if room_id:
+            # 如果指定了room_id，则只发送到该聊天室
+            async_to_sync(bot.broadcast_message)(message, room_id)
+        else:
+            # 否则发送到所有聊天室
+            async_to_sync(bot.broadcast_message)(message)
 
         return JsonResponse({
             'status': 'success',
@@ -614,20 +626,20 @@ def change_money_records(request):
     """查看积分变更记录"""
     try:
         admin_username = request.user.username
-        
+
         # 获取日期参数，默认为今天
         date_str = request.GET.get('date', timezone.now().strftime('%Y-%m-%d'))
         selected_date = timezone.datetime.strptime(date_str, '%Y-%m-%d').date()
 
         # 获取该管理员下的所有用户ID
         user_ids = User.objects.filter(admin__username=admin_username).values_list('id', flat=True)
-        
+
         # 获取这些用户的所有金额变更记录，过滤日期
         records = ChangeMoney.objects.filter(
             user_id__in=user_ids,
             create_time__date=selected_date
         ).select_related('user').order_by('-create_time')
-        
+
         # 计算统计数据
         stats = records.aggregate(
             total_win = Sum(Case(
@@ -641,10 +653,10 @@ def change_money_records(request):
                 output_field=DecimalField()
             ))
         )
-        
+
         # 计算总盈亏（下注总额 - 中奖总额）
         total_profit = (stats['total_bet'] or Decimal('0.00')) - (stats['total_win'] or Decimal('0.00'))
-        
+
         context = {
             'records': records,
             'admin_username': admin_username,
@@ -655,9 +667,9 @@ def change_money_records(request):
             },
             'selected_date': selected_date
         }
-        
+
         return render(request, 'admin/change_money_records.html', context)
-        
+
     except Exception as e:
         return JsonResponse({
             'status': 'error',

@@ -559,18 +559,24 @@
                 <div>
                     <span style="font-size: 15px;font-weight: 900;">当前状态:</span>
                     <button class="btn-custom">开盘</button>
-                    赔率: <input type="text" class="input-custom" placeholder="100"> <span
-                        class="logout-btn">1赔x</span>
-                    积分: {{ 积分 }}
+                    赔率: <input type="text" class="input-custom" placeholder="100">
+                    
+{#                    <span#}
+{#                        class="logout-btn">1赔x</span>#}
+{#                    积分: {{ 积分 }}#}
                 </div>
-                <div style="border-top: 1px solid #000; padding-top: 5px;">
-                    （预留封盘: <span>5</span>分盘<input type="text" class="input-custom" placeholder="60">秒）
-                    （返水: <input type="text" class="input-custom rebate-input" placeholder="0">）
-                </div>
-                <div style="border-top: 1px solid #000; padding-top: 5px;">
-                    <div class="text-red">上下分确认: 声音1</div>
-                    <div style="border: 1px solid #000;width: 100%;height: 100px;"></div>
-                </div>
+                <div>
+    <label for="max-bet-amount">最大下注金额:</label>
+    <input type="text" id="max-bet-amount" class="input-custom" placeholder="0" style="width: 120px !important;">
+</div>
+{#                <div style="border-top: 1px solid #000; padding-top: 5px;">#}
+{#                    （预留封盘: <span>5</span>分盘<input type="text" class="input-custom" placeholder="60">秒）#}
+{#                    （返水: <input type="text" class="input-custom rebate-input" placeholder="0">）#}
+{#                </div>#}
+{#                <div style="border-top: 1px solid #000; padding-top: 5px;">#}
+{#                    <div class="text-red">上下分确认: 声音1</div>#}
+{#                    <div style="border: 1px solid #000;width: 100%;height: 100px;"></div>#}
+{#                </div>#}
                 <div style="margin-top: 5px;margin-left: 20px;">
                     <span>积分榜：</span>
                     <button class="btn-custom score-type-btn" data-type="normal" onclick="queryUsers(false)">
@@ -1060,6 +1066,9 @@
                         $('input[placeholder="60"]').val(data.data.close_seconds);
                         $('.rebate-input').val(parseFloat(data.data.rebate).toFixed(2));
                         $('.total-score').text(parseFloat(data.data.total_score).toFixed(2));
+                        $('#max-bet-amount').val(parseFloat(data.data.max_bet_amount).toFixed(2));
+
+                        
                     }
                 }
             });
@@ -1139,6 +1148,19 @@
             // 每5秒刷新一次
             setInterval(refreshBettingList, 5000);
         });
+        
+        $('#max-bet-amount').change(function() {
+    const value = $(this).val();
+    // 验证是否为有效数字且最多两位小数
+    if (!/^\d+(\.\d{0,2})?$/.test(value)) {
+        alert('请输入有效数字，最多支持两位小数');
+        loadAdminSettings();
+        return;
+    }
+    const formattedValue = parseFloat(value).toFixed(2);
+    $(this).val(formattedValue);
+    updateSetting('max_bet_amount', formattedValue);
+});
     </script>
 
     <style>
