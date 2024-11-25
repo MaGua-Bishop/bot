@@ -94,6 +94,23 @@ class Admin(AbstractUser):
     rebate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0'))
     max_bet_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
 
+    # 新增字段
+    single_bet_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="特指令单场限额")
+    normal_single_player_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="普通指令单场单玩家限额")
+    single_order_max_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="单场注单最大限额")
+    positive_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="正单注限额")
+    corner_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="角单注限额")
+    single_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="念单注限额")
+    common_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="通单注限额")
+    vehicle_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="车单注限额")
+    special_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="特单注限额")
+    single_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="单单注限额")
+    double_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="双单注限额")
+    large_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="大单注限额")
+    small_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="小单注限额")
+    fan_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="番单注限额")
+    add_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="加单注限额")
+
     # 设置必需字段
     REQUIRED_FIELDS = []  # username 和 password 已经是必需的了
 

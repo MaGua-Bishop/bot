@@ -12,8 +12,12 @@ from django.views.generic import TemplateView
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
 from django.db import models
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django import forms
 
 from app import models as app_models
+from app.models import Admin
 
 
 # 自定义 AdminSite
@@ -200,7 +204,7 @@ class AdminForm(ModelForm):
 
 class AdminModelAdmin(admin.ModelAdmin):
     form = AdminForm  # 使用自定义表单
-    list_display = ['username', 'operate', 'available_time', 'status']
+    list_display = ['username', 'operate', 'available_time', 'status', 'update']
     list_display_links = ('username',)
     list_filter = ("username", "is_superuser")
 
@@ -215,12 +219,33 @@ class AdminModelAdmin(admin.ModelAdmin):
         else:
             return mark_safe('<span style="color: green;">正常</span>')
 
-    def get_model_perms(self, request):
-        """
-        果不是超级管理员，返回空权限字典，这样菜单就不会显示
-        """
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        # 如果不是超级管理员，只显示自己关联的用户数据
         if not request.user.is_superuser:
-            return {}
+            qs = qs.filter(username=request.user.username)
+        return qs
+
+    def has_view_permission(self, request, obj=None):
+        # 所有用户都可以查看记录
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        # 所有用户都可以修改记录
+        return True
+
+    def has_delete_permission(self, request, obj=None):
+        # 只有超级管理员可以删除用户
+        return request.user.is_superuser
+
+    def has_add_permission(self, request):
+        # 只有超级管理员可以添加用户
+        return request.user.is_superuser
+
+    def has_module_permission(self, request):
+        return True  # 所有用户都可以访问该模块
+
+    def get_model_perms(self, request):
         return super().get_model_perms(request)
 
     def get_fieldsets(self, request, obj=None):
@@ -269,7 +294,40 @@ class AdminModelAdmin(admin.ModelAdmin):
         else:
             btn = f"""<button 
                 class="el-button el-button--info el-button--small" style="background-color: #909399">代理</button>"""
-        return mark_safe(f"<div>{btn}</div>")
+        return mark_safe(f"<div>{btn}</div>") \
+
+    @admin.display(description='操作', ordering='update')
+    def update(self, obj):
+        # 生成更新链接
+        return mark_safe(f'<a href="{self.get_update_url(obj)}">查看和编辑限额</a>')
+
+    def get_update_url(self, obj):
+        return f"/admin/app/admin/{obj.pk}/update/"
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('<int:pk>/update/', self.admin_site.admin_view(self.update_view), name='admin_update'),
+        ]
+        return custom_urls + urls
+
+    def update_view(self, request, pk):
+        admin_instance = self.get_object(request, pk)
+        if request.method == 'POST':
+            form = AdminUpdateForm(request.POST, instance=admin_instance)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "更新成功！")
+                return redirect('/admin/app/admin/')  # 重定向到列表页
+        else:
+            form = AdminUpdateForm(instance=admin_instance)
+
+        context = {
+            'form': form,
+            'admin_instance': admin_instance,
+            'opts': self.model._meta,
+        }
+        return render(request, 'admin/update_admin.html', context)
 
     def save_model(self, request, obj, form, change):
         # 如果是超级管理员，清空available_time
@@ -284,6 +342,14 @@ class AdminModelAdmin(admin.ModelAdmin):
     def has_module_permission(self, request):
         # 允许超级管理员和代理用户看到代理中心菜单
         return request.user.is_superuser or not request.user.is_superuser
+
+    def has_add_permission(self, request):
+        """只有超级管理员可以添加用户"""
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        """只有超级管理员可以删除用户"""
+        return request.user.is_superuser
 
 
 # 注册模型
@@ -334,3 +400,25 @@ class ChatControllerAdmin(admin.ModelAdmin):
 
 # 注册到admin站点，使用从models导入的ChatController
 custom_admin_site.register(app_models.ChatController, ChatControllerAdmin)
+
+class AdminUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Admin
+        fields = [
+            'single_bet_limit',
+            'normal_single_player_limit',
+            'single_order_max_limit',
+            'positive_order_limit',
+            'corner_order_limit',
+            'single_order_limit',  # 修改为正确的字段名
+            'common_order_limit',
+            'vehicle_order_limit',
+            'special_order_limit',
+            'single_order_limit',  # 确保字段名正确
+            'double_order_limit',
+            'large_order_limit',
+            'small_order_limit',
+            'fan_order_limit',
+            'add_order_limit',
+        ]
+
