@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.core.files.storage import default_storage
 from django.conf import settings
 
-from app import bot
+from app import bot, models
 from app.models import Message, User, generate_random_string, Admin, ChangeMoney,BetRecord
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -576,32 +576,47 @@ def get_current_bets(request):
 
         # 获取当前时间
         now = timezone.now()
-        # 计算5分钟前的时间
         five_minutes_ago = now - timedelta(minutes=5)
 
-        # 查找最新的可下注期号（状态为0且创建时间在5分钟内）
+        # 查找最新的可下注期号
         record = (LotteryRecord.objects
-                 .filter(status=0)
-                 .filter(created_at__gte=five_minutes_ago)  # 创建时间不早于5分钟前
-                 .order_by('-issue')
-                 .first())
+                  .filter(status=0)
+                  .filter(created_at__gte=five_minutes_ago)
+                  .order_by('-issue')
+                  .first())
 
         if not record:
-            return JsonResponse({
-                'status': 'error',
-                'message': '无法获取当前期号'
-            })
+            return JsonResponse({'status': 'error', 'message': '无法获取当前期号'})
 
-        # 获取下注记录
+        # 获取 is_tou 参数
+        is_tou = request.GET.get('is_tou', 'false').lower() == 'true'
+
+        # 根据 is_tou 参数获取下注记录
         bets = list(BetRecord.objects.filter(
             issue=record.issue,
             admin_username=admin_username,
             status=0
-        ).values('user_name', 'bet_type', 'amount').order_by('-id'))
+        ).filter(user_id__in=User.objects.filter(is_tou=is_tou).values_list('id', flat=True))
+        .values('user_name', 'bet_type', 'amount').order_by('-id'))
+
+        # 统计总下注金额
+        total_bet_normal = BetRecord.objects.filter(
+            issue=record.issue,
+            admin_username=admin_username,
+            status=0,
+            user_id__in=User.objects.filter(is_tou=False).values_list('id', flat=True)
+        ).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
+
+        total_bet_tou = BetRecord.objects.filter(
+            issue=record.issue,
+            admin_username=admin_username,
+            status=0,
+            user_id__in=User.objects.filter(is_tou=True).values_list('id', flat=True)
+        ).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
 
         # 格式化金额
         formatted_bets = [{
-            'user_name': bet['user_name'],  # 使用user_name作为显示名称
+            'user_name': bet['user_name'],
             'bet_type': bet['bet_type'],
             'amount': float(bet['amount'])
         } for bet in bets]
@@ -609,16 +624,15 @@ def get_current_bets(request):
         return JsonResponse({
             'status': 'success',
             'issue': record.issue,
-            'bets': formatted_bets
+            'bets': formatted_bets,
+            'total_bet_normal': float(total_bet_normal),
+            'total_bet_tou': float(total_bet_tou)
         })
 
     except Exception as e:
         import traceback
-        print(traceback.format_exc())  # 打印完整错误堆栈
-        return JsonResponse({
-            'status': 'error',
-            'message': str(e)
-        })
+        print(traceback.format_exc())
+        return JsonResponse({'status': 'error', 'message': str(e)})
 
 
 @login_required
