@@ -15,7 +15,7 @@ def generate_random_string(length=18):
 
 class User(models.Model):
     user = models.CharField(max_length=255, verbose_name="用户名")
-    money = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    money = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), verbose_name="余额")
     uid = models.CharField(max_length=255, verbose_name="uid", default=generate_random_string)
     admin = models.ForeignKey('Admin', on_delete=models.SET_NULL, null=True, verbose_name="创建人")
     is_black = models.BooleanField(default=False, verbose_name="是否拉黑")
@@ -58,7 +58,7 @@ class ChangeMoney(models.Model):
         ('中奖增加', '中奖增加')
     ]
 
-    user = models.ForeignKey("User", on_delete=models.CASCADE)
+    user = models.ForeignKey("User", on_delete=models.CASCADE,verbose_name="用户")
     last_money = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), verbose_name="原金额")
     money = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), verbose_name="变更金额")
     now_money = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), verbose_name="现金额")
@@ -86,7 +86,7 @@ class Message(models.Model):
 class Admin(AbstractUser):
     # 继承了 AbstractUser 的字段：username, password, is_superuser, is_staff 等
 
-    available_time = models.DateTimeField(null=True, blank=True)
+    available_time = models.DateTimeField(null=True, blank=True, verbose_name="可用时间")
     is_open = models.BooleanField(default=False)
     odds = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('100'))
     total_score = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))

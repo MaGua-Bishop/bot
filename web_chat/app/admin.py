@@ -282,8 +282,8 @@ class AdminModelAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
     def has_module_permission(self, request):
-        # 只有超级管理员可以看到代理中心菜单
-        return request.user.is_superuser
+        # 允许超级管理员和代理用户看到代理中心菜单
+        return request.user.is_superuser or not request.user.is_superuser
 
 
 # 注册模型

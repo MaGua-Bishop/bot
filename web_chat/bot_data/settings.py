@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-058bg2-lbs+(@as193k74bn_0u0s)imz-9wz#5qs1$t*1h#86@
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
-HOST = "https://ffc1-119-39-51-90.ngrok-free.app"
+HOST = "https://4453-119-39-51-90.ngrok-free.app"
 
 # Application definition
 
@@ -55,7 +55,7 @@ CHANNEL_LAYERS = {
     },
 }
 CSRF_TRUSTED_ORIGINS = [
-    "https://ffc1-119-39-51-90.ngrok-free.app",
+    "https://4453-119-39-51-90.ngrok-free.app",
 ]
 
 MIDDLEWARE = [
@@ -148,7 +148,7 @@ SIMPLEUI_CONFIG = {
     'system_keep': False,
 
     # 用于菜单排序和过滤, 不填此字段为默认排序和全部显示。空列表[] 为全部不显示.
-    'menu_display': ['用户中心', '代理中心', '聊天控制器'],
+    'menu_display': ['用户中心', '账号中心', '聊天控制器'],
 
     # 设置是否开启动态菜单, 默认为False. 如果开启, 则会在每次用户登陆时刷新展示菜单内容。
     # 一般建议关闭。
@@ -170,11 +170,11 @@ SIMPLEUI_CONFIG = {
             ]
         },
         {
-            'name': '代理中心',
+            'name': '账号中心',
             'icon': 'fa fa-users',
             'models': [
                 {
-                    'name': '代理用户',
+                    'name': '账号信息',
                     'url': '/admin/app/admin/',
                 }
             ]

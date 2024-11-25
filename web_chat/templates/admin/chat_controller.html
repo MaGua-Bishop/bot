@@ -543,10 +543,10 @@
                     微信登录暂不可用
                 </div>
                 <div>
-                    <div>下注榜: <span class="current-issue">等待开始</span> 期</div>
+                    <div>下注榜: <span class="current-issue">等待开始</span> 期(普:0,托:0)</div>
                     <div>
-{#                        <button class="btn-custom" style="width: 50px;"><span style="color: #b1b126;">普</span></button>#}
-{#                        <button class="btn-custom" style="width: 50px;">托</button>#}
+                        <button class="btn-custom" style="width: 50px;"><span style="color: #b1b126;">普</span></button>
+                        <button class="btn-custom" style="width: 50px;">托</button>
                         <div class="betting-list" style="width: 100%; height: 410px; border: 1px solid #000; margin-top: 5px; overflow-y: auto; padding: 10px;">
                             <!-- 下注记录将在这里动态显示 -->
                         </div>
@@ -565,10 +565,6 @@
 {#                        class="logout-btn">1赔x</span>#}
 {#                    积分: {{ 积分 }}#}
                 </div>
-                <div>
-    <label for="max-bet-amount">最大下注金额:</label>
-    <input type="text" id="max-bet-amount" class="input-custom" placeholder="0" style="width: 120px !important;">
-</div>
 {#                <div style="border-top: 1px solid #000; padding-top: 5px;">#}
 {#                    （预留封盘: <span>5</span>分盘<input type="text" class="input-custom" placeholder="60">秒）#}
 {#                    （返水: <input type="text" class="input-custom rebate-input" placeholder="0">）#}
@@ -707,7 +703,8 @@
                                         data-money="${user.money}"
                                         data-is-black="${user.is_black}"
                                         onclick="selectUser(this)">
-                                        <span>${touTypeLabel}@${user.id}.${user.user}： ${user.money}</span>
+{#${touTypeLabel}#}
+                                        <span>@${user.id}.${user.user}： ${user.money}</span>
                                         <button class="btn-custom text-red" onclick="deleteUser('${user.id}'); event.stopPropagation();">删除</button>
                                     </div>
                                 `);
@@ -1066,8 +1063,6 @@
                         $('input[placeholder="60"]').val(data.data.close_seconds);
                         $('.rebate-input').val(parseFloat(data.data.rebate).toFixed(2));
                         $('.total-score').text(parseFloat(data.data.total_score).toFixed(2));
-                        $('#max-bet-amount').val(parseFloat(data.data.max_bet_amount).toFixed(2));
-
                         
                     }
                 }
@@ -1148,19 +1143,6 @@
             // 每5秒刷新一次
             setInterval(refreshBettingList, 5000);
         });
-        
-        $('#max-bet-amount').change(function() {
-    const value = $(this).val();
-    // 验证是否为有效数字且最多两位小数
-    if (!/^\d+(\.\d{0,2})?$/.test(value)) {
-        alert('请输入有效数字，最多支持两位小数');
-        loadAdminSettings();
-        return;
-    }
-    const formattedValue = parseFloat(value).toFixed(2);
-    $(this).val(formattedValue);
-    updateSetting('max_bet_amount', formattedValue);
-});
     </script>
 
     <style>
