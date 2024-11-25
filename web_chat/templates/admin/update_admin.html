@@ -1,0 +1,11 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<h1>编辑 {{ admin_instance.username }}</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="button">保存</button>
+</form>
+<a href="{% url 'admin:app_admin_changelist' %}">返回列表</a>
+{% endblock %}
