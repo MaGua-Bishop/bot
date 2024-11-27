@@ -7,13 +7,19 @@ from django.conf import settings
 
 commands = [
     types.BotCommand("start", "启动机器人"),
-    types.BotCommand("create_message", "创建定时发送消息"),
-    types.BotCommand("query_message", "查看定时发送消息"),
+    types.BotCommand("create_message", "创建定时消息"),
+    types.BotCommand("query_message", "查看定时消息"),
     types.BotCommand("query_group", "查看推送的群聊|频道"),
-    types.BotCommand("send", "发送"),
     types.BotCommand("help", "帮助")
 ]
 bot.set_my_commands(commands, scope=types.BotCommandScopeAllPrivateChats())
+
+
+@bot.message_handler(commands=['help'], func=lambda message: message.chat.type == 'private')
+def help_message(message):
+    bot.send_message(message.chat.id,
+                     "<b>使用方法</b>\n\n先把机器人拉到群聊或频道\n再创建定时消息\n会根据定时的消息自动发送\n⚠️️注意频道拉入机器人必须给<b>发送信息权限</b>，否则无法自动发送\n\n<b>使用命令</b>\n\n/create_message - 创建定时消息\n/query_message - 查看定时消息\n/query_group - 查看推送的群聊|频道",
+                     parse_mode="html")
 
 
 @bot.message_handler(commands=['send'], func=lambda message: message.chat.type == 'private')
@@ -28,10 +34,8 @@ def get_start(message):
 def get_start(message):
     markup = types.InlineKeyboardMarkup()
     markup.add(types.InlineKeyboardButton("邀请进群聊", url="https://t.me/" + settings.TG_BOT_NAME + "?startgroup"))
-    markup.add(
-        types.InlineKeyboardButton("邀请进频道", url="https://t.me/" + settings.TG_BOT_NAME + "?startchannel=true"))
     bot.send_message(message.chat.id,
-                     f"欢迎使用自动发消息机器人\n请先把机器人邀请进群聊或频道<b>⚠️（必须给机器人管理员权限）</b>,否则无法使用\n再创建定时发送消息",
+                     f"欢迎使用自动发消息机器人\n\n<b>定时发送到群聊:</b>请先把机器人邀请进群聊，会自动绑定群聊\n<b>定时发送到频道:</b>请先把机器人拉到频道<b>（⚠️注意需要给机器人发送信息权限，否则无法定时发送消息）</b>，转发一条频道消息给机器人。会自动绑定频道\n\n再创建定时消息",
                      parse_mode="html", reply_markup=markup)
 
 
@@ -52,7 +56,7 @@ def welcome_new_member(message):
         print(f"Chat type: {chat_type}")
         print(f"Chat member status: {chat_member.status}")
 
-        if chat_member.status in ['administrator']:
+        if chat_member.status in ['administrator', 'member']:
             # 检查 chat_id 是否已存在
             if not TGInvite.objects.filter(chat_id=message.chat.id).exists():
                 TGInvite.objects.create(
@@ -73,12 +77,13 @@ def welcome_new_member(message):
 
 @bot.message_handler(content_types=['left_chat_member'])
 def handle_left_chat_member(message):
-    if bot.get_me().id and message.content_type == 'left_chat_member':
+    if message.left_chat_member.id == bot.get_me().id:
         TGInvite.objects.filter(chat_id=message.chat.id).delete()
         chat_title = message.chat.title if hasattr(message.chat, 'title') else "无标题"
         inviter_id = message.from_user.id if message.from_user else None
         if inviter_id:
             bot.send_message(inviter_id, f"机器人已离开<b>《{chat_title}》</b>", parse_mode="html")
+
 
 @bot.message_handler(commands=['create_message'], func=lambda message: message.chat.type == 'private')
 def create_send_message(message):
@@ -143,8 +148,10 @@ def query_message(message):
             )
         except Exception as e:
             print(f"Error sending message: {e}")
-            # 直接发送一条消息以确认机器人是否能发送
-            bot.send_message(message.from_user.id, "无法复制消息，请检查消息 ID 和聊天 ID。")
+            if "message to copy not found" in str(e):
+                # 删除定时消息记录
+                timing_message.delete()
+                print(f"已删除定时消息 ID {timing_message.id}，因为消息未找到。")
 
 
 @bot.message_handler(commands=['query_group'], func=lambda message: message.chat.type == 'private')
@@ -166,3 +173,22 @@ def query_group(message):
                                        callback_data=f"delete_group:{group.id}"))
     bot.send_message(message.chat.id, "⚠️直接点击可删除(机器人会自动退出)", reply_markup=markup,
                      parse_mode="html")
+
+
+@bot.message_handler(content_types=['text'])
+def handle_forwarded_message(message):
+    if message.forward_from_chat:
+        channel_id = message.forward_from_chat.id
+        user_id = message.from_user.id
+        title = message.forward_from_chat.title
+
+        if TGInvite.objects.filter(chat_id=channel_id).exists():
+            bot.send_message(user_id, f"《{title}》频道已添加成功")
+        else:
+            try:
+                TGInvite.objects.create(chat_id=channel_id, chat_title=title, inviter_id=user_id, chat_type='channel')
+                bot.send_message(user_id, f"<b>《{title}》</b>频道添加成功", parse_mode="html")
+            except Exception as e:
+                print(f"Error adding channel: {e}")
+    else:
+        bot.send_message(message.chat.id, "添加失败，请重新转发频道消息")

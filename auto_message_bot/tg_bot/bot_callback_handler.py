@@ -117,4 +117,4 @@ def delete_group(call):
         bot.send_message(call.message.chat.id, f"机器人已退出《{invite.chat_title}》")
     except Exception as e:
         print(f"Error deleting message: {e}")
-        bot.answer_callback_query(call.id, text="删除时出错，请重试。")
+        TGInvite.objects.get(id=invite_id).delete()
