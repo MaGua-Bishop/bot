@@ -66,11 +66,11 @@ def create_message_button_url(message, timing_message, button_name):
             timing_message=timing_message,
             url=button_url
         )
-        bot.send_message(message.chat.id, "创建消息导航按钮成功\n请选择是否继续创建按钮", reply_markup=markup,
+        bot.send_message(message.chat.id, "创建消息导航按钮成功\n是否继续创建按钮", reply_markup=markup,
                          parse_mode="html")
     else:
         bot.send_message(message.chat.id,
-                         "创建消息导航按钮失败，链接格式不正确。\n链接必须以<b>http://</b>或<b>https://</b>开头\n请选择是否继续创建按钮",
+                         "创建消息导航按钮失败，链接格式不正确。\n链接必须以<b>http://</b>或<b>https://</b>开头\n是否继续创建按钮",
                          parse_mode="html", reply_markup=markup)
 
 
@@ -184,7 +184,7 @@ def query_group_info(call):
                              parse_mode="html")
             return
         bot.send_message(call.message.chat.id,
-                         "点击定时消息下方的<b>添加按钮</b>\n可给该群聊|频道添加定时消息,并设置推送时间。\n在指定时间会自动发送消息",
+                         "点击定时消息中的<b>添加按钮</b>\n<b>可绑定</b>定时消息",
                          parse_mode="html")
         for timing_message in timing_message_list:
             buttons = TgButton.objects.filter(timing_message=timing_message)
@@ -362,4 +362,4 @@ def create_send_message_content(message):
     markup = types.InlineKeyboardMarkup()
     markup.add(types.InlineKeyboardButton("创建", callback_data=f"add_button:{id}"))
     markup.add(types.InlineKeyboardButton("不创建", callback_data=f"cancel_button:{id}"))
-    bot.send_message(message.chat.id, f"请选择是否需要创建消息导航按钮", reply_markup=markup, parse_mode="html")
+    bot.send_message(message.chat.id, f"是否需要创建消息导航按钮", reply_markup=markup, parse_mode="html")

@@ -1,3 +1,4 @@
+import threading
 from datetime import datetime
 from django.core.management.base import BaseCommand
 import time
@@ -6,7 +7,6 @@ from telebot import types
 
 from tg_bot.models import TgButton, TgTimingMessage, TGInvite, TGInviteTimingMessage
 from tg_bot.bot_config import bot
-from tg_bot.utils import create_markup
 
 
 class Command(BaseCommand):
@@ -31,8 +31,16 @@ class Command(BaseCommand):
             print(f"当前时间: {current_time.strftime('%H:%M:%S')} 没有需要发送的消息")
             return
 
+        # 为每个定时消息创建一个线程
+        threads = []
         for invite_timing_message in invite_timing_message_list:
-            self.send_message(invite_timing_message)
+            thread = threading.Thread(target=self.send_message, args=(invite_timing_message,))
+            threads.append(thread)
+            thread.start()
+
+        # 等待所有线程完成
+        for thread in threads:
+            thread.join()
 
     def send_message(self, invite_timing_message):
         invite_id = invite_timing_message.invite_id
@@ -80,4 +88,3 @@ class Command(BaseCommand):
             print(f"TgTimingMessage with id {timing_message_id} not found.")
         except Exception as e:
             print(f"Error sending message to {group.chat_id}: {e}")
-

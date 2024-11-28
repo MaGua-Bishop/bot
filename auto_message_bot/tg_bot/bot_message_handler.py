@@ -15,7 +15,12 @@ bot.set_my_commands(commands, scope=types.BotCommandScopeAllPrivateChats())
 @bot.message_handler(commands=['help'], func=lambda message: message.chat.type == 'private')
 def help_message(message):
     bot.send_message(message.chat.id,
-                     "<b>使用方法</b>\n\n先把机器人拉到群聊或频道\n再创建定时消息\n会根据定时的消息自动发送\n⚠️️注意频道拉入机器人必须给<b>发送信息权限</b>，否则无法自动发送\n\n<b>使用命令</b>\n\n/create_message - 创建定时消息\n/query_message - 查看定时消息\n/query_group - 查看推送的群聊|频道",
+                     "<b>使用方法</b>\n\n"
+                     "1.在<b>定时信息</b>按钮中设置定时信息\n"
+                     "2.将机器人添加到您的群聊或频道中\n"                      
+                     "3.在<b>群聊|频道</b>按钮中选择目标群聊或频道，绑定定时信息，并设置定时时间\n"
+                     "4.机器人会自动根据您设置的定时信息，按时将消息推送到指定的群聊或频道\n\n"
+                     "⚠️ <b>注意：</b>频道需要给机器人开启<b>发送信息权限</b>，否则无法自动发送消息",
                      parse_mode="html")
 
 
@@ -30,10 +35,14 @@ def get_start(message):
 @bot.message_handler(commands=['start'], func=lambda message: message.chat.type == 'private')
 def get_start(message):
     markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton("查看群聊|频道", callback_data="query_group"))
+    markup.add(types.InlineKeyboardButton("群聊|频道", callback_data="query_group"))
     markup.add(types.InlineKeyboardButton("定时信息", callback_data="timing_message"))
     bot.send_message(message.chat.id,
-                     f"欢迎使用自动发消息机器人\n\n<b>定时发送到群聊:</b>请先把机器人邀请进群聊，会自动绑定群聊\n<b>定时发送到频道:</b>请先把机器人拉到频道<b>（⚠️注意需要给机器人发送信息权限，否则无法定时发送消息）</b>，转发一条频道消息给机器人。会自动绑定频道\n\n再创建定时消息",
+                     f"欢迎使用自动发消息机器人\n\n"
+                     f"<b>添加群聊：</b>把机器人邀请进群聊，会自动绑定群聊\n"
+                     f"<b>添加频道：</b>先把机器人拉到频道<b>（⚠️需要给机器人发送信息权限）</b>.转发一条频道消息给机器人,会自动绑定频道\n\n"
+                     f"可在添加的群聊|频道绑定<b>定时信息</b>,会自动发送信息\n\n"
+                     f"请点击下方按钮",
                      parse_mode="html", reply_markup=markup)
 
 
