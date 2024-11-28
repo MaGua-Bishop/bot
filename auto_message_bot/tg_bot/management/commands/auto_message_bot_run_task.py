@@ -1,5 +1,7 @@
 import threading
 from datetime import datetime
+
+import pytz
 from django.core.management.base import BaseCommand
 import time
 
@@ -19,7 +21,8 @@ class Command(BaseCommand):
 
     def my_scheduled_task(self):
         print("检查是否有定时消息需要发送")
-        current_time = datetime.now()
+        china_timezone = pytz.timezone('Asia/Shanghai')
+        current_time = datetime.now(china_timezone)
         current_hour = current_time.hour
         current_minute = current_time.minute
         print(f"当前时间: {current_time.strftime('%H:%M:%S')}")
