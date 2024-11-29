@@ -79,13 +79,35 @@ class Command(BaseCommand):
         try:
             # 获取定时消息
             timing_message = TgTimingMessage.objects.get(id=timing_message_id)
-            bot.copy_message(
+
+            # 记录上次发送的消息 ID
+            last_message_id = invite_timing_message.message_id
+
+            # 如果需要删除上一次发送的消息
+            if invite_timing_message.delete_last_message:
+                try:
+                    bot.delete_message(chat_id=group.chat_id, message_id=last_message_id)
+                    print(f"Deleted last message with id {last_message_id} in group {group.chat_id}.")
+                except Exception as e:
+                    print(f"Error deleting message {last_message_id} in group {group.chat_id}: {e}")
+
+            # 发送新消息
+            sent_message = bot.copy_message(
                 chat_id=group.chat_id,  # 目标聊天 ID
                 from_chat_id=timing_message.tg_id,  # 来源聊天 ID
                 message_id=timing_message.message_id,  # 消息 ID
                 reply_markup=markup  # 附带按钮
             )
             print(f"Message sent to {group.chat_id} from {timing_message.tg_id}")
+
+            # 如果需要置顶消息
+            if invite_timing_message.is_pinned:
+                bot.pin_chat_message(chat_id=group.chat_id, message_id=sent_message.message_id)
+                print(f"Message pinned in group {group.chat_id}.")
+
+            # 更新上次发送的消息 ID
+            invite_timing_message.message_id = sent_message.message_id
+            invite_timing_message.save()
 
         except TgTimingMessage.DoesNotExist:
             print(f"TgTimingMessage with id {timing_message_id} not found.")

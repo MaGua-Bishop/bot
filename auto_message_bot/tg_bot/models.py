@@ -45,6 +45,9 @@ class TGInviteTimingMessage(models.Model):
     invite_id = models.IntegerField()  # 群聊 ID
     timing_message_id = models.IntegerField()  # 定时消息 ID
     time = models.TimeField()  # 定时消息的发送时间
+    message_id = models.IntegerField(null=True, blank=True)  # 上次发送的消息ID
+    is_pinned = models.BooleanField(default=False)  # 是否置顶
+    delete_last_message = models.BooleanField(default=False)  # 是否删除上次发送的消息
     created_at = models.DateTimeField(auto_now_add=True)  # 创建时间
 
     class Meta:
@@ -52,4 +55,3 @@ class TGInviteTimingMessage(models.Model):
 
     def __str__(self):
         return f"Group ID: {self.invite_id} - Timing Message ID: {self.timing_message_id} - Time: {self.time}"
-

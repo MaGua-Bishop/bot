@@ -96,23 +96,20 @@ def delete_message(call):
 def update_message_time(call):
     invite_timing_message = call.data[len('update_message_time:'):]
     try:
-        bot.send_message(call.message.chat.id, f"请输入新的定时时间，格式为：00:00~23:59")
-        bot.register_next_step_handler(call.message, update_time, invite_timing_message)
+        bot.send_message(call.message.chat.id, f"请输入新的发送时间，格式为：00:00~23:59")
+        bot.register_next_step_handler(call.message, update_time, invite_timing_message, call)
     except Exception as e:
         print(f"Error deleting message: {e}")
         bot.answer_callback_query(call.id, text="消息时出错，请重试。")
 
 
-def update_time(message, invite_timing_message_id):
+def update_time(message, invite_timing_message_id, call):
     text = message.text
     if check_timing(text):
         invite_timing_message = TGInviteTimingMessage.objects.get(id=invite_timing_message_id)
         invite_timing_message.time = text
         invite_timing_message.save()
-        markup = types.InlineKeyboardMarkup()
-        markup.add(
-            types.InlineKeyboardButton("返回", callback_data=f"query_group_info:{invite_timing_message.invite_id}"))
-        bot.send_message(message.chat.id, f"定时消息时间已更新为：{text}", reply_markup=markup)
+        send_invite_timing_message(call, invite_timing_message)
     else:
         bot.send_message(message.chat.id, f"定时消息时间修改失败，格式为：00:00~23:59")
 
@@ -123,6 +120,7 @@ def delete_group(call):
     invite_id = call.data[len('delete_group:'):]
     try:
         invite = TGInvite.objects.get(id=invite_id)
+        TGInviteTimingMessage.objects.filter(invite_id=invite_id).delete()
         bot.leave_chat(invite.chat_id)
         invite.delete()
         bot.send_message(call.message.chat.id, f"机器人已退出《{invite.chat_title}》")
@@ -165,6 +163,7 @@ def query_group_info(call):
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("查看定时信息", callback_data=f"group_query_message:{invite.id}"))
         markup.add(types.InlineKeyboardButton("添加定时信息", callback_data=f"group_add_message:{invite.id}"))
+        markup.add(types.InlineKeyboardButton("退出(⚠️机器人会直接退出)", callback_data=f"delete_group:{invite.id}"))
         timing_message_count = TGInviteTimingMessage.objects.filter(invite_id=invite.id).count()
         bot.send_message(call.message.chat.id,
                          f"\n🆔:{invite.chat_id}\n<b>标题:</b>《{invite.chat_title}》\n<b>类型:</b>{chat_type_display}\n\n共<b>{timing_message_count}</b>条定时消息",
@@ -247,6 +246,48 @@ def add_message_group_time(message, invite_id, timing_message_id):
         print(f"Error deleting message: {e}")
 
 
+def send_invite_timing_message(call, invite_timing_message):
+    is_pinned = "✅置顶" if invite_timing_message.is_pinned else "❌置顶"
+    delete_last_message = "✅删除上次消息" if invite_timing_message.delete_last_message else "❌删除上次消息"
+    timing_message = TgTimingMessage.objects.get(id=invite_timing_message.timing_message_id)
+    buttons = TgButton.objects.filter(timing_message=timing_message)
+    markup = types.InlineKeyboardMarkup()
+
+    if buttons.exists():
+        button_list = [(button.name, button.url) for button in buttons]
+        markup = create_markup(button_list)
+
+    markup.add(
+        types.InlineKeyboardButton(f"定时时间:{invite_timing_message.time}", callback_data="null"))
+    markup.add(
+        types.InlineKeyboardButton(is_pinned, callback_data=f"set_message_pinned:{invite_timing_message.id}")
+    )
+    markup.add(
+        types.InlineKeyboardButton(delete_last_message,
+                                   callback_data=f"set_message_delete:{invite_timing_message.id}")
+    )
+    markup.add(
+        types.InlineKeyboardButton("删除(⚠️点击直接删除)",
+                                   callback_data=f"group_delete_message:{invite_timing_message.id}"))
+    markup.add(
+        types.InlineKeyboardButton("修改发送时间",
+                                   callback_data=f"update_message_time:{invite_timing_message.id}"))
+
+    try:
+        bot.copy_message(
+            chat_id=call.from_user.id,  # 目标聊天 ID
+            from_chat_id=timing_message.tg_id,  # 来源聊天 ID
+            message_id=timing_message.message_id,  # 消息 ID
+            reply_markup=markup  # 附带按钮
+        )
+    except Exception as e:
+        print(f"Error sending message: {e}")
+        if "message to copy not found" in str(e):
+            # 删除定时消息记录
+            timing_message.delete()
+            print(f"已删除定时消息 ID {timing_message.id}，因为消息未找到。")
+
+
 @bot.callback_query_handler(func=lambda call: call.data.startswith('group_query_message'))
 def group_query_message(call):
     invite_id = call.data[len('group_query_message:'):]
@@ -258,35 +299,42 @@ def group_query_message(call):
             return
         bot.send_message(call.message.chat.id, f"以下是该群聊|频道的定时消息")
         for invite_timing_message in invite_timing_message_list:
-            timing_message = TgTimingMessage.objects.get(id=invite_timing_message.timing_message_id)
-            buttons = TgButton.objects.filter(timing_message=timing_message)
-            markup = types.InlineKeyboardMarkup()
-            if buttons.exists():
-                button_list = [(button.name, button.url) for button in buttons]
-                markup = create_markup(button_list)
-            markup.add(
-                types.InlineKeyboardButton(f"定时时间:{invite_timing_message.time}", callback_data="null"))
-            markup.add(
-                types.InlineKeyboardButton("删除(⚠️点击直接删除)",
-                                           callback_data=f"group_delete_message:{invite_timing_message.id}"))
-            markup.add(
-                types.InlineKeyboardButton("修改定时时间",
-                                           callback_data=f"update_message_time:{invite_timing_message.id}"))
-            try:
-                bot.copy_message(
-                    chat_id=call.from_user.id,  # 目标聊天 ID
-                    from_chat_id=timing_message.tg_id,  # 来源聊天 ID
-                    message_id=timing_message.message_id,  # 消息 ID
-                    reply_markup=markup  # 附带按钮
-                )
-            except Exception as e:
-                print(f"Error sending message: {e}")
-                if "message to copy not found" in str(e):
-                    # 删除定时消息记录
-                    timing_message.delete()
-                    print(f"已删除定时消息 ID {timing_message.id}，因为消息未找到。")
+            send_invite_timing_message(call, invite_timing_message)  # 调用提取的函数
     except Exception as e:
         print(f"Error deleting message: {e}")
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("set_message_pinned"))
+def set_message_pinned(call):
+    try:
+        bot.delete_message(call.message.chat.id, call.message.id)
+
+        invite_timing_message_id = call.data[len('set_message_pinned:'):]
+        invite_timing_message = TGInviteTimingMessage.objects.get(id=invite_timing_message_id)
+
+        invite_timing_message.is_pinned = not invite_timing_message.is_pinned
+        invite_timing_message.save()
+
+        send_invite_timing_message(call, invite_timing_message)
+
+    except Exception as e:
+        print(f"Error updating pinned status: {e}")
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("set_message_delete"))
+def set_message_delete(call):
+    try:
+        bot.delete_message(call.message.chat.id, call.message.id)
+
+        invite_timing_message_id = call.data[len('set_message_delete:'):]
+        invite_timing_message = TGInviteTimingMessage.objects.get(id=invite_timing_message_id)
+
+        invite_timing_message.delete_last_message = not invite_timing_message.delete_last_message
+        invite_timing_message.save()
+        send_invite_timing_message(call, invite_timing_message)
+
+    except Exception as e:
+        print(f"Error delete_last_message: {e}")
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("group_delete_message"))
@@ -393,8 +441,8 @@ def check_expiration_reminders():
         now = timezone.now().date()
         three_days_later = now + timedelta(days=3)
 
-        # 查询到期日期在三天后且未发送提醒的消息
-        messages_to_remind = TgTimingMessage.objects.filter(expiration_date=three_days_later, reminder_sent=False)
+        # 查询到期日期三天后的数据发送提醒的消息
+        messages_to_remind = TgTimingMessage.objects.filter(expiration_date__lte=three_days_later, reminder_sent=False)
         for message in messages_to_remind:
             markup = types.InlineKeyboardMarkup()
             buttons = TgButton.objects.filter(timing_message=message)
@@ -415,11 +463,8 @@ def check_expiration_reminders():
         # 删除到期的消息
         expired_messages = TgTimingMessage.objects.filter(expiration_date=now)
         for expired_message in expired_messages:
-            # 删除 TgButton
             TgButton.objects.filter(timing_message=expired_message).delete()
-            # 删除TGInviteTimingMessage
             TGInviteTimingMessage.objects.filter(timing_message_id=expired_message.id).delete()
-            # 删除TgTimingMessage 本身
             expired_message.delete()
 
         time.sleep(86400)
