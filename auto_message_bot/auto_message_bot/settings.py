@@ -133,6 +133,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+TG_BOT_NAME = 'zidongxiaoxibot'
 TG_BOT_TOKEN = '7706249060:AAG2BU6SbCwNNoUyqpA2c9hAu2J7Ro5j3Ms'
 # TG_BOT_TOKEN = '8030696965:AAFY6eZti5yIg7J0p-mXIHSH9fLsmrvHBFE'
 

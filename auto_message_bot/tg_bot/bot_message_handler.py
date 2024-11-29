@@ -17,7 +17,7 @@ def help_message(message):
     bot.send_message(message.chat.id,
                      "<b>使用方法</b>\n\n"
                      "1.在<b>定时信息</b>按钮中设置定时信息\n"
-                     "2.将机器人添加到您的群聊或频道中\n"                      
+                     "2.将机器人添加到您的群聊或频道中\n"
                      "3.在<b>群聊|频道</b>按钮中选择目标群聊或频道，绑定定时信息，并设置定时时间\n"
                      "4.机器人会自动根据您设置的定时信息，按时将消息推送到指定的群聊或频道\n\n"
                      "⚠️ <b>注意：</b>频道需要给机器人开启<b>发送信息权限</b>，否则无法自动发送消息",
@@ -35,6 +35,9 @@ def get_start(message):
 @bot.message_handler(commands=['start'], func=lambda message: message.chat.type == 'private')
 def get_start(message):
     markup = types.InlineKeyboardMarkup()
+    markup.add(types.InlineKeyboardButton("邀请进群聊", url="https://t.me/" + settings.TG_BOT_NAME + "?startgroup"))
+    markup.add(
+        types.InlineKeyboardButton("邀请进频道", url="https://t.me/" + settings.TG_BOT_NAME + "?startchannel=true"))
     markup.add(types.InlineKeyboardButton("群聊|频道", callback_data="query_group"))
     markup.add(types.InlineKeyboardButton("定时信息", callback_data="timing_message"))
     bot.send_message(message.chat.id,
