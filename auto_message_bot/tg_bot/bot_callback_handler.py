@@ -4,6 +4,10 @@ import re
 from tg_bot.models import TgButton, TgTimingMessage, TGInvite, TGInviteTimingMessage
 from tg_bot.utils import check_button_url, check_timing
 from tg_bot.utils import create_markup
+from datetime import datetime, timedelta  # 导入 datetime 模块
+import threading
+import time
+from django.utils import timezone  # 确保使用正确的时区
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('cancel_button'))
@@ -327,6 +331,8 @@ def query_message(call):
             button_list = [(button.name, button.url) for button in buttons]
             markup = create_markup(button_list)
         markup.add(
+            types.InlineKeyboardButton(f"到期时间:{timing_message.expiration_date}", callback_data="null"))
+        markup.add(
             types.InlineKeyboardButton("删除该定时消息", callback_data=f"delete_message:{timing_message.id}"))
 
         # 调试信息
@@ -359,7 +365,66 @@ def create_send_message_content(message):
     tg_id = message.from_user.id
     tg_timing_message = TgTimingMessage.objects.create(message_id=message_id, tg_id=tg_id)
     id = tg_timing_message.id
-    markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton("创建", callback_data=f"add_button:{id}"))
-    markup.add(types.InlineKeyboardButton("不创建", callback_data=f"cancel_button:{id}"))
-    bot.send_message(message.chat.id, f"是否需要创建消息导航按钮", reply_markup=markup, parse_mode="html")
+
+    bot.send_message(message.chat.id, "请输入到期日期（格式：年-月-日）：")
+    bot.register_next_step_handler(message, set_expiration_date, tg_timing_message)
+
+
+def set_expiration_date(message, tg_timing_message):
+    expiration_date = message.text
+    try:
+        valid_date = datetime.strptime(expiration_date, "%Y-%m-%d")
+        tg_timing_message.expiration_date = valid_date.date()
+        tg_timing_message.save()
+
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton("创建", callback_data=f"add_button:{tg_timing_message.id}"))
+        markup.add(types.InlineKeyboardButton("不创建", callback_data=f"cancel_button:{tg_timing_message.id}"))
+        bot.send_message(message.chat.id, f"是否需要创建消息导航按钮", reply_markup=markup, parse_mode="html")
+    except ValueError:
+        bot.send_message(message.chat.id, "日期格式不正确，请使用格式：年-月-日")
+        bot.register_next_step_handler(message, set_expiration_date, tg_timing_message)
+
+
+# 定义检查到期消息的函数
+def check_expiration_reminders():
+    print("检查到期消息的函数正在运行...")
+    while True:
+        now = timezone.now().date()
+        three_days_later = now + timedelta(days=3)
+
+        # 查询到期日期在三天后且未发送提醒的消息
+        messages_to_remind = TgTimingMessage.objects.filter(expiration_date=three_days_later, reminder_sent=False)
+        for message in messages_to_remind:
+            markup = types.InlineKeyboardMarkup()
+            buttons = TgButton.objects.filter(timing_message=message)
+            if buttons.exists():
+                button_list = [(button.name, button.url) for button in buttons]
+                markup = create_markup(button_list)
+            markup.add(types.InlineKeyboardButton(f"到期时间:{message.expiration_date}", callback_data="null"))
+            markup.add(types.InlineKeyboardButton("该定时信息三天后过期", callback_data="null"))
+            bot.copy_message(
+                chat_id=message.tg_id,
+                from_chat_id=message.tg_id,
+                message_id=message.message_id,
+                reply_markup=markup
+            )
+            message.reminder_sent = True
+            message.save()
+
+        # 删除到期的消息
+        expired_messages = TgTimingMessage.objects.filter(expiration_date=now)
+        for expired_message in expired_messages:
+            # 删除 TgButton
+            TgButton.objects.filter(timing_message=expired_message).delete()
+            # 删除TGInviteTimingMessage
+            TGInviteTimingMessage.objects.filter(timing_message_id=expired_message.id).delete()
+            # 删除TgTimingMessage 本身
+            expired_message.delete()
+
+        time.sleep(86400)
+
+
+reminder_thread = threading.Thread(target=check_expiration_reminders)
+reminder_thread.daemon = True
+reminder_thread.start()

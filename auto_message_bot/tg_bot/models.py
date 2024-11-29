@@ -17,12 +17,14 @@ class TgButton(models.Model):
 class TgTimingMessage(models.Model):
     tg_id = models.BigIntegerField()
     message_id = models.IntegerField()
+    expiration_date = models.DateField(null=True, blank=True)
+    reminder_sent = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'tg_timing_message'
 
     def __str__(self):
-        return f"{self.message_id} ({self.time})"
+        return f"{self.message_id} ({self.expiration_date})"
 
 
 class TGInvite(models.Model):
