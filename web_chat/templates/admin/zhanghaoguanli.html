@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>管理后台</title>
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="stylesheet" href="/static/layui/css/layui.css"  media="all">
+  <link rel="stylesheet" href="/agent/admin.css"  media="all">
+  <style>
+  </style>
+</head>
+<body>
+<div class="layui-container">  
+      <ul class="layui-nav layui-bg-cyan" lay-filter="demo">
+        <li class="layui-nav-item"><a href="/kaijiangxinxi">开奖信息</a></li>
+        <li class="layui-nav-item layui-this"><a href="/zhanghaoguanli">账号管理</a></li>
+        <li class="layui-nav-item"><a href="xiugaimima">修改密码</a></li>
+        <li class="layui-nav-item"><a href="tongjifenxi">统计分析</a></li>
+        <li class="layui-nav-item"><a href="weijiesuan">未结算</a></li>
+        <li class="layui-nav-item"><a href="lishi">历史</a></li>
+        <li class="layui-nav-item"><a href="anquantuichu">安全退出</a></li>
+      </ul>
+    <div class="layui-col-md12 nbsp"></div>
+    <!-- <div class="layui-col-md12"><h2>时间设定<h2></div> -->
+    <!-- <div class="layui-col-md12 panel" > 
+            <form class="layui-form" action="">
+        <div class="layui-form-item">
+            <label class="layui-form-label">5分钟封盘</label>
+            <div class="layui-input-block">
+            <input type="password" name="old" lay-verify="required" placeholder="30" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">指令取消</label>
+            <div class="layui-input-block">
+            <input type="password" name="new" lay-verify="required" placeholder="20" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">指令延报</label>
+            <div class="layui-input-block">
+            <input type="password" name="comfirm" lay-verify="required" placeholder="20" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+    
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+            <button class="layui-btn" lay-submit lay-filter="formDemo">设置</button>
+            </div>
+        </div>
+        </form>
+    </div> -->
+
+    <div class="layui-col-md12 nbsp"></div>
+    <!-- <div class="layui-col-md12"><h3>机器人管理</h3></div> -->
+    <div class="layui-col-md12"><span style="color:red">若表格显示不全可拖拽表格左右滑动</span></div>
+    <div class="layui-col-md12 " > 
+      <table class="layui-hide" id="test" lay-filter="test"></table> 
+      <script type="text/html" id="kaipan">
+        {{# 
+          if (d.is_kp==1) {
+            return '<input type="checkbox" checked="" id="'+d.groupId+'" name="open" lay-skin="switch" lay-filter="a" lay-text="开盘|闭盘">';
+          }else{
+            return '<input type="checkbox"  name="close" id="'+d.groupId+'" lay-skin="switch" lay-filter="a" lay-text="开盘|闭盘">';
+          }
+        }}
+      </script>
+    </div>
+
+<script type="text/html" id="barDemo">
+  <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="sxfen">上下分</a>
+  <a class="layui-btn layui-btn-xs" lay-event="xiugaixiane">查看和修改限额</a>
+  <a class="layui-btn layui-btn-xs" lay-event="chauser">查看会员余额</a>
+</script>
+          
+          
+<script src="/static/layui/layui.all.js" charset="utf-8"></script>
+<script>
+layui.use(['form', 'laytpl'], function(){
+  var form = layui.form; //导航的hover效果、二级菜单等功能，需要依赖element模块
+  var jq = layui.jquery;
+  form.on('submit(formDemo)', function(data){
+    jq.post({
+            url: '/changepassword?',
+            data: {
+              'old': data.field.old,
+              'new': data.field.new,
+              'comfirm': data.field.comfirm,
+            },
+            dataType: "json",
+            cache: false,
+            success: function (data) {
+                if (data.data.code == 200) {
+                    layer.msg('修改成功');
+                    setTimeout(function(){  
+                        window.location.href = './xiugaimima'
+                    }, 3000);
+                }else{
+                    layer.msg(data.data.msg)
+                }
+            },
+        });
+    return false;
+  });
+  //
+  form.on('switch(a)', function(data){
+    s = layui.$(this)
+    groupId = s.attr('id');
+    layui.$.post(
+      './dokaiguanpan',
+      {
+        'groupId':groupId
+      },
+      function(res){
+        if (res.error_code == 0) {
+          if (res.kp == 1) {
+            s.next().attr('class', 'layui-unselect layui-form-switch layui-form-onswitch').find('em').html('开盘');
+          }else{
+            s.next().attr('class', 'layui-unselect layui-form-switch').find('em').html('闭盘');
+          }
+        }else{
+          alert(res.error_msg);
+          location.href ='./zhanghaoguanli';
+        }
+
+      }
+    );
+  });
+
+
+  var table = layui.table;
+  
+  table.render({
+    elem: '#test'
+    ,url:'/getagentinfolist'
+    ,title: '用户数据表'
+    ,cols: [[
+      {field:'account', title:'用户名' ,width: 80}
+      ,{field:'expired_time', title:'失效日期' ,width: 200}
+      ,{field:'group_credit', title:'可用积分' ,width: 150 ,templet: function(d){
+          return parseFloat(d.group_credit).toFixed(2); 
+      }}
+      ,{field:'is_kp', title:'开盘状态'  
+        ,templet: '#kaipan'
+        ,width: 120
+      }
+      ,{title:'操作', toolbar: '#barDemo' ,width: 300}
+    ]]
+    // ,page: true
+    ,response: {
+      statusName: 'error_code' //规定数据状态的字段名称，默认：code
+      ,statusCode: 0 //规定成功的状态码，默认：0
+      ,msgName: 'hint' //规定状态信息的字段名称，默认：msg
+      ,countName: 'count' //规定数据总数的字段名称，默认：count
+      ,dataName: 'data' //规定数据列表的字段名称，默认：data
+    } 
+
+  });
+
+  //监听行工具事件
+  table.on('tool(test)', function(obj){
+    var data = obj.data;
+    if(obj.event === 'sxfen'){
+      layer.open({
+        type: 2,
+        title: '修改【'+data.account+'】额度，当前额度'+data.group_credit,
+        shadeClose: true,
+        shade: 0.8,
+        area: ['90%', '90%']
+        ,content: 'sxfen?groupId='+data.groupId
+        ,success: function(layero, index){
+          var body=layer.getChildFrame('body',index);//少了这个是不能从父页面向子页面传值的
+          body.find("#groupId").val(data.groupId);
+        }
+      });
+    }
+
+    if(obj.event === 'xiugaixiane'){
+      layer.open({
+        type: 2,
+        title: '修改【'+data.account+'】投注额度',
+        shadeClose: true,
+        shade: 0.8,
+        area: ['90%', '90%']
+        ,content: 'xiugaixiane?groupId='+data.groupId
+      });
+    }
+
+    if(obj.event === 'chauser'){
+      layer.open({
+        type: 2,
+        title: '【'+data.account+'】会员积分',
+        shadeClose: true,
+        shade: 0.8,
+        area: ['90%', '90%']
+        ,content: 'chauser?groupId='+data.groupId
+      });
+    }
+  });
+
+});
+</script>
+
+</body>
+</html>

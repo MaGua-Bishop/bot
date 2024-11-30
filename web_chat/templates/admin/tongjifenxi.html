@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>管理后台</title>
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="stylesheet" href="/static/layui/css/layui.css"  media="all">
+
+  <style>
+    td{
+      padding: 15px;
+    }
+  </style>
+
+</head>
+<body> 
+<div class="layui-container">  
+    <ul class="layui-nav layui-bg-cyan" lay-filter="demo">
+        <li class="layui-nav-item" ><a href="/kaijiangxinxi">开奖信息</a></li>
+        <li class="layui-nav-item"><a href="/zhanghaoguanli">账号管理</a></li>
+        <li class="layui-nav-item"><a href="xiugaimima">修改密码</a></li>
+        <li class="layui-nav-item layui-this"><a href="tongjifenxi">统计分析</a></li>
+        <li class="layui-nav-item"><a href="weijiesuan">未结算</a></li>
+        <li class="layui-nav-item"><a href="lishi">历史</a></li>
+        <li class="layui-nav-item"><a href="anquantuichu">安全退出</a></li>
+    </ul>
+    <div class="layui-col-md12" style="padding:10px">
+    <form>
+        选择日期：
+        <div class="layui-inline">
+            <select id="range" style="height:40px" name="date">
+                              <option  value="2024-11-30"  selected >2024-11-30</option>
+                              <option  value="2024-11-29" >2024-11-29</option>
+                              <option  value="2024-11-28" >2024-11-28</option>
+                              <option  value="2024-11-27" >2024-11-27</option>
+                          </select>
+            <button class="layui-btn" lay-submit="" lay-filter="comfirm">查看数据</button>
+        </div>
+      </form>
+    </div>
+    <div class="layui-col-md12">
+      <table border="1" id="showgrid">
+        <!-- <tr>
+          <td>
+          <b>
+            数据汇总：总昨余：96.69:总流水：40933:总有效流水：10861.32:总盈亏：-9401.68:总反水：325.79:总上：9500:总下：0:总上下：9500
+          </b></td>
+        </tr>
+        <tr>
+          <td>
+          机器人:al801，总昨余：96.69:总流水：40933:总有效流水：10861.32:总盈亏：-9401.68:总反水：325.79:总上：9500:总下：0:总上下：9500    查看详情
+          </td>
+        </tr>
+        <tr>
+          <td>
+          机器人:al801，总昨余：96.69:总流水：40933:总有效流水：10861.32:总盈亏：-9401.68:总反水：325.79:总上：9500:总下：0:总上下：9500    查看详情
+          </td>
+        </tr> -->
+      </table>
+    </div>
+
+</div>
+ 
+
+              
+<!-- <script src="/static/js/jquery-3.3.1.js"></script> -->
+<script src="/static/layui/layui.js" charset="utf-8"></script>
+
+<script>
+layui.use('form', function(){
+  var form = layui.form;
+  
+  //监听提交
+  form.on('submit(comfirm)', function(data){
+    t = layui.$('#showgrid');
+    t.empty();
+    date = layui.$("#range").val();
+    layui.$.post(
+      '/gethuizhong',
+      {
+        'date':date,
+      },
+      function(res){
+        if (res.data == false) {
+          layer.msg('暂无数据！');     
+        }
+        if (res.error_code == 0 && res.data) {
+          t = layui.$('#showgrid');
+          for (k in res.data) {
+            dt = res.data[k];
+            if (k == 0) {
+              tr = '<tr><td><b>'+dt+'</b></td><tr>';
+            }else{
+              tr = '<tr><td>'+dt+'</td><tr>';
+            }
+            t.append(tr);
+          }
+        }
+      }
+    );
+    return false;
+  });
+});
+</script>
+
+</body>
+</html>
