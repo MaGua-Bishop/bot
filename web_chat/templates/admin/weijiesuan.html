@@ -1,216 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>管理后台</title>
-  <meta name="renderer" content="webkit">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <link rel="stylesheet" href="/static/layui/css/layui.css"  media="all">
-  
-
-  <!-- 注意：如果你直接复制所有代码到本地，上述css路径需要改成你本地的 -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% load static %}
 </head>
-<body> 
-<div class="layui-container">  
-    <ul class="layui-nav layui-bg-cyan" lay-filter="demo">
-        <li class="layui-nav-item" ><a href="/kaijiangxinxi">开奖信息</a></li>
-        <li class="layui-nav-item"><a href="/zhanghaoguanli">账号管理</a></li>
-        <li class="layui-nav-item"><a href="xiugaimima">修改密码</a></li>
-        <li class="layui-nav-item"><a href="tongjifenxi">统计分析</a></li>
-        <li class="layui-nav-item layui-this"><a href="weijiesuan">未结算</a></li>
-        <li class="layui-nav-item"><a href="lishi">历史</a></li>
-        <li class="layui-nav-item"><a href="anquantuichu">安全退出</a></li>
-    </ul>
-    <div class="layui-col-md12">
-        <table class="layui-hide" id="LAY_table_user" lay-filter="user">
-        </table> 
-    </div>
-    <!-- <div class="layui-col-md12">
-        选择日期：
-        <div class="layui-inline">
-            <input type="text" class="layui-input" id="test1">
-        </div>
-    </div>
-    <br>
-    <div class="layui-col-md12">
+<body>
+<table class="layui-hide" id="ID-table-demo-data"></table>
 
-        选择时间：
-        <div class="layui-inline">
-            <select id="range" style="height:40px">
-                <option value="6" selected>6点一天</option>
-                <option value="0">0点一天</option>
-            </select>
-            <button class="layui-btn" data-type="reload">搜索</button>
-        </div>
-    </div> -->
-
-</div>
- 
-
-              
-<script src="/static/js/jquery-3.3.1.js"></script>
-<script src="/static/layui/layui.js" charset="utf-8"></script>
-
-<!-- 注意：如果你直接复制所有代码到本地，上述 JS 路径需要改成你本地的 -->
+<link rel="stylesheet" href="{% static 'layui/css/layui.css' %}" media="all">
+<script src="{% static 'layui/layui.js' %}" charset="utf-8"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+    layui.use('table', function(){
+        var table = layui.table;
 
-  layui.use('laydate', function(){
-    var laydate = layui.laydate;
-    
-    //执行一个laydate实例
-    laydate.render({
-      elem: '#test1' //指定元素
-      ,type: 'date'
-      ,theme: 'grid'
-      ,value: new Date()
-    
-    });
-  });
-
-layui.use('table', function(){
-  var table = layui.table;
-  
-  //方法级渲染
-  table.render({
-    elem: '#LAY_table_user'
-    ,url: '/orderlist'
-    ,cols: [[
-      {field:'account', title: '所属机器人', width:100}
-      ,{field:'nickname', title: '昵称', width:100}
-      ,{field:'content', title: '指令', width:100}
-      ,{field:'qihao', title: '期号', sort: true, width:100}
-      ,{field:'create_time', title: '投注时间', sort: true, width:200}
-    ]]
-    ,id: 'testReload'
-    ,page: true
-    ,response: {
-      statusName: 'error_code' //规定数据状态的字段名称，默认：code
-      ,statusCode: 0 //规定成功的状态码，默认：0
-      ,msgName: 'error_msg' //规定状态信息的字段名称，默认：msg
-      ,countName: 'count' //规定数据总数的字段名称，默认：count
-      ,dataName: 'data' //规定数据列表的字段名称，默认：data
-    } 
-  });
-  
-//   var $ = layui.$, active = {
-//     reload: function(){
-//       var demoReload = $('#demoReload');
-//       var date = $('#date');
-//       var datetime = $('#test1');
-//       var account = $('#account');
-//       var range = $('#range');
-      
-//       //执行重载
-//       table.reload('testReload', {
-//         page: {
-//           curr: 1 //重新从第 1 页开始
-//         }
-//         ,where: {
-//             id: demoReload.val(),
-//             datetime: datetime.val(),
-//             account: account.val(),
-//             range: range.val(),
-//         }
-//       }, 'data');
-//     }
-//   };
-  
-//   $(' .layui-btn').on('click', function(){
-//     var type = $(this).data('type');
-//     active[type] ? active[type].call(this) : '';
-//   });
-});
-</script>
-
-<script>
-
-layui.use('laydate', function(){
-  var laydate = layui.laydate;
-  
-  //执行一个laydate实例
-  laydate.render({
-    elem: '#test1' //指定元素
-    ,type: 'date'
-    ,theme: 'grid'
-    ,value: new Date()
-   
-  });
-});
-
-//注意：选项卡 依赖 element 模块，否则无法进行功能性操作
-layui.use('element', function(){
-    var element = layui.element;
-    
-});
-
-
-layui.use('table', function(){
-  var table = layui.table;
-  
-  //方法级渲染
-  table.render({
-    elem: '#test3'
-    ,url: '/mainadmin/edulist'
-    ,cols: [[
-      {checkbox: true, fixed: true},
-      {field:'id', title: 'ID', width:100, sort: true}
-      ,{field:'account', title: '代理账号', width:150}
-      ,{field:'group_credit', title: '当前额度', width:150, sort: true, event:'changedu'}
-    ]]
-    ,page: true
-    ,height: 520
-  });
-  
-  //监听单元格事件
-  table.on('tool(test3)', function(obj){
-    var data = obj.data;
-    jq = layui.jquery;
-    if(obj.event === 'changedu'){
-      layer.prompt({
-        formType: 3
-        ,title: '添加 ['+ data.account +'] 信用额度'
-        ,value: '10000'
-      }, function(value, index){
-        score = parseFloat(data.group_credit) + parseFloat(value); 
-        groupId = data.id;
-        jq.ajax({
-            url: '/mainadmin/gaiedu?groupId='+groupId+'&score='+value,
-            dataType: "json",
-            cache: false,
-            success: function (data) {
-                console.log(data);
-                if (data.code == 0) {
-                    layer.close(index);
-                    obj.update({
-                        group_credit: data.data.credit
-                    });
-                }else{
-                    alert('接口错误');
-                }
-            },
+        // 渲染已知数据
+        var inst = table.render({
+            elem: '#ID-table-demo-data',
+            cols: [[ //标题栏
+                {field: 'admin_username', title: '所属机器人', width: 120},
+                {field: 'user_name', title: '昵称', width: 120},
+                {field: 'bet_type', title: '指令', minWidth: 100},
+                {field: 'issue', title: '期号', width: 100,sort: true},
+                {field: 'created_at', title: '投注时间', width: 180,sort: true}
+            ]],
+            data: [
+                {% for order in unprocessed_orders %}
+                    {
+                        "admin_username": "{{ order.admin_username }}",
+                        "user_name": "{{ order.user_name }}",
+                        "bet_type": "{{ order.bet_type }}",
+                        "issue": "{{ order.issue }}",
+                        "created_at": "{{ order.created_at }}"
+                    }{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            page: true, // 是否显示分页
+            limits: [5, 10, 15],
+            limit: 5 // 每页默认显示的数量
         });
-      });
-    }
-  });
-
-    //监听行工具事件
-    table.on('tool(user)', function(obj){
-    var data = obj.data;
-    if(obj.event === 'del'){
-      layer.confirm('真的删除行么', function(index){
-        obj.del();
-        layer.close(index);
-      });
-    } else if(obj.event === 'detail'){
-    window.location.href='./fenchengpage?groupId=' + obj.data.group_id;
-    }
-  });
-
-});
-setInterval(()=>{
-    $.post("/time/ttl");
-  }, 1000)
+    });
 </script>
 
 </body>

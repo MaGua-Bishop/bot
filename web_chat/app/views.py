@@ -27,6 +27,7 @@ from datetime import timedelta
 from app.models import LotteryRecord, BetRecord
 from django.db.models import Sum, Case, When, DecimalField
 from decimal import Decimal
+from .backstage_view import kaijiangxinxi, tongjifenxi, weijiesuan, lishi
 
 # 创建一个异步的JsonResponse
 async_json_response = sync_to_async(JsonResponse)
@@ -689,3 +690,7 @@ def change_money_records(request):
             'status': 'error',
             'message': str(e)
         })
+
+
+
+

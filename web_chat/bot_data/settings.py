@@ -148,7 +148,7 @@ SIMPLEUI_CONFIG = {
     'system_keep': False,
 
     # 用于菜单排序和过滤, 不填此字段为默认排序和全部显示。空列表[] 为全部不显示.
-    'menu_display': ['用户中心', '账号中心', '聊天控制器'],
+    'menu_display': ['用户中心', '聊天控制器','后台'],
 
     # 设置是否开启动态菜单, 默认为False. 如果开启, 则会在每次用户登陆时刷新展示菜单内容。
     # 一般建议关闭。
@@ -170,16 +170,6 @@ SIMPLEUI_CONFIG = {
             ]
         },
         {
-            'name': '账号中心',
-            'icon': 'fa fa-users',
-            'models': [
-                {
-                    'name': '账号信息',
-                    'url': '/admin/app/admin/',
-                }
-            ]
-        },
-        {
             'name': '聊天控制器',
             'icon': 'fa fa-comments',
             'models': [
@@ -189,7 +179,59 @@ SIMPLEUI_CONFIG = {
                 }
             ]
         },
+        {
+            'name': '开奖信息',
+            'icon': 'fa fa-trophy',
+            'models': [
+                {
+                    'name': '开奖信息',
+                    'url': '/admin/app/kaijiangxinxi/',
+                }
+            ]
+        },
+        {
+            'name': '账号管理',
+            'icon': 'fa fa-users',
+            'models': [
+                {
+                    'name': '账号管理',
+                    'url': '/admin/app/admin/',
+                }
+            ]
+        },
+        {
+            'name': '后台',
+            'icon': 'fa fa-user-md',
+            'models': [
+                {
+                    'name': '开奖信息',
+                    'url': '/admin/app/kaijiangxinxi/',
+                },
+                {
+                    'name': '账号管理',
+                    'url': '/admin/app/admin/',
+                },
+                {
+                    'name': '统计分析',
+                    'url': '/admin/app/tongjifenxi/',
+                },
+                {
+                    'name': '未结算',
+                    'url': '/admin/app/weijiesuan/',
+                },
+                {
+                    'name': '历史',
+                    'url': '/admin/app/lishi/',
+                },
+            ]
+        },
     ]
 }
 
 AUTH_USER_MODEL = 'app.Admin'
+
+
+# 静态文件目录配置
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',  # 确保这里指向项目中的 static 文件夹
+]

@@ -1,16 +1,13 @@
-import logging
-import time
-import requests
 import asyncio
+import logging
 import os
-import django
-from channels.db import database_sync_to_async
-from datetime import datetime, timedelta
 from collections import defaultdict
-from decimal import Decimal
-from django.db import transaction
+from datetime import datetime
+
+import django
+import requests
+from channels.db import database_sync_to_async
 from django.db.models import F
-from django.conf import settings
 
 # 设置 Django 环境
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bot_data.settings')
@@ -159,6 +156,7 @@ class LotteryMonitor:
                         # 如果有开奖号码，发送开奖消息
                         if record.code:
                             logger.info(f"准备发送开奖通知: {current_draw_issue}")
+                            image_path = create_result_image(record.issue, record.code, record.time)
                             # 构造开奖通知消息
                             draw_message = (
                                 f"🎉 开奖通知\n"
@@ -175,8 +173,8 @@ class LotteryMonitor:
                                 f"{record.get_third_dragon_tiger_display()} "
                                 f"{record.get_fourth_dragon_tiger_display()}"
                             )
-                            
-                            # 使用HTTP请求调用views中的send_broadcast
+
+                            # 使用HTTP���求调用views中的send_broadcast
                             response = requests.post(
                                 'http://localhost:8000/app/send_broadcast/',  # 修改为实际的URL
                                 json={'message': draw_message}
@@ -359,7 +357,6 @@ class LotteryMonitor:
     @database_sync_to_async
     def process_bet_records(self, lottery_record):
         """处理该期所有下注记录"""
-        from decimal import Decimal
         from django.db import transaction
 
         try:
@@ -416,7 +413,8 @@ class LotteryMonitor:
                         # 获取对应管理员的赔率设置并计算中奖金额
                         admin = Admin.objects.get(username=bet.admin_username)
                         bet.win_amount = bet.amount * admin.odds  # 直接使用odds值
-                        logger.info(f"中奖计算 - 管理员: {bet.admin_username}, 赔率: {admin.odds}, 下注金额: {bet.amount}, 中奖金额: {bet.win_amount}")
+                        logger.info(
+                            f"中奖计算 - 管理员: {bet.admin_username}, 赔率: {admin.odds}, 下注金额: {bet.amount}, 中奖金额: {bet.win_amount}")
 
                         try:
                             user = User.objects.select_for_update().get(id=bet.user_id)
@@ -428,7 +426,8 @@ class LotteryMonitor:
                                 now_money=user.money + bet.win_amount,  # 更新后的余额
                                 change_type='中奖增加'
                             )
-                            logger.info(f"用户 {bet.user_id} 余额已更新 - 原余额: {user.money}, 中奖金额: {bet.win_amount}, 新余额: {user.money + bet.win_amount}")
+                            logger.info(
+                                f"用户 {bet.user_id} 余额已更新 - 原余额: {user.money}, 中奖金额: {bet.win_amount}, 新余额: {user.money + bet.win_amount}")
 
                             # 将中奖消息添加到对应聊天室的列表中
                             win_message = (
@@ -466,6 +465,54 @@ class LotteryMonitor:
         except Exception as e:
             logger.error(f"处理下注记录时出错: {str(e)}")
             return []
+
+
+from PIL import Image, ImageDraw, ImageFont
+from django.conf import settings
+
+
+def create_result_image(issue, code, draw_time):
+    """生成开奖结果图片并保存"""
+    logger.info(f'开始生成图片: 期号={issue}, 开奖号码={code}, 开奖时间={draw_time}')
+
+    if issue is None or code is None or draw_time is None:
+        logger.error("期号、开奖号码或开奖时间为 None，无法生成图片")
+        return None  # 或者抛出异常
+
+    # 图片尺寸和背景颜色
+    width, height = 600, 400
+    background_color = (255, 255, 255)  # 白色背景
+    text_color = (0, 0, 0)  # 黑色文字
+
+    try:
+        # 确保目录存在
+        image_dir = 'static/image'  # 直接指定路径
+        os.makedirs(image_dir, exist_ok=True)
+
+        # 创建图片
+        image = Image.new('RGB', (width, height), background_color)
+        draw = ImageDraw.Draw(image)
+
+        # 设置字体（确保路径正确，或使用默认字体）
+        font = ImageFont.load_default()
+
+        # 绘制标题
+        draw.text((20, 20), "开奖结果", fill=text_color, font=font)
+        draw.text((20, 60), f"第{issue}期", fill=text_color, font=font)
+        draw.text((20, 100), draw_time, fill=text_color, font=font)
+
+        # 绘制开奖号码
+        draw.text((20, 140), f"开奖号码: {code}", fill=text_color, font=font)
+
+        # 保存图片
+        image_path = os.path.join(image_dir, f'{issue}_result_image.png')
+        image.save(image_path)
+        logger.info(f"图片成功保存到: {image_path}")
+        return image_path
+
+    except Exception as e:
+        logger.error(f"生成图片时出错: {str(e)}")
+        return None
 
 
 async def start_monitoring():

@@ -15,13 +15,27 @@ from django.db import models
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django import forms
-
+from app import views
 from app import models as app_models
 from app.models import Admin
 
 
 # 自定义 AdminSite
 class CustomAdminSite(AdminSite):
+
+    def get_urls(self):
+        # 默认的管理后台 URLs
+        default_urls = super().get_urls()
+        # 添加自定义路径
+        custom_urls = [
+            path('app/kaijiangxinxi/', self.admin_view(views.kaijiangxinxi), name='kaijiangxinxi'),
+            path('app/tongjifenxi/', self.admin_view(views.tongjifenxi), name='tongjifenxi'),
+            path('app/weijiesuan/', self.admin_view(views.weijiesuan), name='weijiesuan'),
+            path('app/lishi/', self.admin_view(views.lishi), name='lishi'),
+        ]
+        # 合并默认和自定义路径
+        return custom_urls + default_urls
+
     def admin_view(self, view, cacheable=False):
         # 包装原始视图函数
         original_view = super().admin_view(view, cacheable)
