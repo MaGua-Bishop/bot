@@ -107,7 +107,9 @@ def handle_forwarded_message(message):
         title = message.forward_from_chat.title
 
         if TGInvite.objects.filter(chat_id=channel_id).exists():
-            bot.send_message(user_id, f"《{title}》频道已添加成功")
+            markup = types.InlineKeyboardMarkup()
+            markup.add(types.InlineKeyboardButton("查看群聊|频道", callback_data="query_group"))
+            bot.send_message(user_id, f"《{title}》频道已存在", parse_mode="html", reply_markup=markup)
         else:
             try:
                 TGInvite.objects.create(chat_id=channel_id, chat_title=title, inviter_id=user_id, chat_type='channel')
