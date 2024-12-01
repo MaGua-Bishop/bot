@@ -2,10 +2,9 @@ import asyncio
 import logging
 import datetime
 from channels.db import database_sync_to_async
-from app.models import Message, Admin,User, ChangeMoney
+from app.models import Message, Admin, User, ChangeMoney
 from channels.layers import get_channel_layer
 from decimal import Decimal
-
 
 logging.basicConfig(
     level=logging.INFO,
@@ -86,7 +85,8 @@ class ChatBot:
 
                 # 检查下注金额是否超过最大下注金额
                 if amount > max_bet_amount:
-                    await self.send_response(room_id, f"❌ 下注金额超过最大限制\n最大下注金额: {max_bet_amount:.2f}", consumer)
+                    await self.send_response(room_id, f"❌ 下注金额超过最大限制\n最大下注金额: {max_bet_amount:.2f}",
+                                             consumer)
                     return
 
                 # 检查用户余额
@@ -105,6 +105,7 @@ class ChatBot:
                             admin_username=room_id,
                             issue=current_betting_issue,
                             bet_type=bet_type,
+                            message=message,
                             amount=amount
                         )
                         # 发送下注确认消息
@@ -157,10 +158,10 @@ class ChatBot:
 
             # 查找最新的可下注期号（状态为0且创建时间在5分钟内）
             record = (LotteryRecord.objects
-                     .filter(status=0)
-                     .filter(created_at__gte=five_minutes_ago)  # 创建时间不早于5分钟前
-                     .order_by('-issue')
-                     .first())
+                      .filter(status=0)
+                      .filter(created_at__gte=five_minutes_ago)  # 创建时间不早于5分钟前
+                      .order_by('-issue')
+                      .first())
 
             if record:
                 logger.info(f"获取到当前可下注期号: {record.issue}, 创建时间: {record.created_at}")
@@ -185,7 +186,7 @@ class ChatBot:
             return False
 
     @database_sync_to_async
-    def create_bet_record(self, user_id, admin_username, issue, bet_type, amount):
+    def create_bet_record(self, user_id, admin_username, issue, bet_type, message, amount):
         """创建下注记录"""
         from app.models import BetRecord, User
         try:
@@ -199,11 +200,13 @@ class ChatBot:
                 admin_username=admin_username,
                 issue=issue,
                 bet_type=bet_type,
+                message=message,
                 amount=Decimal(str(amount)),  # 确保金额是 Decimal 类型
                 status=0
             )
             bet_record.save()
-            logger.info(f"创建下注记录成功: {user_name}({user_id}) - {admin_username} - {issue} - {bet_type} - {amount}")
+            logger.info(
+                f"创建下注记录成功: {user_name}({user_id}) - {admin_username} - {issue} - {bet_type} - {amount}")
             return True
         except User.DoesNotExist:
             logger.error(f"用户 {user_id} 不存在")

@@ -1,0 +1,130 @@
+{% load static %}
+{% block content %}
+    <!DOCTYPE html>
+    <html lang="zh" xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>L o g i n</title>
+        <link rel="stylesheet" href="{% static 'layui/css/layui.css' %}" media="all">
+        <link rel="stylesheet" href="{% static 'css/styles.css' %}"> 
+        <style>
+            * { padding: 0; margin: 0; font-size: 12px; }
+            html, body { width: 100%; min-width: 10px; }
+            ul, ol { list-style: none; }
+            .clearfix:after { content: "."; display: block; height: 0; clear: both; visibility: hidden; }
+            .clearfix { display: inline-block; }
+            * html .clearfix { height: 1%; }
+            .clearfix { display: block; }
+            .df { margin: 8% auto; width: 80%; border: 2px solid #bbbbbb; max-width: 620px; min-width: 170px; }
+            .df * { line-height: 25px; }
+            .df li { position: relative; display: inline; float: left; }
+            .df input { border: 1px solid #444444; width: 80px; height: 25px; line-height: 25px; }
+            .df img { width: 100px; height: 25px; line-height: 25px; }
+            .tit { display: block; }
+            .df ul { margin: 0 0 10px 10px; }
+            {#.inpgroup { display: line-block; }#}
+            .inpgroup li { margin-right: 20px; }
+        </style>
+    </head>
+    <body>
+    <div class="layui-container">
+        <div class="login-content" id="LAY-user-login">
+            <div class="form-tab">
+                <form action="">
+                    <div class="df">
+                        <div>
+                            <ul class="inpgroup clearfix">
+                                <li>
+                                    <span class="tit">用户名:</span>
+                                    <input name="username" id="lay-user-login-username" type="text" value="" style="border: 1px solid red;">
+                                </li>
+                                <li>
+                                    <span class="tit">密码:</span>
+                                    <input name="password" id="lay-user-login-password" type="password" value="">
+                                </li>
+                                <li style="position:relative; width:75px;">
+                                    <button style="margin-top:22px;width:80px;height:30px;text-align:center;" lay-submit="" lay-filter="login-submit" id="login-btn">登 录</button>
+                                </li>
+                                <li>
+                                    <span id="msg" style="display: block; width: 100%; height: 20px; margin-top: 27px; color: red; font-weight: bold;"></span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'layui/layui.js' %}" charset="utf-8"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function setCookie(name, value) {
+            var Days = 30;
+            var exp = new Date();
+            exp.setTime(exp.getTime() + Days * 24 * 60 * 60 * 1000);
+            document.cookie = name + "=" + value + ";expires=" + exp.toGMTString() + ";path=/";
+        }
+
+        layui.config({base: '/static/js/'}).use(['form', 'layer', 'jquery'], function () {
+            var $ = layui.jquery;
+            var form = layui.form;
+
+            $('#login-btn').click(function (event) {
+                event.preventDefault();
+            });
+
+            form.on('submit(login-submit)', function (data) {
+                var userName = $('#lay-user-login-username').val();
+                var userPass = $('#lay-user-login-password').val();
+
+                if (userName.length == 0) {
+                    layer.alert('请输入账号');
+                    return;
+                }
+                if (userPass.length == 0) {
+                    layer.alert('请输入密码');
+                    return;
+                }
+
+                var load = layer.load(1);
+                $.ajax({
+                    url: '/agentadmin/login',
+                    type: 'post',
+                    data: {
+                        'account': userName,
+                        'password': userPass
+                    },
+                    xhrFields: {
+                        withCredentials: true
+                    },
+                    success: function (res) {
+                        layer.close(load);
+                        if (res.error_code == 0) {
+                            setCookie('agent_session_id', res.cookie);
+                            location.href = res.url;
+                            return;
+                        } else {
+                            layer.msg(res.error_msg, {
+                                offset: '200px',
+                                icon: 2,
+                                time: 2000
+                            });
+                        }
+                    },
+                    fail: function (error) {
+                        layer.close(load);
+                        layer.msg('登入失败,网络请求错误', {
+                            offset: '200px',
+                            icon: 0,
+                            time: 1000
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+    </body>
+    </html>
+{% endblock %}

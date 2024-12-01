@@ -58,7 +58,7 @@ class ChangeMoney(models.Model):
         ('中奖增加', '中奖增加')
     ]
 
-    user = models.ForeignKey("User", on_delete=models.CASCADE,verbose_name="用户")
+    user = models.ForeignKey("User", on_delete=models.CASCADE, verbose_name="用户")
     last_money = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), verbose_name="原金额")
     money = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), verbose_name="变更金额")
     now_money = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), verbose_name="现金额")
@@ -71,45 +71,58 @@ class ChangeMoney(models.Model):
 
 
 class Message(models.Model):
-    user = models.ForeignKey("User", on_delete=models.CASCADE, null=True, blank=True)  # 允许为空
+    user = models.ForeignKey("User", on_delete=models.CASCADE, null=True, blank=True)
     admin_username = models.CharField(max_length=255, verbose_name="所属代理", null=True, blank=True)
     message = models.TextField(null=True, blank=True)
     file_url = models.URLField(null=True, blank=True)
     file_type = models.CharField(max_length=50, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
-    is_bot = models.BooleanField(default=False, verbose_name="是否机器人消息")  # 新增字段
+    is_bot = models.BooleanField(default=False, verbose_name="是否机器人消息")
 
     def __str__(self):
         return f"{self.user} - {self.timestamp}"
 
 
 class Admin(AbstractUser):
-    # 继承了 AbstractUser 的字段：username, password, is_superuser, is_staff 等
 
     available_time = models.DateTimeField(null=True, blank=True, verbose_name="可用时间")
-    is_open = models.BooleanField(default=False)
-    odds = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('100'))
-    total_score = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
-    close_seconds = models.IntegerField(default=60)
-    rebate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0'))
-    max_bet_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    is_open = models.BooleanField(default=False)  # 开封盘
+    odds = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('100'))  # 聊天控制器的赔率
+    total_score = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))  # 聊天控制器的积分
+    close_seconds = models.IntegerField(default=60)  # 聊天控制器的预留封盘
+    rebate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0'))  # 聊天控制器的返水
+    max_bet_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))  # 最大下注金额
 
-    # 新增字段
-    single_bet_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="特指令单场限额")
-    normal_single_player_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="普通指令单场单玩家限额")
-    single_order_max_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="单场注单最大限额")
-    positive_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="正单注限额")
-    corner_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="角单注限额")
-    single_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="念单注限额")
-    common_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="通单注限额")
-    vehicle_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="车单注限额")
-    special_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="特单注限额")
-    single_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="单单注限额")
-    double_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="双单注限额")
-    large_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="大单注限额")
-    small_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="小单注限额")
-    fan_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="番单注限额")
-    add_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'), verbose_name="加单注限额")
+    single_bet_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'),
+                                           verbose_name="特指令单场限额")
+    normal_single_player_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'),
+                                                     verbose_name="普通指令单场单玩家限额")
+    single_order_max_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'),
+                                                 verbose_name="单场注单最大限额")
+    positive_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'),
+                                               verbose_name="正单注限额")
+    corner_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'),
+                                             verbose_name="角单注限额")
+    single_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'),
+                                             verbose_name="念单注限额")
+    common_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'),
+                                             verbose_name="通单注限额")
+    vehicle_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'),
+                                              verbose_name="车单注限额")
+    special_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'),
+                                              verbose_name="特单注限额")
+    single_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'),
+                                             verbose_name="单单注限额")
+    double_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'),
+                                             verbose_name="双单注限额")
+    large_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'),
+                                            verbose_name="大单注限额")
+    small_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'),
+                                            verbose_name="小单注限额")
+    fan_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'),
+                                          verbose_name="番单注限额")
+    add_order_limit = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'),
+                                          verbose_name="加单注限额")
 
     # 设置必需字段
     REQUIRED_FIELDS = []  # username 和 password 已经是必需的了
@@ -183,16 +196,18 @@ class LotteryRecord(models.Model):
 
 
 class BetRecord(models.Model):
+    """下注记录"""
     user_id = models.CharField(max_length=100)
     user_name = models.CharField(max_length=255, verbose_name="用户名", default='Unknown')
-    admin_username = models.CharField(max_length=100)
-    issue = models.CharField(max_length=20)
-    bet_type = models.CharField(max_length=20)
-    amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    admin_username = models.CharField(max_length=100)  # 管理员(所属聊天室)
+    issue = models.CharField(max_length=20)  # 期号
+    bet_type = models.CharField(max_length=20)  # 下注类型
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))  # 下注金额
     status = models.IntegerField(default=0)  # 0-未开奖, 1-已开奖
-    win_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    win_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))  # 赢金额
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    message = models.TextField(null=True, blank=True)  # 下注指令
 
     class Meta:
         db_table = 'bet_records'

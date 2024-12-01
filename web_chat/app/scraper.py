@@ -156,6 +156,7 @@ class LotteryMonitor:
                         # 如果有开奖号码，发送开奖消息
                         if record.code:
                             logger.info(f"准备发送开奖通知: {current_draw_issue}")
+                            #调用创建开奖图片
                             image_path = create_result_image(record.issue, record.code, record.time)
                             # 构造开奖通知消息
                             draw_message = (
@@ -174,9 +175,9 @@ class LotteryMonitor:
                                 f"{record.get_fourth_dragon_tiger_display()}"
                             )
 
-                            # 使用HTTP���求调用views中的send_broadcast
+
                             response = requests.post(
-                                'http://localhost:8000/app/send_broadcast/',  # 修改为实际的URL
+                                'http://localhost:8000/app/send_broadcast/',
                                 json={'message': draw_message}
                             )
                             if response.status_code == 200:
@@ -191,7 +192,7 @@ class LotteryMonitor:
                             for room_id, message in messages_to_send:
                                 try:
                                     response = requests.post(
-                                        'http://localhost:8000/app/send_broadcast/',  # 修改为实际的URL
+                                        'http://localhost:8000/app/send_broadcast/',
                                         json={'message': message, 'room_id': room_id}
                                     )
                                     if response.status_code == 200:
@@ -224,7 +225,7 @@ class LotteryMonitor:
                             f"本期已停止下注，请等待开奖"
                         )
                         response = requests.post(
-                            'http://localhost:8000/app/send_broadcast/',  # 修改为实际的URL
+                            'http://localhost:8000/app/send_broadcast/',
                             json={'message': stop_message}
                         )
                         if response.status_code == 200:
@@ -276,9 +277,8 @@ class LotteryMonitor:
                     f"请各位玩家下注"
                 )
 
-                # 使用HTTP请求调用views中的send_broadcast
                 response = requests.post(
-                    'http://localhost:8000/app/send_broadcast/',  # 修改为实际的URL
+                    'http://localhost:8000/app/send_broadcast/',
                     json={'message': next_message}
                 )
                 if response.status_code == 200:

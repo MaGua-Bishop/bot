@@ -1,0 +1,26 @@
+{% extends "agentadmin/base.html" %}
+
+{% load static %}
+
+{% block content %}
+    <div class="container">
+        <h1>开奖信息</h1>
+        <h2>当期开奖结果：</h2>
+        <ul>
+            {% for result in current_results %}
+                <li>{{ result.date }}: {{ result.result }}</li>
+            {% endfor %}
+        </ul>
+
+        <h2>历史开奖结果：</h2>
+        <ul>
+            {% for result in history_results %}
+                <li>{{ result.date }}: {{ result.result }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <link rel="stylesheet" href="{% static 'layui/css/layui.css' %}" media="all">
+    <script src="{% static 'layui/layui.js' %}" charset="utf-8"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+{% endblock %}

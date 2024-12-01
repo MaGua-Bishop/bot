@@ -4,7 +4,6 @@ from . import views
 app_name = 'app'  # 添加命名空间
 
 urlpatterns = [
-    # 注意这里不需要包含 'admin/' 前缀，因为它已经在主urls.py中定义
     # 删除用户
     path('chatcontroller/delete_user/', views.delete_user, name='delete_user'),
     # 创建用户

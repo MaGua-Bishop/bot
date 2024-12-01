@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'layui/css/layui.css' %}" media="all">
+    <script src="{% static 'layui/layui.js' %}"></script>
+    <title>{% block title %}管理后台{% endblock %}</title>
+</head>
+<body>
+<div class="layui-container">
+    <ul class="layui-nav layui-bg-cyan" lay-filter="demo">
+        <li class="layui-nav-item layui-this"><a href="{% url 'agentadmin:kaijiangxinxi' %}">开奖信息</a></li>
+        <li class="layui-nav-item"><a href="{% url 'agentadmin:zhanghaoguanli' %}">账号管理</a></li>
+        <li class="layui-nav-item"><a href="{% url 'agentadmin:xiugaimima' %}">修改密码</a></li>
+        <li class="layui-nav-item"><a href="{% url 'agentadmin:tongjifenxi' %}">统计分析</a></li>
+        <li class="layui-nav-item"><a href="{% url 'agentadmin:weijiesuan' %}">未结算</a></li>
+        <li class="layui-nav-item"><a href="{% url 'agentadmin:lishi' %}">历史</a></li>
+        <li class="layui-nav-item"><a href="{% url 'agentadmin:anquantuichu' %}">安全退出</a></li>
+        <span class="layui-nav-bar"></span>
+    </ul>
+    <div class="content" style="margin-top: 10px">
+        {% block content %}
+            <!-- 子页面内容会覆盖这里 -->
+        {% endblock %}
+    </div>
+</div>
+<script>
+    layui.use(['element'], function () {
+        var element = layui.element; // 初始化 Layui 的导航模块
+    });
+</script>
+</body>
+</html>

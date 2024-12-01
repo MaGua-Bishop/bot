@@ -1,0 +1,70 @@
+{% extends "agentadmin/base.html" %}
+{% load static %}
+
+{% block content %}
+    <style>
+        .panel {
+            border: 1px black solid;
+            padding:10%;
+            background-color:#ebf7fd;
+            border-color:rgba(43, 110, 143, 0.3);
+            border-radius:4px;
+        }
+        .nbsp {
+            margin: 10px
+        }
+
+        .titleskin {
+            margin-bottom: 10px
+        }
+    </style>
+    <div class="layui-container">
+        <div class="layui-col-md12 nbsp"></div>
+        <div class="layui-col-md12 panel">
+            <form class="layui-form" id="queryForm" action="" method="get">
+                <label>查询指定结果</label>
+                <input type="text" name="qihao" required placeholder="请输入期号，如30288619" autocomplete="off" class="layui-input">
+                <button type="submit" class="layui-btn" style="margin-top: 10px">查询</button>
+            </form>
+            <br>
+            <label id="res" style="display:none"></label>
+        </div>
+        <div class="layui-col-md12 nbsp"></div>
+        <div class="layui-col-md12 panel">
+            <label>
+                <h2>只显示近期前一百期：</h2>
+            </label>
+            <br>
+            {% for result in history_results %}
+                {{ result.issue }}期，{{ result.time }}，{{ result.code }}<br>
+            {% endfor %}
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="{% static 'layui/css/layui.css' %}" media="all">
+    <script src="{% static 'layui/layui.js' %}" charset="utf-8"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // 处理表单提交
+            $('#queryForm').on('submit', function(event) {
+                event.preventDefault(); // 阻止默认表单提交
+
+                // 获取输入的期号
+                var qihao = $('input[name="qihao"]').val();
+
+                // 发送 AJAX 请求
+                $.get('{% url "agentadmin:lishi" %}', { qihao: qihao }, function(data) {
+                    // 更新结果标签
+                    if (data.query_result && data.query_result.issue) {
+                        $('#res').text('查询结果：'+data.query_result.issue + '期，' + data.query_result.time + '，' + data.query_result.code);
+                    } else {
+                        $('#res').text('未找到该期号');
+                    }
+                    $('#res').show(); // 显示结果标签
+                });
+            });
+        });
+    </script>
+{% endblock %}

@@ -15,4 +15,6 @@ urlpatterns = [
                   path('upload/', views.upload, name='upload'),
                   path('game/', views.room, name='room'),
                   path('app/', include('app.urls')),
+                  path('agentadmin/',include('agentadmin.urls')),
+
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
