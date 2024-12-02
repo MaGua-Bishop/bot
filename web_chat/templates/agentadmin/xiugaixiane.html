@@ -1,0 +1,145 @@
+{% load static %}
+
+{% block content %}
+    <style>
+        .panel {
+            border: 1px black solid;
+            padding: 10%;
+            background-color: #ebf7fd;
+            border-color: rgba(43, 110, 143, 0.3);
+            border-radius: 4px;
+        }
+
+        .nbsp {
+            margin: 10px
+        }
+
+        .titleskin {
+            margin-bottom: 10px
+        }
+
+    </style>
+    <div class="layui-container">
+        <br>
+        <input type="hidden" id="groupId" value="">
+        <form class="layui-form" action="">
+            <div class="layui-form-item">
+                <input type="hidden" name="groupId" value="{{ agentadmin_info.id }}">
+                <label class=""><b>特指令单场限额(无须设置)</b></label>
+                <input type="text" name="te_wj" lay-verify="required" value="{{ agentadmin_info.single_bet_limit }}"
+                       autocomplete="off" class="layui-input" disabled="disabled">
+            </div>
+
+            <div class="layui-form-item">
+                <label class=""><b>普通指令单场单玩家限额</b></label>
+                <input type="text" name="max" lay-verify="required"
+                       value="{{ agentadmin_info.normal_single_player_limit }}" autocomplete="off" class="layui-input">
+            </div>
+
+            <div class="layui-form-item">
+                <label class=""><b>单场注单最大限额</b></label>
+                <input type="text" name="allmax" lay-verify="required"
+                       value="{{ agentadmin_info.single_order_max_limit }}" autocomplete="off" class="layui-input">
+            </div>
+
+            <div class="layui-form-item">
+                <label class=""><b>正单注限额</b></label>
+                <input type="text" name="zheng" lay-verify="required" value="{{ agentadmin_info.positive_order_limit }}"
+                       autocomplete="off" class="layui-input">
+            </div>
+
+            <div class="layui-form-item">
+                <label class=""><b>角单注限额</b></label>
+                <input type="text" name="jiao" lay-verify="required" value="{{ agentadmin_info.corner_order_limit }}"
+                       autocomplete="off" class="layui-input">
+            </div>
+
+            <div class="layui-form-item">
+                <label class=""><b>念单注限额</b></label>
+                <input type="text" name="nian" lay-verify="required" value="{{ agentadmin_info.single_order_limit }}"
+                       autocomplete="off" class="layui-input">
+            </div>
+
+            <div class="layui-form-item">
+                <label class=""><b>通单注限额</b></label>
+                <input type="text" name="tong" lay-verify="required" value="{{ agentadmin_info.common_order_limit }}"
+                       autocomplete="off" class="layui-input">
+            </div>
+
+            <div class="layui-form-item">
+                <label class=""><b>车单注限额</b></label>
+                <input type="text" name="che" lay-verify="required" value="{{ agentadmin_info.vehicle_order_limit }}"
+                       autocomplete="off" class="layui-input">
+            </div>
+
+            <div class="layui-form-item">
+                <label class=""><b>特单注限额</b></label>
+                <input type="text" name="te" lay-verify="required" value="{{ agentadmin_info.special_order_limit }}"
+                       autocomplete="off" class="layui-input">
+            </div>
+
+            <div class="layui-form-item">
+                <label class=""><b>单单注限额</b></label>
+                <input type="text" name="dan" lay-verify="required" value="{{ agentadmin_info.single_order_limit }}"
+                       autocomplete="off" class="layui-input">
+            </div>
+
+            <div class="layui-form-item">
+                <label class=""><b>双单注限额</b></label>
+                <input type="text" name="shuang" lay-verify="required" value="{{ agentadmin_info.double_order_limit }}"
+                       autocomplete="off" class="layui-input">
+            </div>
+
+            <div class="layui-form-item">
+                <label class=""><b>大单注限额</b></label>
+                <input type="text" name="da" lay-verify="required" value="{{ agentadmin_info.large_order_limit }}"
+                       autocomplete="off" class="layui-input">
+            </div>
+
+            <div class="layui-form-item">
+                <label class=""><b>小单注限额</b></label>
+                <input type="text" name="xiao" lay-verify="required" value="{{ agentadmin_info.small_order_limit }}"
+                       autocomplete="off" class="layui-input">
+            </div>
+
+            <div class="layui-form-item">
+                <label class=""><b>番单注限额</b></label>
+                <input type="text" name="fan" lay-verify="required" value="{{ agentadmin_info.fan_order_limit }}"
+                       autocomplete="off" class="layui-input">
+            </div>
+
+            <div class="layui-form-item">
+                <label class=""><b>加单注限额</b></label>
+                <input type="text" name="jia" lay-verify="required" value="{{ agentadmin_info.add_order_limit }}"
+                       autocomplete="off" class="layui-input">
+            </div>
+            <div class="layui-form-item">
+                <button class="layui-btn" lay-submit="" lay-filter="comfirm">确认修改</button>
+            </div>
+        </form>
+    </div>
+    <link rel="stylesheet" href="{% static 'layui/css/layui.css' %}" media="all">
+    <script src="{% static 'layui/layui.js' %}" charset="utf-8"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('.layui-form').on('submit', function (event) {
+                event.preventDefault(); // 阻止表单默认提交
+                var formData = $(this).serialize(); // 获取表单数据
+
+                // 发送 AJAX 请求
+                $.ajax({
+                    url: '', // 当前页面的 URL
+                    method: 'POST',
+                    data: formData,
+                    success: function (response) {
+                        alert(response.message); // 显示成功消息
+                    },
+                    error: function () {
+                        alert('修改失败，请重试。');
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

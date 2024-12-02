@@ -1,0 +1,79 @@
+{% extends "agentadmin/base.html" %}
+
+{% load static %}
+
+{% block content %}
+    <style>
+        .panel {
+            border: 1px black solid;
+            padding:10%;
+            background-color:#ebf7fd;
+            border-color:rgba(43, 110, 143, 0.3);
+            border-radius:4px;
+        }
+        .nbsp {
+            margin: 10px
+        }
+
+        .titleskin {
+            margin-bottom: 10px
+        }
+        tbody {
+            display: table-row-group;
+            vertical-align: middle;
+            unicode-bidi: isolate;
+            border-color: inherit;
+        }
+        tr {
+            display: table-row;
+            vertical-align: inherit;
+            unicode-bidi: isolate;
+            border-color: inherit;
+        }
+        td {
+            padding: 15px;
+        }
+        b {
+            font-weight: bold;
+        }
+    </style>
+    <div class="container">
+        <div class="layui-col-md12" style="padding:10px">
+            选择日期：
+                <div class="layui-inline">
+                    <select id="range" style="height:40px" name="date">
+                        {% for date in date_list %}
+                            <option value="{{ date }}" {% if date == selected_date %}selected{% endif %}>{{ date }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="layui-btn" lay-submit="" lay-filter="comfirm" onclick="viewData()">查看数据</button>
+                </div>
+        </div>
+        <div class="layui-col-md12">
+            <table border="1" id="showgrid"><tbody></tbody></table>
+        </div>
+    </div>
+    <link rel="stylesheet" href="{% static 'layui/css/layui.css' %}" media="all">
+    <script src="{% static 'layui/layui.js' %}" charset="utf-8"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function viewData() {
+            var selectedDate = document.getElementById('range').value;
+            $.ajax({
+                url: '/agentadmin/tongjifenxi_info?date=' + selectedDate,
+                method: 'GET',
+                success: function(response) {
+                    var data = response.data;
+                    var tableBody = $('#showgrid tbody');
+                    tableBody.empty(); 
+                    data.forEach(function(item) {
+                        tableBody.append('<tr><td>' + item + '</td></tr>');
+                    });
+                },
+                error: function() {
+                    alert('获取数据失败，请重试。');
+                }
+            });
+        }
+    </script>
+{% endblock %}

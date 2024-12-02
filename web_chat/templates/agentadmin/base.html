@@ -11,13 +11,27 @@
 <body>
 <div class="layui-container">
     <ul class="layui-nav layui-bg-cyan" lay-filter="demo">
-        <li class="layui-nav-item layui-this"><a href="{% url 'agentadmin:kaijiangxinxi' %}">开奖信息</a></li>
-        <li class="layui-nav-item"><a href="{% url 'agentadmin:zhanghaoguanli' %}">账号管理</a></li>
-        <li class="layui-nav-item"><a href="{% url 'agentadmin:xiugaimima' %}">修改密码</a></li>
-        <li class="layui-nav-item"><a href="{% url 'agentadmin:tongjifenxi' %}">统计分析</a></li>
-        <li class="layui-nav-item"><a href="{% url 'agentadmin:weijiesuan' %}">未结算</a></li>
-        <li class="layui-nav-item"><a href="{% url 'agentadmin:lishi' %}">历史</a></li>
-        <li class="layui-nav-item"><a href="{% url 'agentadmin:anquantuichu' %}">安全退出</a></li>
+        <li class="layui-nav-item {% if request.path == '/agentadmin/kaijiangxinxi/' %}layui-this{% endif %}">
+            <a href="{% url 'agentadmin:kaijiangxinxi' %}">开奖信息</a>
+        </li>
+        <li class="layui-nav-item {% if request.path == '/agentadmin/zhanghaoguanli/' %}layui-this{% endif %}">
+            <a href="{% url 'agentadmin:zhanghaoguanli' %}">账号管理</a>
+        </li>
+        <li class="layui-nav-item {% if request.path == '/agentadmin/xiugaimima/' %}layui-this{% endif %}">
+            <a href="{% url 'agentadmin:xiugaimima' %}">修改密码</a>
+        </li>
+        <li class="layui-nav-item {% if request.path == '/agentadmin/tongjifenxi/' %}layui-this{% endif %}">
+            <a href="{% url 'agentadmin:tongjifenxi' %}">统计分析</a>
+        </li>
+        <li class="layui-nav-item {% if request.path == '/agentadmin/weijiesuan/' %}layui-this{% endif %}">
+            <a href="{% url 'agentadmin:weijiesuan' %}">未结算</a>
+        </li>
+        <li class="layui-nav-item {% if request.path == '/agentadmin/lishi/' %}layui-this{% endif %}">
+            <a href="{% url 'agentadmin:lishi' %}">历史</a>
+        </li>
+        <li class="layui-nav-item {% if request.path == '/agentadmin/anquantuichu/' %}layui-this{% endif %}">
+            <a href="{% url 'agentadmin:anquantuichu' %}">安全退出</a>
+        </li>
         <span class="layui-nav-bar"></span>
     </ul>
     <div class="content" style="margin-top: 10px">

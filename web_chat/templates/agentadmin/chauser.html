@@ -1,0 +1,74 @@
+{% load static %}
+
+{% block content %}
+    <link rel="stylesheet" href="{% static 'layui/css/layui.css' %}" media="all">
+    <script src="{% static 'layui/layui.js' %}" charset="utf-8"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        thead_1 {
+            display: table-header-group;
+            vertical-align: middle;
+            unicode-bidi: isolate;
+            border-color: inherit;
+        }
+
+        .laytable-cell-1-0-0 {
+            width: 150px;
+        }
+
+        .laytable-cell-1-0-1 {
+        }
+    </style>
+    <div class="layui-container">
+        <br>
+        <input type="hidden" id="groupId" value="64">
+        <div class="layui-col-md12 ">
+            <table class="layui-hide" id="test" lay-filter="test"></table>
+            <div class="layui-form layui-border-box layui-table-view" lay-filter="LAY-table-1" lay-id="test" style=" ">
+                <div class="layui-table-box">
+                    <div class="layui-table-header">
+                        <table cellspacing="0" cellpadding="0" border="0" class="layui-table">
+                            <tr>
+                                <th data-field="nickname" data-key="1-0-0" class="">
+                                    <div class="layui-table-cell laytable-cell-1-0-0"><span>用户名</span></div>
+                                </th>
+                                <th data-field="points" data-key="1-0-1" class=" layui-unselect" >
+                                    <div class="layui-table-cell laytable-cell-1-0-1"><span>积分</span><span
+                                            class="layui-table-sort layui-inline"><i
+                                            class="layui-edge layui-table-sort-asc" title="升序"></i><i
+                                            class="layui-edge layui-table-sort-desc" title="降序"></i></span></div>
+                                </th>
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                    <div class="layui-table-body layui-table-main">
+                        <table cellspacing="0" cellpadding="0" border="0" class="layui-table">
+                            <tbody>
+                            <tr data-index="0" class="">
+                                <td data-field="nickname" data-key="1-0-0" class="">
+                                    <div class="layui-table-cell laytable-cell-1-0-0">非托会员</div>
+                                </td>
+                                <td data-field="points" data-key="1-0-1" class="">
+                                    <div class="layui-table-cell laytable-cell-1-0-1">{{ not_tuo }}</div>
+                                </td>
+                            </tr>
+                            <tr data-index="1" class="">
+                                <td data-field="nickname" data-key="1-0-0" class="">
+                                    <div class="layui-table-cell laytable-cell-1-0-0">托会员</div>
+                                </td>
+                                <td data-field="points" data-key="1-0-1" class="">
+                                    <div class="layui-table-cell laytable-cell-1-0-1">{{ tuo }}</div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script>
+    </script>
+{% endblock %}

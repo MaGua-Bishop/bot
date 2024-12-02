@@ -1,0 +1,133 @@
+
+{% load static %}
+
+{% block content %}
+    <style>
+        .panel {
+            border: 1px black solid;
+            padding:10%;
+            background-color:#ebf7fd;
+            border-color:rgba(43, 110, 143, 0.3);
+            border-radius:4px;
+        }
+        .nbsp {
+            margin: 10px
+        }
+
+        .titleskin {
+            margin-bottom: 10px
+        }
+        tbody {
+            display: table-row-group;
+            vertical-align: middle;
+            unicode-bidi: isolate;
+            border-color: inherit;
+        }
+        tr {
+            display: table-row;
+            vertical-align: inherit;
+            unicode-bidi: isolate;
+            border-color: inherit;
+        }
+        td {
+            padding: 15px;
+        }
+        b {
+            font-weight: bold;
+        }
+    </style>
+    <div class="layui-container">
+        <br>
+        <input type="hidden" id="groupId" value="">
+        <form class="layui-form layui-form-pane" action="">
+            <div class="layui-form-item">
+                <label class="layui-form-label">上分额度</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="score" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <button class="layui-btn" lay-submit="" lay-filter="shangfen">确认上分</button>
+            </div>
+        </form>
+
+        <form class="layui-form layui-form-pane" action="">
+            <div class="layui-form-item">
+                <label class="layui-form-label">下分额度</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="score" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <button class="layui-btn" lay-submit="" lay-filter="xiafen">确认下分</button>
+            </div>
+        </form>
+        上下分记录
+        <table class="layui-hide" id="test" lay-filter="test"></table><div class="layui-form layui-border-box layui-table-view" lay-filter="LAY-table-1" lay-id="test" style=" "><div class="layui-table-box"><div class="layui-table-header"><table cellspacing="0" cellpadding="0" border="0" class="layui-table"><thead><tr><th data-field="credit" data-key="1-0-0" class=""><div class="layui-table-cell laytable-cell-1-0-0"><span>修改前积分</span></div></th><th data-field="score_var" data-key="1-0-1" class=""><div class="layui-table-cell laytable-cell-1-0-1"><span>额度</span></div></th><th data-field="create_time" data-key="1-0-2" class=""><div class="layui-table-cell laytable-cell-1-0-2"><span>修改日期</span></div></th></tr></thead></table></div><div class="layui-table-body layui-table-main"><table cellspacing="0" cellpadding="0" border="0" class="layui-table"><tbody>
+    {% for item in data %}
+    <tr data-index="{{ forloop.counter0 }}">
+        <td data-field="credit" data-key="1-0-0" data-content="{{ item.credit }}">
+            <div class="layui-table-cell laytable-cell-1-0-0">{{ item.credit }}</div>
+        </td>
+        <td data-field="score_var" data-key="1-0-1">
+            <div class="layui-table-cell laytable-cell-1-0-1">{{ item.score_var }}</div>
+        </td>
+        <td data-field="create_time" data-key="1-0-2">
+            <div class="layui-table-cell laytable-cell-1-0-2">{{ item.create_time }}</div>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody></table></div></div><style>.laytable-cell-1-0-0{ width: 150px; }.laytable-cell-1-0-1{ width: 80px; }.laytable-cell-1-0-2{ width: 200px; }</style></div>
+    </div>
+    <link rel="stylesheet" href="{% static 'layui/css/layui.css' %}" media="all">
+    <script src="{% static 'layui/layui.js' %}" charset="utf-8"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.layui-form-pane[lay-filter="shangfen"]').on('submit', function(event) {
+                event.preventDefault();
+                var score = $(this).find('input[name="score"]').val();
+                var groupId = $('#groupId').val();
+
+                $.ajax({
+                    url: '/agentadmin/shangfen',
+                    method: 'POST',
+                    data: {
+                        score: score,
+                        groupId: groupId,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        alert('上分成功！');
+                    },
+                    error: function() {
+                        alert('上分失败，请重试。');
+                    }
+                });
+            });
+
+            $('.layui-form-pane[lay-filter="xiafen"]').on('submit', function(event) {
+                event.preventDefault();
+                var score = $(this).find('input[name="score"]').val();
+                var groupId = $('#groupId').val();
+
+
+                $.ajax({
+                    url: '/agentadmin/xiafen',
+                    method: 'POST',
+                    data: {
+                        score: score,
+                        groupId: groupId,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        alert('下分成功！');
+                    },
+                    error: function() {
+                        alert('下分失败，请重试。');
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}
