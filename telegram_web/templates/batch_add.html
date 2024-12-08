@@ -1,0 +1,42 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
+    <h1 style="font-size: 24px; text-align: center; margin-bottom: 20px;">批量添加用户</h1>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div style="margin-bottom: 15px;">
+            <label for="batch_data" style="display: block; font-weight: bold; margin-bottom: 5px;">请输入批量用户数据</label>
+            <textarea
+                id="batch_data"
+                name="batch_data"
+                rows="10"
+                style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace;"
+                placeholder="格式示例：https://t.me/aaabcooc、@aaabcooc  一行一个"
+            ></textarea>
+        </div>
+
+        <div style="text-align: center;">
+            <button
+                type="submit"
+                style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;"
+                onmouseover="this.style.backgroundColor='#0056b3'"
+                onmouseout="this.style.backgroundColor='#007bff'"
+            >
+                提交
+            </button>
+            <button
+                type="button"
+                style="padding: 10px 20px; background-color: #d52e3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;"
+                onmouseover="this.style.backgroundColor='#cd0c1b'"
+                onmouseout="this.style.backgroundColor='#d52e3c'"
+                onclick="window.location.href='/admin/app/telegramusername/'"
+            >
+                返回
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
