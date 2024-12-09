@@ -12,14 +12,16 @@ from django.utils.safestring import mark_safe
 from django.conf import settings
 from django.urls import path
 from django.shortcuts import render
+from utils import copy_user_info
+
 
 @admin.register(models.TelegramUserName)
 class TelegramUserName(admin.ModelAdmin):
-    list_display = ['id',"img", 'username_link', 'name', 'about', "status", 'create_time']
+    list_display = ['id', "img", 'username_link', 'name', 'about', "status", 'create_time']
     search_fields = ['username', 'name']
     list_editable = ("status",)
 
-    exclude = ('create_time',"status")
+    exclude = ('create_time', "status")
 
     # 在list页面显示头像
     @admin.display(description='头像', ordering='img')
@@ -32,39 +34,66 @@ class TelegramUserName(admin.ModelAdmin):
         div = f"<a href='https://t.me/{obj.username}' target='_blank'>{obj.username}</a>"
         return mark_safe(div)
         # 添加一个额外的 URL 路由
+
     actions = ['custom_button']
 
-    @button(type='danger', short_description='批量导入用户', enable=True,icon="fas fa-audio-description")
+    @button(type='danger', short_description='批量导入用户', enable=True, icon="fas fa-audio-description")
     def custom_button(self, request, queryset):
         return redirect('/batch_add/')
 
 
-
 @admin.register(models.CopyTelegramUser)
 class CopyTelegramUser(admin.ModelAdmin):
-    list_display = ['id',"username","phone","copyObj","create_time","custom_action"]
+    list_display = ['id', "username", "phone", "copyObj", "create_time", "custom_action"]
     search_fields = ['username', ]
     list_editable = ("copyObj",)
     raw_id_fields = ("copyObj",)
     exclude = ('create_time',)
-    actions = ('layer_input',"test_action")
-    def test_action(self, request, queryset):
-        # 通过单元格执行的action，可以通过request.POST.get('ids')获取到选中的id
-        # queryset 的数据只有一个，如果通过自定义按钮勾行执行，则有多个
-        for obj in queryset:
-            pass
+    actions = ('layer_input', "test_action")
 
-        return JsonResponse(data={
-            'status': 'success',
-            'msg': '修改状态成功！'
-        })
+    def test_action(self, request, queryset):
+        """模仿选中的用户"""
+        success_count = 0
+        failure_messages = []
+
+        for obj in queryset:
+            copy_user_id = obj.copyObj_id
+            try:
+                copy_user = models.TelegramUserName.objects.get(id=copy_user_id)
+                # 确保图像文件存在
+                img_file = copy_user.image.name if copy_user.image else None
+
+                # 调用模仿用户的函数
+                copy_user_info(
+                    user=obj,  # 当前用户对象
+                    username=copy_user.username,  # 被模仿用户的用户名
+                    img_file=img_file,  # 被模仿用户的头像文件
+                    about=copy_user.about,  # 被模仿用户的简介
+                    name=copy_user.name  # 被模仿用户的名称
+                )
+                success_count += 1  # 记录成功的操作
+
+            except models.TelegramUserName.DoesNotExist:
+                failure_messages.append(f'模仿用户失败: {obj.username} 不存在')
+            except Exception as e:
+                failure_messages.append(f'模仿用户 {obj.username} 失败: {str(e)}')
+        if failure_messages:
+            return JsonResponse(data={
+                'status': 'success',
+                'msg': f'部分操作成功！成功模仿 {success_count} 个用户。失败信息: {", ".join(failure_messages)}'
+            })
+        else:
+            return JsonResponse(data={
+                'status': 'success',
+                'msg': f'成功模仿 {success_count} 个用户！'
+            })
+
     test_action.short_description = '模仿'
 
     def custom_action(self, obj):
         return CellAction(text='模仿', action=self.test_action)
 
     custom_action.short_description = '模仿目标账号'
-
 
     def layer_input(self, request, queryset):
         # 这里的queryset 会有数据过滤，只包含选中的数据
@@ -119,6 +148,3 @@ class CopyTelegramUser(admin.ModelAdmin):
             }
         }]
     }
-
-
-

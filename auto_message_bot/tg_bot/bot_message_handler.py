@@ -1,4 +1,6 @@
 from telebot import types
+from telebot.types import MessageEntity
+
 from .bot_config import bot
 import re
 from tg_bot.models import TgButton, TgTimingMessage, TGInvite
@@ -7,10 +9,44 @@ from django.conf import settings
 
 commands = [
     types.BotCommand("start", "启动机器人"),
-    types.BotCommand("help", "帮助")
+    types.BotCommand("help", "帮助"),
+    types.BotCommand("test", "test")
 ]
 bot.set_my_commands(commands, scope=types.BotCommandScopeAllPrivateChats())
 
+
+@bot.message_handler(commands=['test'], func=lambda message: message.chat.type == 'private')
+def test_message(message):
+    bot.send_message(message.chat.id, "请输入消息", parse_mode="html")
+    bot.register_next_step_handler(message, test_copy_message)
+
+
+def test_copy_message(message):
+    # 重建用户消息的文本内容
+    message_text = message.text
+    if message.entities:
+        # 通过原始内容的 entities 重建富文本内容
+        reconstructed_text = ""
+        current_position = 0
+        for entity in message.entities:
+            start = entity.offset
+            end = entity.offset + entity.length
+            # 添加非实体部分
+            reconstructed_text += message_text[current_position:start]
+            # 添加实体部分
+            entity_text = message_text[start:end]
+            if entity.type == 'custom_emoji':
+                reconstructed_text += entity_text
+            else:
+                reconstructed_text += entity_text  # 根据类型可以进一步处理，比如加粗、链接等
+            current_position = end
+        # 添加剩余的非实体部分
+        reconstructed_text += message_text[current_position:]
+    else:
+        reconstructed_text = message_text
+
+    # 发送重建后的消息
+    bot.send_message(message.chat.id, reconstructed_text, parse_mode="html")
 
 @bot.message_handler(commands=['help'], func=lambda message: message.chat.type == 'private')
 def help_message(message):

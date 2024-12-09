@@ -163,3 +163,7 @@ SIMPLEUI_CONFIG = {
     ]
 }
 
+
+# 邮件配置
+EMAIL_USER = 'RobbyCorbitt6qWBH@gmail.com'
+EMAIL_PASSWORD = 'lfrw lgld bfge xdym'
