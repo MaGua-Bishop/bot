@@ -74,26 +74,12 @@ public class BotMessageUtils {
 
 
 
-    public static String getUserInfoMessage(User user, List<UserAndOrderVo> userOrderList, List<UserAndOrderVo> surplusOrder, List<UserAndOrderVo> replyOrderList) {
-        String userOrderListText = getUserOrderList(userOrderList);
-        String surplusOrderText = getUserOrderList(surplusOrder);
-        String replyOrderListText = getUserOrderList(replyOrderList);
+    public static String getUserInfoMessage(User user) {
         return "```用户信息\n" +
                 "TGID："+user.getTgId()+"\n" +
                 "用户名："+user.getTgName()+"\n" +
                 "用户余额："+user.getMoney()+"\n" +
-                "用户报单：\n" +
-                "业务类型 金额 业务状态 发单时间\n" +
-                userOrderListText +
-                "\n" +
-                "用户回单：\n" +
-                "业务类型 金额 业务状态 发单时间\n" +
-                replyOrderListText +
-                "\n" +
-                "剩余未回单：\n" +
-                "业务类型 金额 业务状态 发单时间\n" +
-                surplusOrderText+
-                "```";
+                "```\n点击下方按钮查看报单状态";
     }
 
     //       "序号  订单编号  业务价格 业务状态\n" +

@@ -54,11 +54,16 @@ public class UserInfoBotMenuImpl implements IBotMenu {
                 .collect(Collectors.groupingBy(UserAndOrderVo::getOrderStatus));
     }
 
-    private InlineKeyboardMarkup createInlineKeyboardButton() {
+    private InlineKeyboardMarkup createInlineKeyboardButton(User user) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
-        buttonList.add(InlineKeyboardButton.builder().text("查看用户信息").callbackData("adminSelectUserInfo:" + 1).build());
-        buttonList.add(InlineKeyboardButton.builder().text("查看今日账单").callbackData("adminSelectBilling").build());
-        buttonList.add(InlineKeyboardButton.builder().text("导出消费记录").callbackData("adminExport").build());
+        if (user.getIsAdmin()) {
+            buttonList.add(InlineKeyboardButton.builder().text("查看用户信息").callbackData("adminSelectUserInfo:" + 1).build());
+            buttonList.add(InlineKeyboardButton.builder().text("查看今日账单").callbackData("adminSelectBilling").build());
+            buttonList.add(InlineKeyboardButton.builder().text("导出消费记录").callbackData("adminExport").build());
+        }
+        buttonList.add(InlineKeyboardButton.builder().text("查看报单").callbackData("userOrderType:0").build());
+        buttonList.add(InlineKeyboardButton.builder().text("查看回单").callbackData("userOrderType:1").build());
+        buttonList.add(InlineKeyboardButton.builder().text("查看剩余未回单").callbackData("userOrderType:2").build());
 
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 1);
 
@@ -77,41 +82,39 @@ public class UserInfoBotMenuImpl implements IBotMenu {
         userWrapper.eq(User::getTgId, tgId);
         User user = userMapper.selectOne(userWrapper);
 
-        List<UserAndOrderVo> userOrderList = new ArrayList<>();
-        if (user == null) {
-            user = new User();
-            user.setTgId(tgId);
-            user.setTgName(message.getFrom().getFirstName() + message.getFrom().getLastName());
-            userMapper.insert(user);
-        } else {
-            userOrderList = orderMapper.getUserAndOrderVoByTgId(tgId);
-        }
+//        List<UserAndOrderVo> userOrderList = new ArrayList<>();
+//        if (user == null) {
+//            user = new User();
+//            user.setTgId(tgId);
+//            user.setTgName(message.getFrom().getFirstName() + message.getFrom().getLastName());
+//            userMapper.insert(user);
+//        } else {
+//            userOrderList = orderMapper.getUserAndOrderVoByTgId(tgId);
+//        }
 
 
-        List<UserAndOrderVo> surplusOrder = new ArrayList<>();
-        List<UserAndOrderVo> replyOrder = new ArrayList<>();
-        if (!userOrderList.isEmpty()) {
-            // 根据订单状态分组
-            Map<Integer, List<UserAndOrderVo>> groupOrders = groupOrdersByStatus(userOrderList);
-            // 遍历订单状态
-            Set<Integer> orderStatus = groupOrders.keySet();
-            for (Integer status : orderStatus) {
-                List<UserAndOrderVo> orders = groupOrders.get(status);
-                if (status == OrderStatus.IN_PROGRESS.getCode() || status == OrderStatus.PENDING.getCode() || status == OrderStatus.REVIEW.getCode()) {
-                    surplusOrder.addAll(orders);
-                } else if (status == OrderStatus.COMPLETED.getCode()) {
-                    replyOrder.addAll(orders);
-                }
-            }
-        }
+//        List<UserAndOrderVo> surplusOrder = new ArrayList<>();
+//        List<UserAndOrderVo> replyOrder = new ArrayList<>();
+//        if (!userOrderList.isEmpty()) {
+//            // 根据订单状态分组
+//            Map<Integer, List<UserAndOrderVo>> groupOrders = groupOrdersByStatus(userOrderList);
+//            // 遍历订单状态
+//            Set<Integer> orderStatus = groupOrders.keySet();
+//            for (Integer status : orderStatus) {
+//                List<UserAndOrderVo> orders = groupOrders.get(status);
+//                if (status == OrderStatus.IN_PROGRESS.getCode() || status == OrderStatus.PENDING.getCode() || status == OrderStatus.REVIEW.getCode()) {
+//                    surplusOrder.addAll(orders);
+//                } else if (status == OrderStatus.COMPLETED.getCode()) {
+//                    replyOrder.addAll(orders);
+//                }
+//            }
+//        }
 
 
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId());
-        sendMessage.setText(BotMessageUtils.getUserInfoMessage(user, userOrderList, surplusOrder, replyOrder));
-        if (user.getIsAdmin()) {
-            sendMessage.setReplyMarkup(createInlineKeyboardButton());
-        }
+        sendMessage.setText(BotMessageUtils.getUserInfoMessage(user));
+        sendMessage.setReplyMarkup(createInlineKeyboardButton(user));
         sendMessage.enableMarkdownV2(true);
         try {
             bot.execute(sendMessage);

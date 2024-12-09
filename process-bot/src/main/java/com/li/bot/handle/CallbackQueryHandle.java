@@ -176,6 +176,10 @@ public class CallbackQueryHandle {
             callbackFactory.getCallback("admindeletecode").execute(bot, callbackQuery);
             return;
         }
+        if (data.indexOf("userOrderType:") == 0) {
+            callbackFactory.getCallback("userOrderType").execute(bot, callbackQuery);
+            return;
+        }
 
 
 //        bot.execute(SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("未找到对应按钮回调").build());
