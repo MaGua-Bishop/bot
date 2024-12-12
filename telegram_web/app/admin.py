@@ -4,15 +4,15 @@ from django.utils.html import format_html
 from django.shortcuts import redirect
 from simplepro.action import CellAction
 from simplepro.decorators import button
-from simplepro.dialog import ModalDialog
 from simplepro.monitor.views import JsonResponse
 
 from app import models
 from django.utils.safestring import mark_safe
 from django.conf import settings
-from django.urls import path
+from django.urls import path, reverse
 from django.shortcuts import render
 from utils import copy_user_info
+from .views import imitation_status_view
 
 
 @admin.register(models.TelegramUserName)
@@ -52,15 +52,34 @@ class CopyTelegramUser(admin.ModelAdmin):
     actions = ('layer_input', "test_action")
 
     def test_action(self, request, queryset):
-        # 通过单元格执行的action，可以通过request.POST.get('ids')获取到选中的id
-        # queryset 的数据只有一个，如果通过自定义按钮勾行执行，则有多个
-        for obj in queryset:
-            pass
-        return JsonResponse(data={
-            'status': 'success',
-            'msg': '修改状态成功！'
-        })
+        """模仿选中的用户"""
+        success_count = 0
+        failure_messages = []
 
+        for obj in queryset:
+            copy_user_id = obj.copyObj_id
+            try:
+                copy_user = models.TelegramUserName.objects.get(id=copy_user_id)
+                # 确保图像文件存在
+                img_file = copy_user.image.name if copy_user.image else None
+
+                # 调用模仿用户的函数
+                copy_user_info(
+                    user=obj,  # 当前用户对象
+                    username=copy_user.username,  # 被模仿用户的用户名
+                    img_file=img_file,  # 被模仿用户的头像文件
+                    about=copy_user.about,  # 被模仿用户的简介
+                    name=copy_user.name  # 被模仿用户的名称
+                )
+                success_count += 1  # 记录成功的操作
+
+            except models.TelegramUserName.DoesNotExist:
+                failure_messages.append(f'模仿用户失败: {obj.username} 不存在')
+            except Exception as e:
+                failure_messages.append(f'模仿用户 {obj.username} 失败: {str(e)}')
+
+        # 重定向到自定义页面
+        return redirect(reverse('imitation_status', kwargs={'success_count': success_count, 'failure_messages': failure_messages}))
     test_action.short_description = '模仿'
 
     def custom_action(self, obj):

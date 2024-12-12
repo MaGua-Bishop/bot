@@ -106,11 +106,13 @@ def copy_user_info(user, username, img_file, about, name):
     session = f"media/{user.session}"
     img_file = f"media/{img_file}"
 
-    # 读取 JSON 文件以获取 API 凭证
+    # 读取 JSON 文件以获取 API 凭证和手机号码
     with open(json_file, "r") as fp:
         data = json.loads(fp.read())
     app_id = data['app_id']
     app_hash = data['app_hash']
+    phone_number = data.get('phone')  # 从 JSON 中获取手机号码
+
     proxy = (socks.SOCKS5, '127.0.0.1', 7890, True)
     client = TelegramClient(session, app_id, app_hash, proxy=proxy)
     # 使用同步 API
@@ -124,8 +126,10 @@ def copy_user_info(user, username, img_file, about, name):
         username += last_word
 
     try:
+
         client(UpdateUsernameRequest(username=username))
         print(f"用户名已更新为: {username}")
+
         # 更新其他用户资料
         client(UpdateProfileRequest(
             first_name=name,
@@ -133,14 +137,62 @@ def copy_user_info(user, username, img_file, about, name):
             about=about  # 简介
         ))
     except Exception as e:
-        print(f"更新用户资料时发生错误: {str(e)}")
-        return f"更新失败: {str(e)}"
+        # 根据异常内容判断是否是字数超出的问题
+        if "first_name" in str(e) and "too long" in str(e):
+            send_mail_to_admin(
+                '用户模仿失败',
+                f'{user.username} 的账号模仿失败: 名称超出字数限制。'
+            )
+            return "更新失败: 名称超出字数限制"
+        elif "about" in str(e) and "too long" in str(e):
+            send_mail_to_admin(
+                '用户模仿失败',
+                f'手机号码: {user.username} 的账号模仿失败: 简介超出字数限制。'
+            )
+            return "更新失败: 简介超出字数限制"
+        else:
+            print(f"更新用户资料时发生错误: {str(e)}")
+            return f"更新失败: {str(e)}"
 
     # 上传头像
     file = client.upload_file(img_file)
     client(UploadProfilePhotoRequest(
         file=file
     ))
+    # 发送成功通知
+    send_mail_to_admin(
+        f'手机号码: {phone_number} 的账号成功替换上用户名及资料。',
+        f"""
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>变更字段</th>
+                        <th>变更后</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>名称</td>
+                        <td>{name}(主)</td>
+                    </tr>
+                    <tr>
+                        <td>简介</td>
+      
+                        <td>{about}</td>
+                    </tr>
+                    <tr>
+                        <td>用户名</td>
+
+                        <td>{username}</td>
+                    </tr>
+                    <tr>
+                        <td>头像</td>
+                        <td>{img_file}</td>
+                    </tr>
+                </tbody>
+            </table>
+            """
+    )
     client.disconnect()
     return "更新成功"
 

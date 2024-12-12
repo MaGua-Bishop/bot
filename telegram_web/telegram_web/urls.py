@@ -19,11 +19,11 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from app import views
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('batch_add/', views.batch_add),
     path('sp/', include('simplepro.urls')),
+    path('app/', include('app.urls')),  # 确保包含 app 的 URL 路由
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
