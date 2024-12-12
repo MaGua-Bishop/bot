@@ -52,41 +52,14 @@ class CopyTelegramUser(admin.ModelAdmin):
     actions = ('layer_input', "test_action")
 
     def test_action(self, request, queryset):
-        """模仿选中的用户"""
-        success_count = 0
-        failure_messages = []
-
+        # 通过单元格执行的action，可以通过request.POST.get('ids')获取到选中的id
+        # queryset 的数据只有一个，如果通过自定义按钮勾行执行，则有多个
         for obj in queryset:
-            copy_user_id = obj.copyObj_id
-            try:
-                copy_user = models.TelegramUserName.objects.get(id=copy_user_id)
-                # 确保图像文件存在
-                img_file = copy_user.image.name if copy_user.image else None
-
-                # 调用模仿用户的函数
-                copy_user_info(
-                    user=obj,  # 当前用户对象
-                    username=copy_user.username,  # 被模仿用户的用户名
-                    img_file=img_file,  # 被模仿用户的头像文件
-                    about=copy_user.about,  # 被模仿用户的简介
-                    name=copy_user.name  # 被模仿用户的名称
-                )
-                success_count += 1  # 记录成功的操作
-
-            except models.TelegramUserName.DoesNotExist:
-                failure_messages.append(f'模仿用户失败: {obj.username} 不存在')
-            except Exception as e:
-                failure_messages.append(f'模仿用户 {obj.username} 失败: {str(e)}')
-        if failure_messages:
-            return JsonResponse(data={
-                'status': 'success',
-                'msg': f'部分操作成功！成功模仿 {success_count} 个用户。失败信息: {", ".join(failure_messages)}'
-            })
-        else:
-            return JsonResponse(data={
-                'status': 'success',
-                'msg': f'成功模仿 {success_count} 个用户！'
-            })
+            pass
+        return JsonResponse(data={
+            'status': 'success',
+            'msg': '修改状态成功！'
+        })
 
     test_action.short_description = '模仿'
 

@@ -47,8 +47,8 @@ def send_mail_to_admin(title, content):
     """发送信息给系统管理员"""
     sender_email = settings.EMAIL_USER
     sender_password = settings.EMAIL_PASSWORD
-    # admin_email = "li2604984003@gmail.com"
-    admin_email = "y17373081487@gmail.com"
+    admin_email = "li2604984003@gmail.com"
+    # admin_email = "y17373081487@gmail.com"
     # 创建邮件内容
     msg = MIMEMultipart()
     msg['From'] = sender_email

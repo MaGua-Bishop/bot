@@ -14,6 +14,7 @@ class TelegramUserName(models.Model):
     name = models.CharField(max_length=100, verbose_name='名称', null=True, blank=True)
     about = models.CharField(max_length=100, verbose_name='简介', null=True, blank=True)
     image = models.ImageField(max_length=100, verbose_name='头像', null=True, blank=True,upload_to='images/')
+    original_image = models.ImageField(max_length=100, verbose_name='原头像', null=True, blank=True, upload_to='images/')
     status = models.BooleanField(default=True, verbose_name='监控状态')
     create_time = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
 
@@ -24,9 +25,12 @@ class TelegramUserName(models.Model):
 @receiver(pre_save, sender=TelegramUserName)
 def username_before_save(sender, instance, **kwargs):
     old_instance = sender.objects.filter(id=instance.pk).first()  # 获取数据库中当前的数据
-    instance.username = instance.username.replace("@", "").replace("https://t.me/", "").replace(" ","")
+    instance.username = instance.username.replace("@", "").replace("https://t.me/", "").replace(" ", "")
+    
     if old_instance:  # 修改
-        pass
+        # 如果头像发生变化，更新原头像字段
+        if old_instance.image.name != instance.image.name:
+            instance.original_image = old_instance.image.name  # 保存原头像路径
     else:  # 新增
         # TODO: 触发检查函数
         status, name, about, image, image_name = utils.get_telegram_user_data(instance.username)
