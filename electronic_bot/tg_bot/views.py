@@ -11,6 +11,7 @@ from django.utils import timezone
 from .models import TgRecharge, TgUser, AmountChange
 from decimal import Decimal
 import pytz
+from .utlis import get_okex
 
 
 class BotView(View):
@@ -53,7 +54,9 @@ class RechargeView(View):
             results.update(status=1)  # 批量更新状态为1，避免逐条循环
 
             # 汇率转换
-            usdt_to_cny_rate = Decimal('7.26')
+            okex = get_okex()
+            usdt_to_cny_rate = Decimal(str(okex))
+            print(f"当前汇率: {usdt_to_cny_rate}")
             print(f"用户充值的USDT金额: {data.money}")
             cny_amount = data.money * usdt_to_cny_rate  # 将USDT转换为CNY
             print(f"给用户转成的CNY金额: {cny_amount}")

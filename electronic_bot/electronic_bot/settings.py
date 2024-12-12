@@ -126,8 +126,8 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-TG_BOT_NAME = 'lidemobot'
-TG_BOT_TOKEN = '8030696965:AAFY6eZti5yIg7J0p-mXIHSH9fLsmrvHBFE'
+# TG_BOT_TOKEN = '8030696965:AAFY6eZti5yIg7J0p-mXIHSH9fLsmrvHBFE'
+TG_BOT_TOKEN = '7645032262:AAF9rHfZQJTbd1QseahdVGdVWBh2SfJcZVI'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

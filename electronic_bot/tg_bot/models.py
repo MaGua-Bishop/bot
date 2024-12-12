@@ -7,10 +7,11 @@ import uuid
 class TgUser(models.Model):
     tg_id = models.BigIntegerField(primary_key=True)
     money = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    pg_money = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     is_notify = models.BooleanField(default=True)  # 是否奖励通知
     invite_tg_id = models.BigIntegerField(blank=True, null=True)  # 邀请人
     deposit_reward = models.BigIntegerField(default=0)
+    pg_player_id = models.CharField(max_length=50, blank=True, null=True)
+    jdb_player_id = models.CharField(max_length=50, blank=True, null=True)
     create_time = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -5,7 +5,7 @@ import os
 TOKEN = settings.TG_BOT_TOKEN
 bot = telebot.TeleBot(TOKEN)
 
-# WEBHOOK_URL = os.environ.get('SERVER_HOST') + '/tgbot/electronic_bot'
-WEBHOOK_URL = 'https://bb3d-119-39-51-58.ngrok-free.app/tgbot/electronic_bot'
+WEBHOOK_URL = os.environ.get('SERVER_HOST') + '/tgbot/electronic_bot'
+# WEBHOOK_URL = 'https://e44a-119-39-51-58.ngrok-free.app/tgbot/electronic_bot'
 bot.remove_webhook()
 bot.set_webhook(url=WEBHOOK_URL)
