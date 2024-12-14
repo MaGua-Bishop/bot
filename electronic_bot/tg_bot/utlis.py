@@ -190,3 +190,36 @@ def get_okex():
         return price
     else:
         return None
+
+
+import json
+import os
+
+
+def get_work_group_id():
+    file_path = "tg_bot/work_group.json"
+
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"The file {file_path} does not exist.")
+
+    # Read the JSON file
+    with open(file_path, "r", encoding="utf-8") as file:
+        try:
+            data = json.load(file)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON in {file_path}: {e}")
+    chat_id = data.get("chat_id")
+    if chat_id == "":
+        return None
+
+    return chat_id
+
+
+def set_work_group_id(chat_id):
+    if not isinstance(chat_id, str):
+        raise ValueError("chat_id must be a string.")
+    file_path = "tg_bot/work_group.json"
+    data = {"chat_id": chat_id}
+    with open(file_path, "w", encoding="utf-8") as file:
+        json.dump(data, file, indent=4, ensure_ascii=False)

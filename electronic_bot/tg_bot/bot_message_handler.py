@@ -1,8 +1,9 @@
 from telebot import types
 
 from .bot_config import bot
-from .utlis import get_start_reply_markup, create_game_user, get_game_url, get_user_pgmoney
-from .models import TgUser
+from .utlis import get_start_reply_markup, create_game_user, get_game_url, get_user_pgmoney, set_work_group_id, \
+    get_work_group_id
+from .models import TgUser, AmountChange
 
 commands = [
     types.BotCommand("start", "Start Bot"),
@@ -59,3 +60,243 @@ def start_message(message):
     markup.add(types.InlineKeyboardButton("🏠主菜单", callback_data="return_start"))
     bot.send_message(chat_id=message.chat.id, text=text,
                      reply_markup=markup, parse_mode="HTML")
+
+
+@bot.message_handler(func=lambda message: message.text == "设置工作群" and message.chat.type in ["group", "supergroup"])
+def set_work_group_handler(message):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+    user = TgUser.objects.get(tg_id=user_id)
+    if not user.is_admin:
+        return
+    try:
+        set_work_group_id(str(chat_id))
+        bot.reply_to(message, f"工作群已设置为当前群聊 (ID: {chat_id})")
+    except Exception as e:
+        bot.reply_to(message, f"设置工作群时发生错误: {e}")
+
+
+import re
+
+
+@bot.message_handler(
+    func=lambda message: re.fullmatch(r"\d{5,15}", message.text) and message.chat.type in ["group", "supergroup"]
+)
+def work_group_query_user(message):
+    chat_id = message.chat.id
+    admin_id = message.from_user.id
+    work_group_id = get_work_group_id()
+    if work_group_id != str(chat_id):
+        return
+    try:
+        admin = TgUser.objects.get(tg_id=admin_id)
+        if not admin.is_admin:
+            return
+        user_id = int(message.text)
+        user = TgUser.objects.get(tg_id=user_id)
+        user_name = bot.get_chat(user_id)
+        full_name = f"{user_name.first_name} {user_name.last_name if user_name.last_name else ''}".strip()
+        text = (
+            f"用户信息:\n"
+            f"用户ID:<code> {user.tg_id}</code>\n"
+            f"用户名: <a href='tg://user?id={user.tg_id}'>@{full_name}</a>\n"
+            f"钱包余额: <b>{user.money:.2f}</b>"
+        )
+        bot.reply_to(message, text, parse_mode="HTML")
+    except TgUser.DoesNotExist:
+        bot.reply_to(message, "未找到对应的用户信息，请检查输入的用户ID。")
+        return
+
+    except ValueError:
+        bot.reply_to(message, "输入的用户ID无效，请确保输入的是正确的数字格式。")
+        return
+    except Exception as e:
+        bot.reply_to(message, f"查询时发生未知错误: {e}")
+        return
+
+
+from decimal import Decimal, InvalidOperation
+
+
+# @bot.message_handler(
+#     func=lambda message: re.fullmatch(r"加分 \d{5,15} \d+(\.\d{1,2})?", message.text) and message.chat.type in ["group", "supergroup"]
+# )
+# def handle_bonus_command(message):
+#     chat_id = message.chat.id
+#     admin_id = message.from_user.id
+#
+#     work_group_id = get_work_group_id()
+#     if work_group_id != str(chat_id):
+#         return
+#
+#     try:
+#         admin = TgUser.objects.get(tg_id=admin_id)
+#         if not admin.is_admin:
+#             return
+#     except TgUser.DoesNotExist:
+#         return
+#
+#     try:
+#         # 使用正则提取 tg_id 和金额
+#         match = re.fullmatch(r"加分 (\d{5,15}) (\d+(\.\d{1,2})?)", message.text)
+#         if not match:
+#             bot.reply_to(message, "输入格式错误，请确保格式为: 加分 tg_id 金额")
+#             return
+#
+#         tg_id = int(match.group(1))
+#         amount_str = match.group(2)
+#
+#         try:
+#             amount = Decimal(amount_str)
+#             if amount <= 0:
+#                 bot.reply_to(message, "金额必须大于 0，请重新输入正确的金额。")
+#                 return
+#         except InvalidOperation:
+#             bot.reply_to(message, "金额格式错误，请确保输入一个有效的数字金额。")
+#             return
+#
+#         try:
+#             user = TgUser.objects.get(tg_id=tg_id)
+#         except TgUser.DoesNotExist:
+#             bot.reply_to(message, f"用户ID {tg_id} 不存在，请检查输入的 tg_id 是否正确。")
+#             return
+#
+#         try:
+#             user_name = bot.get_chat(tg_id)
+#             full_name = f"{user_name.first_name} {user_name.last_name if user_name.last_name else ''}".strip()
+#         except Exception:
+#             full_name = "未知用户"
+#
+#         before_amount = user.money
+#         user.money += amount
+#         user.save()
+#
+#         AmountChange.objects.create(
+#             user=user,
+#             change_type='+',
+#             name='福利',
+#             change_amount=amount,
+#             before_amount=before_amount,
+#             after_amount=user.money
+#         )
+#
+#         text = (
+#             f"加分成功:\n"
+#             f"用户ID: <code>{user.tg_id}</code>\n"
+#             f"用户名: <a href='tg://user?id={user.tg_id}'>{full_name}</a>\n"
+#             f"加分前余额: <b>{before_amount:.2f}</b>\n"
+#             f"加分金额: <b>{amount:.2f}</b>\n"
+#             f"钱包余额: <b>{user.money:.2f}</b>"
+#         )
+#         bot.reply_to(message, text, parse_mode="HTML")
+#
+#     except TgUser.DoesNotExist:
+#         bot.reply_to(message, f"用户ID {tg_id} 不存在，请检查输入的 tg_id 是否正确。")
+#     except Exception as e:
+#         bot.reply_to(message, f"处理加分命令时发生未知错误: {e}")
+
+def handle_money_change(message, operation):
+    """
+    通用函数处理加分或减分操作。
+    operation: "+" 表示加分, "-" 表示减分
+    """
+    chat_id = message.chat.id
+    admin_id = message.from_user.id
+
+    # 验证是否为工作群
+    work_group_id = get_work_group_id()
+    if work_group_id != str(chat_id):
+        return
+
+    # 验证管理员权限
+    try:
+        admin = TgUser.objects.get(tg_id=admin_id)
+        if not admin.is_admin:
+            return
+    except TgUser.DoesNotExist:
+        return
+
+    try:
+        # 使用正则提取 tg_id 和金额
+        match = re.fullmatch(r"(加分|减分) (\d{5,15}) (\d+(\.\d{1,2})?)", message.text)
+        if not match:
+            bot.reply_to(message, "输入格式错误，请确保格式为: 加分/减分 tg_id 金额")
+            return
+
+        tg_id = int(match.group(2))  # 提取 tg_id
+        amount_str = match.group(3)  # 提取金额字符串
+
+        # 转换金额为 Decimal 类型并验证
+        try:
+            amount = Decimal(amount_str)
+            if amount <= 0:
+                bot.reply_to(message, "金额必须大于 0，请重新输入正确的金额。")
+                return
+        except InvalidOperation:
+            bot.reply_to(message, "金额格式错误，请确保输入一个有效的数字金额。")
+            return
+
+        # 查询目标用户信息
+        try:
+            user = TgUser.objects.get(tg_id=tg_id)
+        except TgUser.DoesNotExist:
+            bot.reply_to(message, f"用户ID {tg_id} 不存在，请检查输入的 tg_id 是否正确。")
+            return
+
+        # 获取 Telegram 用户名
+        try:
+            user_name = bot.get_chat(tg_id)
+            full_name = f"{user_name.first_name} {user_name.last_name if user_name.last_name else ''}".strip()
+        except Exception:
+            full_name = "未知用户"
+
+        # 更新用户余额
+        before_amount = user.money
+        if operation == "+":
+            user.money += amount
+            change_type = "加分"
+        elif operation == "-":
+            user.money -= amount
+            change_type = "减分"
+
+        user.save()
+
+        # 记录操作
+        AmountChange.objects.create(
+            user=user,
+            change_type=operation,
+            name='福利',
+            change_amount=amount,
+            before_amount=before_amount,
+            after_amount=user.money
+        )
+
+        # 回复成功消息
+        text = (
+            f"{change_type}成功:\n"
+            f"用户ID: <code>{user.tg_id}</code>\n"
+            f"用户名: <a href='tg://user?id={user.tg_id}'>@{full_name}</a>\n"
+            f"{change_type}前余额: <b>{before_amount:.2f}</b>\n"
+            f"{change_type}金额: <b>{amount:.2f}</b>\n"
+            f"钱包余额: <b>{user.money:.2f}</b>"
+        )
+        bot.reply_to(message, text, parse_mode="HTML")
+
+    except Exception as e:
+        bot.reply_to(message, f"处理 {change_type} 命令时发生未知错误: {e}")
+
+
+@bot.message_handler(
+    func=lambda message: re.fullmatch(r"加分 \d{5,15} \d+(\.\d{1,2})?", message.text) and message.chat.type in ["group",
+                                                                                                                "supergroup"]
+)
+def handle_bonus_command(message):
+    handle_money_change(message, "+")
+
+
+@bot.message_handler(
+    func=lambda message: re.fullmatch(r"减分 \d{5,15} \d+(\.\d{1,2})?", message.text) and message.chat.type in ["group",
+                                                                                                                "supergroup"]
+)
+def handle_deduction_command(message):
+    handle_money_change(message, "-")
