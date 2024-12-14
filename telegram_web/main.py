@@ -1,4 +1,5 @@
 """检查用户名是否过期，过期则需要发送报警"""
+import asyncio
 import os
 
 import utils
@@ -71,7 +72,7 @@ def start():
                         user.image.name):  # 去掉哈希值进行比较
                     tr += f"""<tr>
                                   <td>头像</td>
-                                  <td><img src="{url}{"media/images/" +user.original_image.name}"></td>
+                                  <td><img src="{url}{"media/" + user.original_image.name}"></td>
                                   <td><img src="{url}{"media/images/" + image_name}"></td>
                                 </tr>"""
                 text = f"""变更内容如下: 
@@ -94,6 +95,20 @@ def start():
         else:
             # 用户不存在
             utils.send_mail_to_admin(f"用户 {name}<{user.username}> 不存在", "")
+            copy_user = models.CopyTelegramUser.objects.filter(copyObj_id=None).first()
+            if copy_user:
+                img_file = user.image.name if user.image else None
+                message = asyncio.run(utils.copy_user_info(
+                    user=copy_user,  # 当前用户对象
+                    username=user.username,  # 被模仿用户的用户名
+                    img_file=img_file,  # 被模仿用户的头像文件
+                    about=user.about,  # 被模仿用户的简介
+                    name=user.name  # 被模仿用户的名称
+                ))
+                if message:
+                    user.status = False
+                    user.save()
+                    utils.send_mail_to_admin(f"【复制用户】 {name}<{user.username}>", message)
 
 
 if __name__ == '__main__':

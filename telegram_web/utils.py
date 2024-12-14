@@ -42,6 +42,33 @@ def get_telegram_user_data(username: str):
     return status, name, about, image, image_name
 
 
+async def send_mail_to_admin_async(title, content):
+    print(title, content)
+    """发送信息给系统管理员"""
+    sender_email = settings.EMAIL_USER
+    sender_password = settings.EMAIL_PASSWORD
+    admin_email = "li2604984003@gmail.com"
+    # admin_email = "y17373081487@gmail.com"
+    # 创建邮件内容
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = admin_email
+    msg['Subject'] = title
+
+    # 添加邮件正文
+    msg.attach(MIMEText(content, 'html'))
+
+    try:
+        # 连接到 Gmail SMTP 服务器并发送邮件
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()  # 启用 TLS
+            server.login(sender_email, sender_password)  # 登录
+            server.send_message(msg)  # 发送邮件
+            print("邮件发送成功")
+    except Exception as e:
+        print(f"邮件发送失败: {e}")
+
+
 def send_mail_to_admin(title, content):
     print(title, content)
     """发送信息给系统管理员"""
@@ -100,7 +127,7 @@ def is_username_available(client, username):
         return False
 
 
-def copy_user_info(user, username, img_file, about, name):
+async def copy_user_info(user, username, img_file, about, name):
     """模仿用户"""
     json_file = f"media/{user.fileJson}"
     session = f"media/{user.session}"
@@ -120,16 +147,18 @@ def copy_user_info(user, username, img_file, about, name):
 
     original_username = username
     last_word = original_username[-1]
-    username = f"{original_username}{last_word}"
+    # username = f"{original_username}{last_word}"
 
     while not is_username_available(client, username):
         username += last_word
 
     try:
-
         client(UpdateUsernameRequest(username=username))
         print(f"用户名已更新为: {username}")
-
+    except Exception as e:
+        if "The username is not different from the current username" in str(e):
+            print(f"更新用户资料时发生错误: {e}")
+    try:
         # 更新其他用户资料
         client(UpdateProfileRequest(
             first_name=name,
@@ -139,17 +168,17 @@ def copy_user_info(user, username, img_file, about, name):
     except Exception as e:
         # 根据异常内容判断是否是字数超出的问题
         if "first_name" in str(e) and "too long" in str(e):
-            send_mail_to_admin(
+            await send_mail_to_admin_async(
                 '用户模仿失败',
                 f'{user.username} 的账号模仿失败: 名称超出字数限制。'
             )
-            return "更新失败: 名称超出字数限制"
-        elif "about" in str(e) and "too long" in str(e):
-            send_mail_to_admin(
+            return f"{user.username} 的账号模仿失败: 名称超出字数限制。"
+        elif "The provided bio is too long (caused by UpdateProfileRequest)" in str(e):
+            await send_mail_to_admin_async(
                 '用户模仿失败',
-                f'手机号码: {user.username} 的账号模仿失败: 简介超出字数限制。'
+                f'手机号码: {user.phone_number} 的账号模仿失败: 简介超出字数限制。'
             )
-            return "更新失败: 简介超出字数限制"
+            return f'手机号码: {user.phone_number} 的账号模仿失败: 简介超出字数限制。'
         else:
             print(f"更新用户资料时发生错误: {str(e)}")
             return f"更新失败: {str(e)}"
@@ -160,9 +189,9 @@ def copy_user_info(user, username, img_file, about, name):
         file=file
     ))
     # 发送成功通知
-    send_mail_to_admin(
-        f'手机号码: {phone_number} 的账号成功替换上用户名及资料。',
-        f"""
+    url = "http://127.0.0.1:8000/"
+    title = f"{phone_number} 的账号成功替换上用户名及资料。"
+    content = f"""
             <table border="1">
                 <thead>
                     <tr>
@@ -187,24 +216,34 @@ def copy_user_info(user, username, img_file, about, name):
                     </tr>
                     <tr>
                         <td>头像</td>
-                        <td>{img_file}</td>
+                        <td><img src="{url}{img_file}"></td>
                     </tr>
                 </tbody>
             </table>
             """
+    await send_mail_to_admin_async(
+        title,
+        content,
     )
     client.disconnect()
-    return "更新成功"
+    return title + "\n" + f"用户名:{username}\n名称:{name}(主)\n简介:{about}"
+
+
+import random
+import string
+
+
+def generate_random_letters(length):
+    """
+    生成指定长度的随机字母字符串。
+
+    :param length: int, 要生成的字符串长度
+    :return: str, 随机字母字符串
+    """
+    if length <= 0:
+        raise ValueError("长度必须为正整数")
+    return ''.join(random.choices(string.ascii_letters, k=length))
 
 
 if __name__ == '__main__':
-    import os
-
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'telegram_web.settings')
-    import django
-
-    django.setup()
-    from app import models
-
-    data = models.CopyTelegramUser.objects.first()
-    get_user_info(data)
+    print(generate_random_letters(10))

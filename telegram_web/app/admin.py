@@ -1,18 +1,14 @@
+import asyncio
+
+from django.conf import settings
 from django.contrib import admin, messages
-from django.http import HttpResponseRedirect
-from django.utils.html import format_html
 from django.shortcuts import redirect
+from django.utils.safestring import mark_safe
 from simplepro.action import CellAction
 from simplepro.decorators import button
-from simplepro.monitor.views import JsonResponse
 
 from app import models
-from django.utils.safestring import mark_safe
-from django.conf import settings
-from django.urls import path, reverse
-from django.shortcuts import render
 from utils import copy_user_info
-from .views import imitation_status_view
 
 
 @admin.register(models.TelegramUserName)
@@ -54,8 +50,6 @@ class CopyTelegramUser(admin.ModelAdmin):
     def test_action(self, request, queryset):
         """模仿选中的用户"""
         success_count = 0
-        failure_messages = []
-
         for obj in queryset:
             copy_user_id = obj.copyObj_id
             try:
@@ -64,22 +58,25 @@ class CopyTelegramUser(admin.ModelAdmin):
                 img_file = copy_user.image.name if copy_user.image else None
 
                 # 调用模仿用户的函数
-                copy_user_info(
+                message = asyncio.run(copy_user_info(
                     user=obj,  # 当前用户对象
                     username=copy_user.username,  # 被模仿用户的用户名
                     img_file=img_file,  # 被模仿用户的头像文件
                     about=copy_user.about,  # 被模仿用户的简介
                     name=copy_user.name  # 被模仿用户的名称
-                )
-                success_count += 1  # 记录成功的操作
-
-            except models.TelegramUserName.DoesNotExist:
-                failure_messages.append(f'模仿用户失败: {obj.username} 不存在')
+                ))
+                if message:
+                    # 使用 admin 的 message_user 方法通知用户
+                    self.message_user(request, message, level=messages.SUCCESS)
+                    success_count += 1
             except Exception as e:
-                failure_messages.append(f'模仿用户 {obj.username} 失败: {str(e)}')
+                error_message = f"Error processing user {obj}: {str(e)}"
+                self.message_user(request, error_message, level=messages.ERROR)
 
-        # 重定向到自定义页面
-        return redirect(reverse('imitation_status', kwargs={'success_count': success_count, 'failure_messages': failure_messages}))
+        # 返回通知处理结果
+        if success_count > 0:
+            self.message_user(request, f"已成功处理 {success_count} 位用户", level=messages.INFO)
+
     test_action.short_description = '模仿'
 
     def custom_action(self, obj):
