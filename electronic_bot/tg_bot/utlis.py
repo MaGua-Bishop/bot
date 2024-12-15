@@ -1,3 +1,5 @@
+import threading
+
 from telebot import types
 import hashlib
 import random
@@ -5,6 +7,9 @@ import string
 import requests
 from decimal import Decimal, ROUND_DOWN
 from telebot.types import WebAppInfo
+import time
+from datetime import datetime, timedelta
+from .models import GameHistory
 
 
 def get_start_reply_markup() -> types.ReplyKeyboardMarkup:
@@ -223,3 +228,99 @@ def set_work_group_id(chat_id):
     data = {"chat_id": chat_id}
     with open(file_path, "w", encoding="utf-8") as file:
         json.dump(data, file, indent=4, ensure_ascii=False)
+
+
+import requests
+from datetime import datetime
+from .models import GameHistory
+
+
+def fetch_all_game_history():
+    while True:  # 添加一个无限循环
+        print("开始执行 fetch_all_game_history")
+        # 设置当前时间为结束时间
+        end_time = datetime.now()
+        # 设置开始时间为当前时间的 6 小时前
+        start_time = end_time - timedelta(hours=6)
+
+        # 确保时间范围不超过 6 小时
+        if (end_time - start_time).total_seconds() > 21600:  # 6小时 = 21600秒
+            print("开始时间和结束时间不能超过 6 小时")
+            return
+
+        page_no = 1
+        page_size = 200
+        total_pages = 1  # 初始化总页数
+
+        while page_no <= total_pages:
+            url = 'https://ap.api-bet.net/api/server/recordHistory'
+            headers = generate_headers()
+            params = {
+                "currency": 'CNY',
+                "startTime": start_time.strftime("%Y-%m-%d %H:%M:%S"),
+                "endTime": end_time.strftime("%Y-%m-%d %H:%M:%S"),
+                "pageNo": page_no,
+                "pageSize": page_size
+            }
+
+            response = requests.get(url, headers=headers, json=params, timeout=30)
+            json_response = response.json()
+
+            if json_response['code'] == 10000:
+                records = json_response['data']['list']
+                print(f"查到的记录数:{records}")
+                total_pages = json_response['data']['total'] // page_size + (
+                    1 if json_response['data']['total'] % page_size > 0 else 0)
+
+                for record in records:
+                    game_order_id = record['gameOrderId']
+                    # 只处理状态为 1 的记录
+                    if record['status'] == 1:
+                        # 检查数据库中是否已存在该记录
+                        if not GameHistory.objects.filter(game_order_id=game_order_id).exists():
+                            # 如果不存在，则添加记录
+                            try:
+                                GameHistory.objects.create(
+                                    game_order_id=game_order_id,
+                                    player_id=record['playerId'],
+                                    plat_type=record['platType'],
+                                    currency=record['currency'],
+                                    game_type=record['gameType'],
+                                    game_name=record['gameName'],
+                                    round_number=record['round'],
+                                    table_number=record['table'],
+                                    seat_number=record['seat'],
+                                    bet_amount=record['betAmount'],
+                                    valid_amount=record['validAmount'],
+                                    settled_amount=record['settledAmount'],
+                                    bet_content=record['betContent'],
+                                    status=record['status'],
+                                    bet_time=datetime.strptime(record['betTime'], "%Y-%m-%d %H:%M:%S"),
+                                    last_update_time=datetime.strptime(record['lastUpdateTime'], "%Y-%m-%d %H:%M:%S"),
+                                    is_status=False  # 默认状态为 False
+                                )
+                            except Exception as e:
+                                print(f"插入记录失败: {e}")
+
+                # 请求间隔控制
+                if page_no % 5 == 0:  # 每 5 次请求后等待 1 分钟
+                    print("每小时请求不能超过 5 次，等待 1 分钟...")
+                    time.sleep(60)
+                else:
+                    # 每次请求之间等待 10 秒
+                    print("等待 10 秒...")
+                    time.sleep(10)
+
+                page_no += 1  # 翻页
+            else:
+                print(f"请求失败: {json_response['msg']}")
+                break  # 如果请求失败，退出循环
+
+        print("等待 30 分钟再执行下一次...")
+        time.sleep(1800)  # 等待 30 分钟
+
+
+# 启动线程
+reminder_thread = threading.Thread(target=fetch_all_game_history)
+reminder_thread.daemon = True
+reminder_thread.start()

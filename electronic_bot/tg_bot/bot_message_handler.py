@@ -1,9 +1,16 @@
+from time import localtime
+
 from telebot import types
+from django.db.models import Sum, Value, DecimalField
+from django.db.models.functions import Coalesce
+from django.utils import timezone
+from datetime import timedelta
+from django.utils.timezone import localtime
 
 from .bot_config import bot
 from .utlis import get_start_reply_markup, create_game_user, get_game_url, get_user_pgmoney, set_work_group_id, \
     get_work_group_id
-from .models import TgUser, AmountChange
+from .models import TgUser, AmountChange, GameHistory
 
 commands = [
     types.BotCommand("start", "Start Bot"),
@@ -300,3 +307,97 @@ def handle_bonus_command(message):
 )
 def handle_deduction_command(message):
     handle_money_change(message, "-")
+
+
+@bot.message_handler(func=lambda message: message.text == "流水" and message.chat.type == "private")
+def user_query_history(message):
+    user_id = message.from_user.id
+    full_name = message.from_user.full_name
+    player_id = "tg" + str(user_id)[:9]
+
+    try:
+        user = TgUser.objects.get(tg_id=user_id)
+    except TgUser.DoesNotExist:
+        bot.send_message(user_id, "用户信息未找到，请确保您已注册。")
+        return
+    except Exception as e:
+        return
+
+    today = timezone.now().date()
+    yesterday = today - timedelta(days=1)
+
+    try:
+        # 查询今天的历史记录
+        history_today = GameHistory.objects.filter(player_id=player_id, bet_time__date=today)
+        totals_today = history_today.aggregate(
+            total_settled_amount=Coalesce(Sum('settled_amount', output_field=DecimalField()),
+                                          Value(0, output_field=DecimalField())),
+            total_valid_amount=Coalesce(Sum('valid_amount', output_field=DecimalField()),
+                                        Value(0, output_field=DecimalField()))
+        )
+        total_settled_amount_today = totals_today['total_settled_amount']
+        total_valid_amount_today = totals_today['total_valid_amount']
+
+        # 查询前一天的历史记录
+        history_yesterday = GameHistory.objects.filter(player_id=player_id, bet_time__date=yesterday)
+        totals_yesterday = history_yesterday.aggregate(
+            total_valid_amount=Coalesce(Sum('valid_amount', output_field=DecimalField()),
+                                        Value(0, output_field=DecimalField()))
+        )
+        total_valid_amount_yesterday = totals_yesterday['total_valid_amount']
+        text = (
+            f"Hi ,<a href='https://t.me/{user_id}'>{full_name}</a>ID: <code>{user_id}</code>\n"
+            f"💵余额 :{user.money:.2f} \n"
+            f"(如果余额在游戏平台,需要转回钱包才可以显示哦~)\n"
+            f"🔸今日老虎机流水：{total_valid_amount_today:.2f}\n"
+            f"🔹昨日老虎机流水：{total_valid_amount_yesterday:.2f}\n"
+            f"(💡流水更新大约有十分钟延迟哦~)\n"
+            f"🔸今日输赢：{total_settled_amount_today}\n"
+            f"🔹注册时间：{localtime(user.create_time).strftime('%Y-%m-%d %H:%M:%S')}"
+        )
+        bot.send_message(user_id, text, parse_mode="HTML")
+    except Exception as e:
+        bot.send_message(user_id, f"发生错误: {str(e)}")
+
+
+@bot.message_handler(func=lambda message: message.text == "反水" and message.chat.type == "private")
+def user_betrayal(message):
+    user_id = message.from_user.id
+    player_id = "tg" + str(user_id)[:9]
+
+    try:
+        user = TgUser.objects.get(tg_id=user_id)
+    except TgUser.DoesNotExist:
+        bot.send_message(user_id, "用户信息未找到，请确保您已注册。")
+        return
+    except Exception as e:
+        return
+
+    try:
+        history_today = GameHistory.objects.filter(player_id=player_id, is_status=False)
+        totals_today = history_today.aggregate(
+            total_valid_amount=Coalesce(Sum('valid_amount', output_field=DecimalField()),
+                                        Value(0, output_field=DecimalField()))
+        )
+        total_valid_amount_today = totals_today['total_valid_amount']
+
+        rebate_percentage = Decimal('0.008')  # 设定返水比例为 0.8%
+        rebate_amount = total_valid_amount_today * rebate_percentage
+        before_amount = user.money
+        user.money += rebate_amount
+        user.save()
+
+        history_today.update(is_status=True)
+
+        AmountChange.objects.create(
+            user=user,
+            change_type="+",
+            name=f'反水({total_valid_amount_today}|{rebate_amount})',
+            change_amount=rebate_amount,
+            before_amount=before_amount,
+            after_amount=user.money
+        )
+        bot.send_message(user_id, f"有效金额: {total_valid_amount_today:.2f} \n"
+                                  f"返水金额: {rebate_amount:.2f}\n已发送到您的钱包。")
+    except Exception as e:
+        bot.send_message(user_id, f"发生错误: {str(e)}")
