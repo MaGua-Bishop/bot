@@ -13,9 +13,9 @@ from .utlis import get_start_reply_markup, create_game_user, get_game_url, get_u
 from .models import TgUser, AmountChange, GameHistory
 
 commands = [
-    types.BotCommand("start", "Start Bot"),
-    types.BotCommand("help", "Help"),
-    types.BotCommand("support", "Support")
+    types.BotCommand("start", "🏠启动机器人"),
+    types.BotCommand("help", "❔︎帮助"),
+    types.BotCommand("support", "🙋客服支持")
 ]
 bot.set_my_commands(commands, scope=types.BotCommandScopeAllPrivateChats())
 
@@ -53,7 +53,7 @@ def start_message(message):
 
 @bot.message_handler(commands=['help'], func=lambda message: message.chat.type == 'private')
 def start_message(message):
-    text = f"👩‍💻 Support<a href='https://t.me/trx066'>@易水寒能量租赁，转账一笔2trx</a>"
+    text = f"👩‍💻客服支持<a href='https://t.me/dhkf9'>@鼎豪客服 阿伟</a>"
     markup = types.InlineKeyboardMarkup()
     markup.add(types.InlineKeyboardButton("🏠主菜单", callback_data="return_start"))
     bot.send_message(chat_id=message.chat.id, text=text,
@@ -62,7 +62,7 @@ def start_message(message):
 
 @bot.message_handler(commands=['support'], func=lambda message: message.chat.type == 'private')
 def start_message(message):
-    text = f"👩‍💻 Support<a href='https://t.me/trx066'>@易水寒能量租赁，转账一笔2trx</a>"
+    text = f"👩‍💻客服支持<a href='https://t.me/dhkf9'>@鼎豪客服 阿伟</a>"
     markup = types.InlineKeyboardMarkup()
     markup.add(types.InlineKeyboardButton("🏠主菜单", callback_data="return_start"))
     bot.send_message(chat_id=message.chat.id, text=text,

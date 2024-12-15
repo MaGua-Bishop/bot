@@ -21,7 +21,7 @@ def get_start_reply_markup() -> types.ReplyKeyboardMarkup:
     # markup.add(types.InlineKeyboardButton("🔁刷新", callback_data="refresh"))
     markup.add(types.InlineKeyboardButton("🎰PG电子", callback_data="game_type:0"),
                types.InlineKeyboardButton("🎰JDB电子", callback_data="game_type:1"))
-    markup.add(types.InlineKeyboardButton("👥官方群组", url="https://baidu.com"))
+    markup.add(types.InlineKeyboardButton("👥官方群组", url="https://t.me/dhpg9"))
     markup.add(types.InlineKeyboardButton("💰充值提现", callback_data="recharge_withdrawal"))
     markup.add(types.InlineKeyboardButton("🙋客服支持", callback_data="support"),
                types.InlineKeyboardButton("👋邀请好友", callback_data="invite_user"))

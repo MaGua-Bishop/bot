@@ -893,7 +893,7 @@ def invite_user(call):
 
 @bot.callback_query_handler(func=lambda call: call.data == "support")
 def support(call):
-    text = f"👩‍💻 Support<a href='https://t.me/trx066'>@易水寒能量租赁，转账一笔2trx</a>"
+    text = f"🙋客服支持<a href='https://t.me/dhkf9'>@鼎豪客服 阿伟</a>"
     markup = types.InlineKeyboardMarkup()
     markup.add(types.InlineKeyboardButton("🏠主菜单", callback_data="return_start"))
     bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=text,
