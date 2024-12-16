@@ -143,24 +143,24 @@ async def copy_user_info(user, username, img_file, about, name):
     proxy = (socks.SOCKS5, '127.0.0.1', 7890, True)
     client = TelegramClient(session, app_id, app_hash, proxy=proxy)
     # 使用同步 API
-    client.start()
+    await client.start()  # 确保使用 await 启动客户端
 
     original_username = username
     last_word = original_username[-1]
-    # username = f"{original_username}{last_word}"
 
-    while not is_username_available(client, username):
+    while not await is_username_available(client, username):  # 确保使用 await
         username += last_word
 
     try:
-        client(UpdateUsernameRequest(username=username))
+        await client(UpdateUsernameRequest(username=username))  # 确保使用 await
         print(f"用户名已更新为: {username}")
     except Exception as e:
         if "The username is not different from the current username" in str(e):
             print(f"更新用户资料时发生错误: {e}")
+
     try:
         # 更新其他用户资料
-        client(UpdateProfileRequest(
+        await client(UpdateProfileRequest(  # 确保使用 await
             first_name=name,
             last_name="(主)",  # 如果需要可以设置
             about=about  # 简介
@@ -184,10 +184,11 @@ async def copy_user_info(user, username, img_file, about, name):
             return f"更新失败: {str(e)}"
 
     # 上传头像
-    file = client.upload_file(img_file)
-    client(UploadProfilePhotoRequest(
+    file = await client.upload_file(img_file)  # 确保使用 await
+    await client(UploadProfilePhotoRequest(  # 确保使用 await
         file=file
     ))
+
     # 发送成功通知
     url = "http://127.0.0.1:8000/"
     title = f"{phone_number} 的账号成功替换上用户名及资料。"
@@ -206,12 +207,10 @@ async def copy_user_info(user, username, img_file, about, name):
                     </tr>
                     <tr>
                         <td>简介</td>
-      
                         <td>{about}</td>
                     </tr>
                     <tr>
                         <td>用户名</td>
-
                         <td>{username}</td>
                     </tr>
                     <tr>
@@ -225,7 +224,7 @@ async def copy_user_info(user, username, img_file, about, name):
         title,
         content,
     )
-    client.disconnect()
+    await client.disconnect()  # 确保使用 await
     return title + "\n" + f"用户名:{username}\n名称:{name}(主)\n简介:{about}"
 
 
