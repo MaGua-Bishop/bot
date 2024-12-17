@@ -45,7 +45,17 @@ class CopyTelegramUser(admin.ModelAdmin):
     list_editable = ("copyObj",)
     raw_id_fields = ("copyObj",)
     exclude = ('create_time',)
-    actions = ('layer_input', "test_action")
+    actions = ('layer_input', "test_action", "custom_button")
+
+    @button(type='danger', short_description='手动登录添加', enable=True, icon="fas fa-audio-description")
+    def custom_button(self, request, queryset):
+        return redirect('/manual_add/')
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if obj is None:  # 如果是新增对象
+            form.base_fields.pop('copyObj', None)  # 不显示 copyObj 字段
+        return form
 
     def test_action(self, request, queryset):
         """模仿选中的用户"""

@@ -52,7 +52,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -166,7 +166,13 @@ SIMPLEUI_CONFIG = {
     ]
 }
 
+# 静态文件目录配置
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',  # 确保这里指向项目中的 static 文件夹
+]
 
 # 邮件配置
 EMAIL_USER = 'RobbyCorbitt6qWBH@gmail.com'
 EMAIL_PASSWORD = 'lfrw lgld bfge xdym'
+
+ADMIN_EMAIL = "li2604984003@gmail.com"

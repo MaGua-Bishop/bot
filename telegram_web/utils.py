@@ -47,7 +47,7 @@ async def send_mail_to_admin_async(title, content):
     """发送信息给系统管理员"""
     sender_email = settings.EMAIL_USER
     sender_password = settings.EMAIL_PASSWORD
-    admin_email = "li2604984003@gmail.com"
+    admin_email = settings.ADMIN_EMAIL
     # admin_email = "y17373081487@gmail.com"
     # 创建邮件内容
     msg = MIMEMultipart()
@@ -74,7 +74,7 @@ def send_mail_to_admin(title, content):
     """发送信息给系统管理员"""
     sender_email = settings.EMAIL_USER
     sender_password = settings.EMAIL_PASSWORD
-    admin_email = "li2604984003@gmail.com"
+    admin_email = settings.ADMIN_EMAIL
     # admin_email = "y17373081487@gmail.com"
     # 创建邮件内容
     msg = MIMEMultipart()
@@ -153,6 +153,8 @@ async def copy_user_info(user, username, img_file, about, name):
 
     try:
         await client(UpdateUsernameRequest(username=username))  # 确保使用 await
+        user.username = username
+        user.save()
         print(f"用户名已更新为: {username}")
     except Exception as e:
         if "The username is not different from the current username" in str(e):
