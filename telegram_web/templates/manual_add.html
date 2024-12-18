@@ -1,0 +1,118 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+    <link rel="stylesheet" href="{% static 'layui/css/layui.css' %}">
+    <div class="layui-container">
+        <h1 style="text-align: center;">登录入口</h1>
+        <form class="layui-form" id="add-form">
+            <div class="layui-form-item">
+                <label class="layui-form-label">手机号</label>
+                <div class="layui-input-block">
+                    <input type="text" name="phone" required lay-verify="required" placeholder="请输入手机号"
+                           class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">二级密码</label>
+                <div class="layui-input-block">
+                    <input type="password" name="password" placeholder="请输入二级密码（若无可跳过）" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn" lay-submit lay-filter="submit-phone">提交</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script src="{% static 'layui/layui.js' %}"></script>
+    <script>
+        layui.use(['form', 'jquery', 'layer'], function () {
+            var form = layui.form;
+            var $ = layui.jquery;
+            var layer = layui.layer;
+
+            form.on('submit(submit-phone)', function (data) {
+                var loadIndex = layer.load(1, {shade: [0.3, '#000']});
+
+                $.ajax({
+                    type: 'POST',
+                    url: '',
+                    data: data.field,
+                    success: function (response) {
+                        layer.close(loadIndex);
+
+                        if (response.status === 'info' && response.needs_second_password) {
+                            layer.msg(response.message);
+                        } else if (response.status === 'info') {
+                            showVerificationModal(data.field);
+                        } else if (response.status === 'success') {
+                            layer.msg(response.message);
+                            $('#add-form')[0].reset();
+                        } else {
+                            layer.msg('错误: ' + response.message, {icon: 5});
+                        }
+                    },
+                    error: function () {
+                        layer.close(loadIndex);
+                        layer.msg('请求失败，请重试！', {icon: 5});
+                    }
+                });
+                return false;
+            });
+
+            function showVerificationModal(formData) {
+                layer.open({
+                    type: 1,
+                    title: '请输入验证码',
+                    area: ['600px', '200px'],
+                    content: `
+                <div class="layui-form-item">
+                    <label class="layui-form-label">验证码</label>
+                    <div class="layui-input-block">
+                        <input type="text" id="verification_code" placeholder="请输入验证码" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-input-block">
+                        <button class="layui-btn" id="submit-verification">提交</button>
+                    </div>
+                </div>
+            `,
+                    success: function () {
+                        $('#submit-verification').on('click', function () {
+                            var verification_code = $('#verification_code').val();
+
+                            $.ajax({
+                                type: 'POST',
+                                url: '',
+                                data: {
+                                    phone: formData.phone,
+                                    password: formData.password,
+                                    verification_code: verification_code
+                                },
+                                success: function (response) {
+                                    if (response.status === 'info' && response.needs_second_password) {
+                                        layer.msg(response.message);
+                                    } else if (response.status === 'success') {
+                                        layer.msg(response.message);
+                                        layer.closeAll();
+                                        $('#add-form')[0].reset();
+                                    } else {
+                                        layer.msg('错误: ' + response.message, {icon: 5});
+                                    }
+                                },
+                                error: function () {
+                                    layer.msg('请求失败，请重试！', {icon: 5});
+                                }
+                            });
+                        });
+                    }
+                });
+            }
+        });
+
+    </script>
+{% endblock %}

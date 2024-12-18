@@ -20,13 +20,13 @@ from django.contrib import admin
 from django.urls import path, include
 
 from app import views
-from app.views import manual_add_menu
+from app.views import manual_add
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('batch_add/', views.batch_add),
     path('sp/', include('simplepro.urls')),
-    path('manual_add/', views.manual_add_menu),
+    path('manual_add/', views.manual_add),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

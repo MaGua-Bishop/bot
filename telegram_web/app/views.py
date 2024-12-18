@@ -34,7 +34,7 @@ def batch_add(request):
 import socks
 
 
-def manual_add_menu(request):
+def manual_add(request):
     if request.method == 'POST':
         phone = request.POST.get('phone')
         second_password = request.POST.get('password')  # 二级密码
