@@ -10,7 +10,7 @@ from django.utils.timezone import localtime
 from .bot_config import bot
 from .utlis import get_start_reply_markup, create_game_user, get_game_url, get_user_pgmoney, set_work_group_id, \
     get_work_group_id
-from .models import TgUser, AmountChange, GameHistory
+from .models import TgUser, AmountChange, GameHistory, TgRecharge
 
 commands = [
     types.BotCommand("start", "🏠启动机器人"),
@@ -125,83 +125,6 @@ def work_group_query_user(message):
 from decimal import Decimal, InvalidOperation
 
 
-# @bot.message_handler(
-#     func=lambda message: re.fullmatch(r"加分 \d{5,15} \d+(\.\d{1,2})?", message.text) and message.chat.type in ["group", "supergroup"]
-# )
-# def handle_bonus_command(message):
-#     chat_id = message.chat.id
-#     admin_id = message.from_user.id
-#
-#     work_group_id = get_work_group_id()
-#     if work_group_id != str(chat_id):
-#         return
-#
-#     try:
-#         admin = TgUser.objects.get(tg_id=admin_id)
-#         if not admin.is_admin:
-#             return
-#     except TgUser.DoesNotExist:
-#         return
-#
-#     try:
-#         # 使用正则提取 tg_id 和金额
-#         match = re.fullmatch(r"加分 (\d{5,15}) (\d+(\.\d{1,2})?)", message.text)
-#         if not match:
-#             bot.reply_to(message, "输入格式错误，请确保格式为: 加分 tg_id 金额")
-#             return
-#
-#         tg_id = int(match.group(1))
-#         amount_str = match.group(2)
-#
-#         try:
-#             amount = Decimal(amount_str)
-#             if amount <= 0:
-#                 bot.reply_to(message, "金额必须大于 0，请重新输入正确的金额。")
-#                 return
-#         except InvalidOperation:
-#             bot.reply_to(message, "金额格式错误，请确保输入一个有效的数字金额。")
-#             return
-#
-#         try:
-#             user = TgUser.objects.get(tg_id=tg_id)
-#         except TgUser.DoesNotExist:
-#             bot.reply_to(message, f"用户ID {tg_id} 不存在，请检查输入的 tg_id 是否正确。")
-#             return
-#
-#         try:
-#             user_name = bot.get_chat(tg_id)
-#             full_name = f"{user_name.first_name} {user_name.last_name if user_name.last_name else ''}".strip()
-#         except Exception:
-#             full_name = "未知用户"
-#
-#         before_amount = user.money
-#         user.money += amount
-#         user.save()
-#
-#         AmountChange.objects.create(
-#             user=user,
-#             change_type='+',
-#             name='福利',
-#             change_amount=amount,
-#             before_amount=before_amount,
-#             after_amount=user.money
-#         )
-#
-#         text = (
-#             f"加分成功:\n"
-#             f"用户ID: <code>{user.tg_id}</code>\n"
-#             f"用户名: <a href='tg://user?id={user.tg_id}'>{full_name}</a>\n"
-#             f"加分前余额: <b>{before_amount:.2f}</b>\n"
-#             f"加分金额: <b>{amount:.2f}</b>\n"
-#             f"钱包余额: <b>{user.money:.2f}</b>"
-#         )
-#         bot.reply_to(message, text, parse_mode="HTML")
-#
-#     except TgUser.DoesNotExist:
-#         bot.reply_to(message, f"用户ID {tg_id} 不存在，请检查输入的 tg_id 是否正确。")
-#     except Exception as e:
-#         bot.reply_to(message, f"处理加分命令时发生未知错误: {e}")
-
 def handle_money_change(message, operation):
     """
     通用函数处理加分或减分操作。
@@ -307,6 +230,51 @@ def handle_bonus_command(message):
 )
 def handle_deduction_command(message):
     handle_money_change(message, "-")
+
+
+@bot.message_handler(
+    func=lambda message: re.fullmatch(r"充值记录 \d{5,15}", message.text) and message.chat.type in ["group",
+                                                                                                    "supergroup"]
+)
+def handle_recharge_record(message):
+    chat_id = message.chat.id
+    admin_id = message.from_user.id
+
+    # 验证是否为工作群
+    work_group_id = get_work_group_id()
+    if work_group_id != str(chat_id):
+        return
+
+    # 验证管理员权限
+    try:
+        admin = TgUser.objects.get(tg_id=admin_id)
+        if not admin.is_admin:
+            return
+    except TgUser.DoesNotExist:
+        return
+
+    tgid = message.text.split()[1]
+    try:
+        recharge_records = TgRecharge.objects.filter(tg_id=tgid, status=1).order_by('-create_time')
+        if not recharge_records:
+            bot.reply_to(message, f"用户ID {tgid} 没有充值记录。")
+            return
+
+        # 统计总金额
+        total_amount = sum(record.money for record in recharge_records)
+
+        text = "\n".join(
+            [
+                f"金额:<b>{record.money:.2f} </b>\n充值时间:<b>{localtime(record.update_time).strftime('%Y-%m-%d %H:%M:%S')}</b>\n"
+                for record in recharge_records
+            ]
+        )
+
+        bot.reply_to(message, f"用户ID {tgid} 的充值记录:\n{text}\n总充值金额: <b>{total_amount:.2f} USDT</b>",
+                     parse_mode="HTML")
+    except Exception as e:
+        bot.reply_to(message, f"查询充值记录时发生错误: {e}")
+        return
 
 
 @bot.message_handler(func=lambda message: message.text == "流水" and message.chat.type == "private")

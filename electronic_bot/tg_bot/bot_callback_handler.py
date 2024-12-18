@@ -193,7 +193,7 @@ def recharge_withdrawal(call):
     user = TgUser.objects.get(tg_id=user_id)
     text = f"💰充值提现\n\n💴余额:{user.money}"
     bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=text,
-                          reply_markup=get_recharge_withdrawal_reply_markup(user.is_notify))
+                          reply_markup=get_recharge_withdrawal_reply_markup(user.is_notify, user.is_admin))
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'user_recharge')
@@ -309,7 +309,7 @@ def user_recharge_USDT(call):
         tg_id=call.message.chat.id,
     )
     recharge.save()
-    address = 'TVgX88b7ndx1nTCGQnFFE9Rm5fgg1rKs9P'
+    address = 'TLAsbVyEPi3Z14JdqRYtx262CaKvgsYu9g'
     text = f'''此订单15分钟内有效，过期后请重新生成订单。\n\n<b>转账地址(点击可复制): </b><code>{address}</code> (TRC-20网络)\n\n转账金额:<b>{money} USDT</b>\n\n请注意<b>转账金额务必与上方的转账金额一致</b>，否则无法自动到账\n支付完成后, 请等待1分钟左右查询，自动到账。'''
     bot.send_message(call.message.chat.id, text, parse_mode='html')
 
@@ -363,7 +363,7 @@ def handle_custom_recharge_amount(message):
         recharge.save()
 
         # 显示支付信息
-        address = 'TVgX88b7ndx1nTCGQnFFE9Rm5fgg1rKs9P'
+        address = 'TLAsbVyEPi3Z14JdqRYtx262CaKvgsYu9g'
         text = f'''此订单15分钟内有效，过期后请重新生成订单。\n\n<b>转账地址(点击可复制): </b><code>{address}</code> (TRC-20网络)\n\n转账金额:<b>{adjusted_amount:.2f} USDT</b>\n\n请注意<b>转账金额务必与上方的转账金额一致</b>，否则无法自动到账\n支付完成后, 请等待1分钟左右查询，自动到账。'''
         bot.send_message(message.chat.id, text, parse_mode='html')
 
@@ -483,6 +483,40 @@ def user_withdrawal_history(call):
         bot.answer_callback_query(call.id, f"处理提现历史时发生错误: {e}")
 
 
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("admin_query_recharge:"))
+def user_history_bill(call):
+    page = int(call.data[len("admin_query_recharge:"):])  # 获取当前页码
+    user_id = call.from_user.id
+    full_name = call.from_user.full_name
+
+    # 查询 TgRecharge 表，条件为 status=1
+    recharge_records = TgRecharge.objects.filter(status=1).order_by('-create_time')
+    total_changes = recharge_records.count()
+    changes_to_display = recharge_records[(page - 1) * 5: page * 5]
+
+    # 构建显示文本
+    text = f"<a href='https://t.me/{user_id}'>{full_name}</a> 🆔<code> {user_id}</code>\n查询所有用户充值记录\n\n"
+    for record in changes_to_display:
+        formatted_time = localtime(record.create_time).strftime("%Y-%m-%d %H:%M:%S")
+        text += f"用户ID: <b>{record.tg_id}</b>\n金额: <b>{record.money:.2f}</b>\n时间: <b>{formatted_time}</b>\n\n"
+
+    # 添加分页信息
+    total_pages = (total_changes // 5) + (1 if total_changes % 5 > 0 else 0)
+    text += f"\n当前页: {page}/{total_pages}"
+
+    markup = types.InlineKeyboardMarkup()
+    if page > 1:
+        markup.add(types.InlineKeyboardButton("上一页", callback_data=f"admin_query_recharge:{page - 1}"))
+    if page < total_pages:
+        markup.add(types.InlineKeyboardButton("下一页", callback_data=f"admin_query_recharge:{page + 1}"))
+    markup.add(types.InlineKeyboardButton("↩️返回", callback_data="recharge_withdrawal"))
+    markup.add(types.InlineKeyboardButton("🏠主菜单", callback_data="return_start"))
+
+    bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=text,
+                          reply_markup=markup, parse_mode="HTML")
+
+
 @bot.callback_query_handler(func=lambda call: call.data == "user_is_notify")
 def user_is_notify(call):
     user_id = call.from_user.id
@@ -495,7 +529,7 @@ def user_is_notify(call):
     else:
         bot.answer_callback_query(call.id, "🔕奖励通知已关闭", show_alert=True)
     bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=text,
-                          reply_markup=get_recharge_withdrawal_reply_markup(user.is_notify))
+                          reply_markup=get_recharge_withdrawal_reply_markup(user.is_notify, user.is_admin))
 
 
 ''''

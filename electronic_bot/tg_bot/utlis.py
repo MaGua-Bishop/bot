@@ -42,7 +42,7 @@ def get_game_type_reply_markup(type, player_url) -> types.ReplyKeyboardMarkup:
     return markup
 
 
-def get_recharge_withdrawal_reply_markup(is_notify: bool) -> types.ReplyKeyboardMarkup:
+def get_recharge_withdrawal_reply_markup(is_notify: bool, is_admin) -> types.ReplyKeyboardMarkup:
     markup = types.InlineKeyboardMarkup()
     markup.add(types.InlineKeyboardButton("➕存款", callback_data="user_recharge"),
                types.InlineKeyboardButton("💵取款", callback_data="user_withdraw"))
@@ -52,6 +52,8 @@ def get_recharge_withdrawal_reply_markup(is_notify: bool) -> types.ReplyKeyboard
         markup.add(types.InlineKeyboardButton("🔔奖励通知已开启", callback_data="user_is_notify"))
     else:
         markup.add(types.InlineKeyboardButton("🔕奖励通知已关闭", callback_data="user_is_notify"))
+    if is_admin:
+        markup.add(types.InlineKeyboardButton("查看所有充值记录", callback_data="admin_query_recharge:1"))
     markup.add(types.InlineKeyboardButton("🏠主菜单", callback_data="return_start"))
     return markup
 
