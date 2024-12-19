@@ -52,8 +52,7 @@ def manual_add(request):
 
         try:
             # 初始化 Telethon 客户端
-            proxy = (socks.SOCKS5, '127.0.0.1', 7890, True)
-            client = TelegramClient(session_file_path, '21507271', '6f6d9d0b737034f07108ae1997e3305c', proxy=proxy)
+            client = TelegramClient(session_file_path, '21507271', '6f6d9d0b737034f07108ae1997e3305c')
             client.connect()
 
             # 如果用户未授权，先发送验证码

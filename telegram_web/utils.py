@@ -127,7 +127,7 @@ def is_username_available(client, username):
         return False
 
 
-async def copy_user_info(user, username, img_file, about, name):
+async def copy_user_info(user, username, img_file, about, name, msg=""):
     """模仿用户"""
     json_file = f"media/{user.fileJson}"
     session = f"media/{user.session}"
@@ -139,9 +139,8 @@ async def copy_user_info(user, username, img_file, about, name):
     app_id = data['app_id']
     app_hash = data['app_hash']
     phone_number = data.get('phone')  # 从 JSON 中获取手机号码
-
-    proxy = (socks.SOCKS5, '127.0.0.1', 7890, True)
-    client = TelegramClient(session, app_id, app_hash, proxy=proxy)
+    # proxy = (socks.SOCKS5, '127.0.0.1', 7890, True)
+    client = TelegramClient(session, app_id, app_hash)
     # 使用同步 API
     await client.start()  # 确保使用 await 启动客户端
 
@@ -193,7 +192,7 @@ async def copy_user_info(user, username, img_file, about, name):
 
     # 发送成功通知
     url = "http://127.0.0.1:8000/"
-    title = f"{phone_number} 的账号成功替换上用户名及资料。"
+    title = f"{msg}{phone_number} 的账号成功替换上原用户名【{original_username}】的资料。"
     content = f"""
             <table border="1">
                 <thead>
