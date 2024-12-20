@@ -170,3 +170,9 @@ STATICFILES_DIRS = [
 EMAIL_USER = 'RobbyCorbitt6qWBH@gmail.com'
 EMAIL_PASSWORD = 'lfrw lgld bfge xdym'
 ADMIN_EMAIL = "jiaobenzhuanyong88@gmail.com"
+
+# Telegram info配置
+API_ID = '21507271'
+API_HASH = "6f6d9d0b737034f07108ae1997e3305c"
+# telethon 客户端存储
+clients = {}

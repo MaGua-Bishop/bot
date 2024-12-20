@@ -1,14 +1,13 @@
+import asyncio
+
 from django.contrib import messages
 from django.shortcuts import render, redirect
 import os
-import json
-from django.conf import settings
+from telegram_web import settings
 from django.http import JsonResponse
 from telethon.errors import SessionPasswordNeededError
-
 from .models import CopyTelegramUser
 from telethon.sync import TelegramClient
-
 from app import models
 
 
@@ -31,74 +30,69 @@ def batch_add(request):
         return render(request, 'batch_add.html')
 
 
-import socks
 
 
 def manual_add(request):
     if request.method == 'POST':
+        print(request.POST)
         phone = request.POST.get('phone')
         second_password = request.POST.get('password')  # 二级密码
         verification_code = request.POST.get('verification_code')
-
-        # 如果是第一次请求（手机号和密码提交）
-        if 'phone' not in request.session:
-            request.session['phone'] = phone
-            request.session['second_password'] = second_password or None
-            request.session.modified = True
-
-        phone = request.session.get('phone')
         session_file_name = f'session_{phone}.session'
         session_file_path = os.path.join(settings.MEDIA_ROOT, 'session', session_file_name)
-
+        # 显式设置事件循环
         try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:  # 没有正在运行的事件循环
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+        if verification_code is None:
             # 初始化 Telethon 客户端
-            client = TelegramClient(session_file_path, '21507271', '6f6d9d0b737034f07108ae1997e3305c')
+            client = TelegramClient(session_file_path, settings.API_ID, settings.API_HASH)
+            client.connect()
+            if not client.is_user_authorized():
+                info = client.send_code_request(phone) # 发送验证码
+                settings.clients[phone] = info.phone_code_hash  # 临时保存phone_code_hash到内存中
+
+            return JsonResponse({
+                'status': 'info',
+                'message': '验证码已发送，请输入验证码。'
+            })
+
+
+        else:
+            # 发送验证码成功
+            client = TelegramClient(session_file_path, settings.API_ID, settings.API_HASH)
             client.connect()
 
-            # 如果用户未授权，先发送验证码
-            if not client.is_user_authorized():
-                if not verification_code:
-                    sent_code = client.send_code_request(phone)
-                    request.session['phone_code_hash'] = sent_code.phone_code_hash
-                    request.session.modified = True
-                    return JsonResponse({
-                        'status': 'info',
-                        'message': '验证码已发送，请输入验证码。'
-                    })
 
-                # 使用验证码登录
-                phone_code_hash = request.session.get('phone_code_hash')
-                client.sign_in(phone, verification_code, phone_code_hash=phone_code_hash)
-
-            # 如果需要二级密码
             try:
-                if not client.is_user_authorized():
-                    if second_password:
-                        client.sign_in(password=second_password)
-
+                client.sign_in(phone, verification_code,phone_code_hash=settings.clients[phone])
             except SessionPasswordNeededError:
-                return JsonResponse({
-                    'status': 'info',
-                    'message': '检测到二步验证，请输入您的二级密码。',
-                    'needs_second_password': True
-                })
+                if second_password:
+                    client.sign_in(password=second_password,phone_code_hash=settings.clients[phone])
+            if client.is_user_authorized():
+                client.disconnect() # 关闭客户端
+                return JsonResponse({'status': 'success', 'message': '登录成功'})
 
-            # 登录成功，保存数据
-            CopyTelegramUser.objects.create(
-                username=phone,
-                phone=phone,
-                session=session_file_name,
-                user_id=client.get_me().id
-            )
-
-            # 清理 session
-            for key in ['phone', 'second_password', 'phone_code_hash']:
-                request.session.pop(key, None)
-            request.session.modified = True
-
-            return JsonResponse({'status': 'success', 'message': '登录成功，session 文件已生成！'})
-
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': f'发生未知错误: {str(e)}'})
+        #
+        #     # 登录成功，保存数据
+        #     CopyTelegramUser.objects.create(
+        #         username=phone,
+        #         phone=phone,
+        #         session=session_file_name,
+        #         user_id=client.get_me().id
+        #     )
+        #
+        #     # 清理 session
+        #     for key in ['phone', 'second_password', 'phone_code_hash']:
+        #         request.session.pop(key, None)
+        #     request.session.modified = True
+        #
+        #     return JsonResponse({'status': 'success', 'message': '登录成功，session 文件已生成！'})
+        #
+        # except Exception as e:
+        #     return JsonResponse({'status': 'error', 'message': f'发生未知错误: {str(e)}'})
 
     return render(request, 'manual_add.html')
