@@ -133,12 +133,21 @@ async def copy_user_info(user, username, img_file, about, name, msg=""):
     session = f"media/{user.session}"
     img_file = f"media/{img_file}"
 
-    # 读取 JSON 文件以获取 API 凭证和手机号码
-    with open(json_file, "r") as fp:
-        data = json.loads(fp.read())
-    app_id = data['app_id']
-    app_hash = data['app_hash']
-    phone_number = data.get('phone')  # 从 JSON 中获取手机号码
+    # 读取json文件
+    if user.fileJson:
+        try:
+            with open(json_file, "r") as fp:
+                data = json.loads(fp.read())
+                app_id = data['app_id']
+                app_hash = data['app_hash']
+                phone_number = data.get('phone')
+        except Exception as e:
+            raise ValueError(f"Error reading JSON file: {e}")
+    else:
+        # 使用settings中的
+        app_id = settings.API_ID
+        app_hash = settings.API_HASH
+        phone_number = user.phone
     # proxy = (socks.SOCKS5, '127.0.0.1', 7890, True)
     client = TelegramClient(session, app_id, app_hash)
     # 使用同步 API
@@ -156,6 +165,7 @@ async def copy_user_info(user, username, img_file, about, name, msg=""):
         user.save()
         print(f"用户名已更新为: {username}")
     except Exception as e:
+        print(f"用户名发生错误: {e}")
         if "The username is not different from the current username" in str(e):
             print(f"更新用户资料时发生错误: {e}")
 

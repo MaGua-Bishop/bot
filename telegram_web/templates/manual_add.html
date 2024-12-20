@@ -44,15 +44,24 @@
                     success: function (response) {
                         layer.close(loadIndex);
 
-                        if (response.status === 'info' && response.needs_second_password) {
-                            layer.msg(response.message);
-                        } else if (response.status === 'info') {
-                            showVerificationModal(data.field);
+                        if (response.status === 'info') {
+                            // 信息性提示
+                            if (response.needs_second_password) {
+                                layer.msg(response.message);
+                            } else {
+                                showVerificationModal(data.field);
+                            }
+                        } else if (response.status === 'error') {
+                            // 错误提示
+                            layer.msg(response.message, {icon: 5});
                         } else if (response.status === 'success') {
                             layer.msg(response.message);
                             $('#add-form')[0].reset();
-                        } else {
-                            layer.msg('错误: ' + response.message, {icon: 5});
+
+                            // 页面跳转
+                            if (response.redirect_url) {
+                                window.location.href = response.redirect_url;
+                            }
                         }
                     },
                     error: function () {
@@ -69,21 +78,24 @@
                     title: '请输入验证码',
                     area: ['600px', '200px'],
                     content: `
-                <div class="layui-form-item">
-                    <label class="layui-form-label">验证码</label>
-                    <div class="layui-input-block">
-                        <input type="text" id="verification_code" placeholder="请输入验证码" class="layui-input">
-                    </div>
-                </div>
-                <div class="layui-form-item">
-                    <div class="layui-input-block">
-                        <button class="layui-btn" id="submit-verification">提交</button>
-                    </div>
-                </div>
-            `,
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">验证码</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="verification_code" placeholder="请输入验证码" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="layui-input-block">
+                                <button class="layui-btn" id="submit-verification">提交</button>
+                            </div>
+                        </div>
+                    `,
                     success: function () {
                         $('#submit-verification').on('click', function () {
                             var verification_code = $('#verification_code').val();
+
+                            // 显示加载动画
+                            var loadIndex = layer.load(1, {shade: [0.3, '#000']});
 
                             $.ajax({
                                 type: 'POST',
@@ -94,17 +106,31 @@
                                     verification_code: verification_code
                                 },
                                 success: function (response) {
-                                    if (response.status === 'info' && response.needs_second_password) {
-                                        layer.msg(response.message);
+                                    layer.close(loadIndex); // 关闭加载动画
+
+                                    if (response.status === 'info') {
+                                        // 信息性提示
+                                        if (response.needs_second_password) {
+                                            layer.msg(response.message);
+                                        } else {
+                                            layer.msg(response.message);
+                                        }
+                                    } else if (response.status === 'error') {
+                                        // 错误提示
+                                        layer.msg(response.message, {icon: 5});
                                     } else if (response.status === 'success') {
                                         layer.msg(response.message);
                                         layer.closeAll();
                                         $('#add-form')[0].reset();
-                                    } else {
-                                        layer.msg('错误: ' + response.message, {icon: 5});
+
+                                        // 页面跳转
+                                        if (response.redirect_url) {
+                                            window.location.href = response.redirect_url;
+                                        }
                                     }
                                 },
                                 error: function () {
+                                    layer.close(loadIndex); // 关闭加载动画
                                     layer.msg('请求失败，请重试！', {icon: 5});
                                 }
                             });
@@ -113,6 +139,5 @@
                 });
             }
         });
-
     </script>
 {% endblock %}
