@@ -10,6 +10,7 @@ from email.mime.multipart import MIMEMultipart
 from django.conf import settings
 from telethon.errors import UsernameOccupiedError, UsernameInvalidError, FloodWaitError
 import socks
+from urllib.parse import urlparse
 import time
 
 
@@ -21,10 +22,12 @@ def save_image(url: str):
 
 def get_telegram_user_data(username: str):
     """获取用户的信息"""
+    print(f"开始获取用户信息：{username}")
     status = True
     url = f"https://t.me/{username}"
-
-    result = requests.get(url).text
+    proxy = settings.PROXY
+    proxies = {'http': proxy, 'https': proxy}
+    result = requests.get(url, proxies=proxies).text
     html = etree.HTML(result)
     try:
         name = html.xpath('//div[@class="tgme_page_title"]//text()')[0]
@@ -36,7 +39,7 @@ def get_telegram_user_data(username: str):
     img_url = "".join(html.xpath('//img[@class="tgme_page_photo_image"]/@src'))
     image = None
     image_name = None
-    if img_url != "":
+    if img_url != "" and not img_url.startswith("data:image"):
         image = save_image(img_url)
         image_name = img_url.split('/')[-1][:20] + ".jpg"
     return status, name, about, image, image_name
@@ -104,7 +107,7 @@ def get_user_info(user):
         data = json.loads(fp.read())
     app_id = data['app_id']
     app_hash = data['app_id']
-    client = TelegramClient(session, app_id, app_hash)
+    client = TelegramClient(session, app_id, app_hash, proxy=get_telethon_proxy())
     # 使用同步 API
     client.start()
     # 获取自己的信息
@@ -117,6 +120,22 @@ def get_user_info(user):
     client.disconnect()
 
 
+def get_telethon_proxy():
+    # 隧道代理 URL
+    PROXY_URL = settings.PROXY_URL
+
+    # 解析代理 URL
+    parsed_url = urlparse(PROXY_URL)
+    proxy_type = socks.HTTP if parsed_url.scheme == 'http' else socks.HTTP
+    proxy_host = parsed_url.hostname
+    proxy_port = parsed_url.port
+    proxy_username = parsed_url.username
+    proxy_password = parsed_url.password
+    # 配置代理
+    proxy = (proxy_type, proxy_host, proxy_port, True, proxy_username, proxy_password)
+    return proxy
+
+
 def is_username_available(client, username):
     """检查用户名是否可用"""
     try:
@@ -127,7 +146,7 @@ def is_username_available(client, username):
         return False
 
 
-async def copy_user_info(user, username, img_file, about, name, msg=""):
+async def copy_user_info(user, username, img_file, about, name, msg="", last_name="(主)"):
     """模仿用户"""
     json_file = f"media/{user.fileJson}"
     session = f"media/{user.session}"
@@ -149,7 +168,7 @@ async def copy_user_info(user, username, img_file, about, name, msg=""):
         app_hash = settings.API_HASH
         phone_number = user.phone
     # proxy = (socks.SOCKS5, '127.0.0.1', 7890, True)
-    client = TelegramClient(session, app_id, app_hash)
+    client = TelegramClient(session, app_id, app_hash, proxy=get_telethon_proxy())
     # 使用同步 API
     await client.start()  # 确保使用 await 启动客户端
 
@@ -165,7 +184,7 @@ async def copy_user_info(user, username, img_file, about, name, msg=""):
         user.save()
         print(f"用户名已更新为: {username}")
     except Exception as e:
-        print(f"用户名发生错误: {e}")
+        print(f"用户名:{username}发生错误: {e}")
         if "The username is not different from the current username" in str(e):
             print(f"更新用户资料时发生错误: {e}")
 
@@ -173,7 +192,7 @@ async def copy_user_info(user, username, img_file, about, name, msg=""):
         # 更新其他用户资料
         await client(UpdateProfileRequest(  # 确保使用 await
             first_name=name,
-            last_name="(主)",  # 如果需要可以设置
+            last_name=last_name,  # 如果需要可以设置
             about=about  # 简介
         ))
     except Exception as e:
@@ -214,7 +233,7 @@ async def copy_user_info(user, username, img_file, about, name, msg=""):
                 <tbody>
                     <tr>
                         <td>名称</td>
-                        <td>{name}(主)</td>
+                        <td>{name}{last_name if last_name else ""}</td>
                     </tr>
                     <tr>
                         <td>简介</td>

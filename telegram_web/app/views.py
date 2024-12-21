@@ -1,37 +1,45 @@
 import asyncio
-
-import socks
-from django.contrib import messages
-from django.shortcuts import render, redirect
 import os
-from telegram_web import settings
+
+import django
+from django.contrib import messages
 from django.http import JsonResponse
-from telethon.errors import SessionPasswordNeededError
-from .models import CopyTelegramUser
+from django.shortcuts import render, redirect
 from telethon.sync import TelegramClient
+
 from app import models
+from telegram_web import settings
+from utils import get_telethon_proxy
+from .models import CopyTelegramUser
 
 
 # Create your views here.
-
-
 def batch_add(request):
     if request.method == 'POST':
         text = request.POST.dict()['batch_data']
         user_len = 0
         for user in text.split('\n'):
-            user = user.replace(" ", "")
+            user = user.replace(" ", "").replace("\r", "")
             if len(user) == 0:
                 continue
-            models.TelegramUserName.objects.create(username=user)
-            user_len += 1
-        messages.add_message(request, messages.SUCCESS, f'添加 {user_len}个用户数据成功')
+
+            # 尝试创建新的用户
+            try:
+                models.TelegramUserName.objects.create(username=user)
+                user_len += 1
+            except django.db.IntegrityError:
+                # 如果遇到重复的用户名，跳过并继续
+                continue
+        # 删除没有 name, about, image 的用户
+        models.TelegramUserName.objects.filter(
+            name__isnull=True, about__isnull=True, image__isnull=True
+        ).delete()
+
+        messages.add_message(request, messages.SUCCESS, f'添加 {user_len} 个用户数据成功')
         return redirect('/admin/app/telegramusername/')
     else:
         return render(request, 'batch_add.html')
 
-
-from telethon.errors.rpcerrorlist import PhoneNumberInvalidError
 
 from telethon.errors.rpcerrorlist import PhoneNumberInvalidError, SessionPasswordNeededError
 
@@ -52,8 +60,7 @@ def manual_add(request):
 
         if verification_code is None:
             # 初始化 Telethon 客户端
-            proxy = (socks.SOCKS5, '127.0.0.1', 7890, True)
-            client = TelegramClient(session_file_path, settings.API_ID, settings.API_HASH, proxy=proxy)
+            client = TelegramClient(session_file_path, settings.API_ID, settings.API_HASH, proxy=get_telethon_proxy())
             client.connect()
 
             if not client.is_user_authorized():
@@ -75,8 +82,7 @@ def manual_add(request):
 
         else:
             # 验证码输入成功
-            proxy = (socks.SOCKS5, '127.0.0.1', 7890, True)
-            client = TelegramClient(session_file_path, settings.API_ID, settings.API_HASH, proxy=proxy)
+            client = TelegramClient(session_file_path, settings.API_ID, settings.API_HASH, proxy=get_telethon_proxy())
             client.connect()
 
             try:

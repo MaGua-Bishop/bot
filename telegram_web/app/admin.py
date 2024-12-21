@@ -13,10 +13,10 @@ from utils import copy_user_info
 
 @admin.register(models.TelegramUserName)
 class TelegramUserName(admin.ModelAdmin):
-    list_display = ['id', "img", 'username_link', 'name', 'about', "status", 'create_time']
+    list_display = ['custom_id', "img", 'username_link', 'name', 'about', "status", 'create_time']
     search_fields = ['username', 'name']
     list_editable = ("status",)
-
+    ordering = ['-id']
     exclude = ('create_time', "status")
 
     # 在list页面显示头像
@@ -30,6 +30,14 @@ class TelegramUserName(admin.ModelAdmin):
         div = f"<a href='https://t.me/{obj.username}' target='_blank'>{obj.username}</a>"
         return mark_safe(div)
         # 添加一个额外的 URL 路由
+
+        # 自定义序号
+    @admin.display(description='编号', ordering='id')
+    def custom_id(self, obj):
+        # 获取对象的排序位置
+        queryset = models.TelegramUserName.objects.all().order_by('id')
+        index = list(queryset).index(obj) + 1  # 获取从 1 开始的索引
+        return index
 
     actions = ['custom_button']
 

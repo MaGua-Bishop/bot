@@ -27,7 +27,8 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://bot2.tgfrw.com'
+    'https://bot2.tgfrw.com',
+    'https://61e3-119-39-51-58.ngrok-free.app'
 ]
 
 # Application definition
@@ -169,10 +170,12 @@ STATICFILES_DIRS = [
 # 邮件配置
 EMAIL_USER = 'RobbyCorbitt6qWBH@gmail.com'
 EMAIL_PASSWORD = 'lfrw lgld bfge xdym'
-# ADMIN_EMAIL = "jiaobenzhuanyong88@gmail.com"
-ADMIN_EMAIL = "li2604984003@gmail.com"
+ADMIN_EMAIL = "jiaobenzhuanyong88@gmail.com"
 # Telegram info配置
 API_ID = '21507271'
 API_HASH = "6f6d9d0b737034f07108ae1997e3305c"
 # telethon 客户端存储
 clients = {}
+
+# 代理
+PROXY_URL = 'https://spqv5r9wdr:ied_oqno2wFE5fE7U3@gate.visitxiangtan.com:10001'
