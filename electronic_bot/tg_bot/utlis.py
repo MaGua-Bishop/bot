@@ -265,7 +265,7 @@ def fetch_all_game_history():
                 "pageSize": page_size
             }
 
-            response = requests.get(url, headers=headers, json=params, timeout=30)
+            response = requests.post(url, headers=headers, json=params, timeout=30)
             json_response = response.json()
 
             if json_response['code'] == 10000:

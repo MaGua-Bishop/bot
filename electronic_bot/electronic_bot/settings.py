@@ -145,3 +145,6 @@ LOGGING = {
         },
     }
 }
+
+OKPAY_ID = '13620'
+OKPAY_TOKEN = 'VfeikGoUqgRuyCsEGIK1SFh0t24JwZn'

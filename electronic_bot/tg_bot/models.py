@@ -127,25 +127,22 @@ class WithdrawalRecord(models.Model):
 
 class GameHistory(models.Model):
     game_order_id = models.CharField(max_length=50, primary_key=True)  # 订单号作为主键
-    player_id = models.CharField(max_length=50)  # 玩家账号
-    plat_type = models.CharField(max_length=20)  # 游戏平台
-    currency = models.CharField(max_length=10)  # 游戏货币
+    player_id = models.CharField(max_length=50, blank=True, null=True)  # 玩家账号
+    plat_type = models.CharField(max_length=20, blank=True, null=True)  # 游戏平台
+    currency = models.CharField(max_length=10, blank=True, null=True)  # 游戏货币
     game_type = models.IntegerField()  # 游戏类型
-    game_name = models.CharField(max_length=50)  # 游戏名称
-    round_number = models.CharField(max_length=50)  # 局号
-    table_number = models.CharField(max_length=50)  # 桌号
-    seat_number = models.CharField(max_length=50)  # 座号
-    bet_amount = models.DecimalField(max_digits=10, decimal_places=2)  # 投注金额
-    valid_amount = models.DecimalField(max_digits=10, decimal_places=2)  # 有效投注金额
-    settled_amount = models.DecimalField(max_digits=10, decimal_places=2)  # 输赢金额
-    bet_content = models.TextField()  # 投注内容
+    game_name = models.CharField(max_length=50, blank=True, null=True)  # 游戏名称
+    round_number = models.CharField(max_length=50, blank=True, null=True)  # 局号
+    table_number = models.CharField(max_length=50, blank=True, null=True)  # 桌号
+    seat_number = models.CharField(max_length=50, blank=True, null=True)  # 座号
+    bet_amount = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # 投注金额
+    valid_amount = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # 有效投注金额
+    settled_amount = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # 输赢金额
+    bet_content = models.TextField(blank=True, null=True)  # 投注内容
     status = models.IntegerField()  # 状态，0:未完成、1:已完成、2:已取消、3:已撤单
     is_status = models.BooleanField(default=False)  # 新增字段，默认值为 False
-    bet_time = models.DateTimeField()  # 订单创建时间
-    last_update_time = models.DateTimeField()  # 订单更新时间
+    bet_time = models.DateTimeField(blank=True, null=True)  # 订单创建时间
+    last_update_time = models.DateTimeField(blank=True, null=True)  # 订单更新时间
 
     class Meta:
         db_table = 'game_history'
-
-
-
