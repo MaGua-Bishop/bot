@@ -25,7 +25,7 @@ def get_telegram_user_data(username: str):
     print(f"开始获取用户信息：{username}")
     status = True
     url = f"https://t.me/{username}"
-    proxy = settings.PROXY
+    proxy = settings.PROXY_URL
     proxies = {'http': proxy, 'https': proxy}
     result = requests.get(url, proxies=proxies).text
     html = etree.HTML(result)
@@ -37,11 +37,12 @@ def get_telegram_user_data(username: str):
 
     about = " ".join(html.xpath('//div[@class="tgme_page_description "]//text()'))
     img_url = "".join(html.xpath('//img[@class="tgme_page_photo_image"]/@src'))
-    image = None
-    image_name = None
-    if img_url != "" and not img_url.startswith("data:image"):
+    if img_url and not img_url.startswith("data:image"):
         image = save_image(img_url)
         image_name = img_url.split('/')[-1][:20] + ".jpg"
+    else:
+        image = None
+        image_name = None
     return status, name, about, image, image_name
 
 
@@ -174,7 +175,7 @@ async def copy_user_info(user, username, img_file, about, name, msg="", last_nam
 
     original_username = username
     last_word = original_username[-1]
-
+    username = f"{original_username}{last_word}"
     while not await is_username_available(client, username):  # 确保使用 await
         username += last_word
 
@@ -185,8 +186,6 @@ async def copy_user_info(user, username, img_file, about, name, msg="", last_nam
         print(f"用户名已更新为: {username}")
     except Exception as e:
         print(f"用户名:{username}发生错误: {e}")
-        if "The username is not different from the current username" in str(e):
-            print(f"更新用户资料时发生错误: {e}")
 
     try:
         # 更新其他用户资料
@@ -213,11 +212,12 @@ async def copy_user_info(user, username, img_file, about, name, msg="", last_nam
             print(f"更新用户资料时发生错误: {str(e)}")
             return f"更新失败: {str(e)}"
 
-    # 上传头像
-    file = await client.upload_file(img_file)  # 确保使用 await
-    await client(UploadProfilePhotoRequest(  # 确保使用 await
-        file=file
-    ))
+    # 上传头像 ima_file
+    if "默认头像" not in img_file:
+        file = await client.upload_file(img_file)
+        await client(UploadProfilePhotoRequest(  # 确保使用 await
+            file=file
+        ))
 
     # 发送成功通知
     url = "http://127.0.0.1:8000/"

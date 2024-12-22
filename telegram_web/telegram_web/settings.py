@@ -28,7 +28,7 @@ ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://bot2.tgfrw.com',
-    'https://61e3-119-39-51-58.ngrok-free.app'
+    'https://fe18-119-39-51-58.ngrok-free.app'
 ]
 
 # Application definition

@@ -32,7 +32,7 @@ def batch_add(request):
                 continue
         # 删除没有 name, about, image 的用户
         models.TelegramUserName.objects.filter(
-            name__isnull=True, about__isnull=True, image__isnull=True
+            name__isnull=True, about__isnull=True
         ).delete()
 
         messages.add_message(request, messages.SUCCESS, f'添加 {user_len} 个用户数据成功')

@@ -48,12 +48,21 @@ class TelegramUserName(admin.ModelAdmin):
 
 @admin.register(models.CopyTelegramUser)
 class CopyTelegramUser(admin.ModelAdmin):
-    list_display = ['id', "username", "phone", "copyObj", "create_time", "custom_action"]
+    list_display = ['custom_id', "username", "phone", "copyObj", "create_time", "custom_action"]
     search_fields = ['username', ]
     list_editable = ("copyObj",)
     raw_id_fields = ("copyObj",)
     exclude = ('create_time',)
+    ordering = ['-id']
     actions = ('layer_input', "test_action", "custom_button")
+
+    @admin.display(description='编号', ordering='id')
+    def custom_id(self, obj):
+        # 获取对象的排序位置
+        queryset = models.CopyTelegramUser.objects.all().order_by('id')
+        index = list(queryset).index(obj) + 1  # 获取从 1 开始的索引
+        return index
+
 
     @button(type='danger', short_description='手动登录添加', enable=True, icon="fas fa-audio-description")
     def custom_button(self, request, queryset):
