@@ -328,6 +328,143 @@ def user_query_history(message):
         bot.send_message(user_id, f"发生错误: {str(e)}")
 
 
+@bot.message_handler(
+    func=lambda message: re.fullmatch(r"玩家流水 \d{5,15}", message.text) and message.chat.type in ["group",
+                                                                                                    "supergroup"]
+)
+def admin_query_user_history(message):
+    chat_id = message.chat.id
+    admin_id = message.from_user.id
+
+    # 验证是否为工作群
+    work_group_id = get_work_group_id()
+    if work_group_id != str(chat_id):
+        return
+
+    # 验证管理员权限
+    try:
+        admin = TgUser.objects.get(tg_id=admin_id)
+        if not admin.is_admin:
+            return
+    except TgUser.DoesNotExist:
+        return
+
+    tg_id = message.text.split()[1]
+    # 获取用户名
+    try:
+        user_name = bot.get_chat(tg_id)
+        full_name = f"{user_name.first_name} {user_name.last_name if user_name.last_name else ''}".strip()
+    except Exception:
+        full_name = "未知用户"
+    user_id = tg_id
+    player_id = "tg" + str(user_id)[:9]
+
+    try:
+        user = TgUser.objects.get(tg_id=user_id)
+    except TgUser.DoesNotExist:
+        bot.reply_to(message, f"用户信息未找到，请确认用户ID是否正确。")
+        return
+    except Exception as e:
+        return
+
+    today = timezone.now().date()
+    yesterday = today - timedelta(days=1)
+
+    try:
+        # 查询今天的历史记录
+        history_today = GameHistory.objects.filter(player_id=player_id, bet_time__date=today)
+        totals_today = history_today.aggregate(
+            total_settled_amount=Coalesce(Sum('settled_amount', output_field=DecimalField()),
+                                          Value(0, output_field=DecimalField())),
+            total_valid_amount=Coalesce(Sum('valid_amount', output_field=DecimalField()),
+                                        Value(0, output_field=DecimalField()))
+        )
+        total_settled_amount_today = totals_today['total_settled_amount']
+        total_valid_amount_today = totals_today['total_valid_amount']
+
+        # 查询前一天的历史记录
+        history_yesterday = GameHistory.objects.filter(player_id=player_id, bet_time__date=yesterday)
+        totals_yesterday = history_yesterday.aggregate(
+            total_valid_amount=Coalesce(Sum('valid_amount', output_field=DecimalField()),
+                                        Value(0, output_field=DecimalField()))
+        )
+        total_valid_amount_yesterday = totals_yesterday['total_valid_amount']
+        text = (
+            f"<a href='tg://user?id={user_id}'>@{full_name}</a>ID: <code>{user_id}</code>\n"
+            f"💵余额 :{user.money:.2f} \n"
+            f"(如果余额在游戏平台,需要转回钱包才可以显示哦~)\n"
+            f"🔸今日老虎机流水：{total_valid_amount_today:.2f}\n"
+            f"🔹昨日老虎机流水：{total_valid_amount_yesterday:.2f}\n"
+            f"(💡流水更新大约有十分钟延迟哦~)\n"
+            f"🔸今日输赢：{total_settled_amount_today}\n"
+            f"🔹注册时间：{localtime(user.create_time).strftime('%Y-%m-%d %H:%M:%S')}"
+        )
+        bot.reply_to(message, text, parse_mode='html')
+    except Exception as e:
+        bot.reply_to(message, f"发生错误: {str(e)}")
+
+
+@bot.message_handler(
+    func=lambda message: re.fullmatch(r"玩家邀请 \d{5,15}", message.text) and message.chat.type in ["group",
+                                                                                                    "supergroup"]
+)
+def admin_query_user_invite(message):
+    chat_id = message.chat.id
+    admin_id = message.from_user.id
+
+    # 验证是否为工作群
+    work_group_id = get_work_group_id()
+    if work_group_id != str(chat_id):
+        return
+
+    # 验证管理员权限
+    try:
+        admin = TgUser.objects.get(tg_id=admin_id)
+        if not admin.is_admin:
+            return
+    except TgUser.DoesNotExist:
+        return
+
+    tg_id = message.text.split()[1]
+    user_id = tg_id
+    try:
+        user = TgUser.objects.get(tg_id=user_id)
+    except TgUser.DoesNotExist:
+        bot.reply_to(message, "用户信息未找到，请确认用户ID是否正确。")
+        return
+    except Exception as e:
+        bot.reply_to(message, f"发生错误: {str(e)}")
+        return
+
+    # 获取被邀请用户的列表
+    invited_users = TgUser.objects.filter(invite_tg_id=user_id)
+    invited_users_text = []
+
+    for invited_user in invited_users:
+        try:
+            # 使用 get_chat 获取用户信息
+            user_info = bot.get_chat(invited_user.tg_id)
+            full_name = f"{user_info.first_name} {user_info.last_name if user_info.last_name else ''}".strip()
+            # 创建可点击的链接
+            invited_users_text.append(f"<a href='tg://user?id={invited_user.tg_id}'>@{full_name}</a>\t")
+        except Exception as e:
+            print(f"获取用户 {invited_user.tg_id} 的信息失败: {e}")
+
+    invited_users_text = "\n".join(invited_users_text) if invited_users_text else "没有邀请任何用户"
+    try:
+        user_name = bot.get_chat(tg_id)
+        full_name = f"{user_name.first_name} {user_name.last_name if user_name.last_name else ''}".strip()
+    except Exception:
+        full_name = "未知用户"
+    text = (
+        f"<a href='tg://user?id={user_id}'>@{full_name}</a>ID: <code>{user_id}</code>\n"
+        f"👥 已邀请人数 : {len(invited_users)}\n"  # 使用 len(invited_users) 获取已邀请人数
+        f"👥 已邀请用户 : \n{invited_users_text}\n"
+    )
+
+    bot.reply_to(message, text, parse_mode='HTML')
+
+
 @bot.message_handler(func=lambda message: message.text == "反水" and message.chat.type == "private")
 def user_betrayal(message):
     user_id = message.from_user.id

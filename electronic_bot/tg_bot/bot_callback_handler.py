@@ -2,6 +2,8 @@ from .bot_config import bot
 from telebot import types
 from .models import TgUser, AmountChange, TgRecharge, WithdrawalRecord
 from decimal import Decimal, ROUND_DOWN
+
+from .okay_pay import OkayPay
 from .utlis import get_start_reply_markup, get_recharge_withdrawal_reply_markup, get_okex, transfer_money, \
     get_user_pgmoney, get_game_url, get_game_type_reply_markup, get_work_group_id
 from django.utils.timezone import localtime
@@ -230,24 +232,60 @@ def user_set_recharge(call):
 from decimal import Decimal, InvalidOperation
 
 
-def recharge_cny(message):
+def recharge_okpay(message, recharge_type):
+    okpay = OkayPay()
     user_id = message.from_user.id
     text = message.text
     try:
         amount = Decimal(text)
-        if amount <= 0:
-            bot.send_message(user_id, "充值金额必须大于0。")
+        if amount < 1:
+            bot.send_message(user_id, "充值金额必须大于1。")
             return
-        recharge = TgRecharge.objects.create(
-            tg_id=user_id,
-            money=amount,
-            amount_type='CNY',
-            pay_type='OKPAY',
-        )
+
+        if recharge_type == 0:  # CNY
+            okex_rate = Decimal(get_okex())
+            if okex_rate is not None:
+                usdt_amount = amount / okex_rate
+                usdt_amount = usdt_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
+                amount = usdt_amount
+                amount_type = 'CNY'
+                # 创建充值记录
+                recharge = TgRecharge.objects.create(
+                    tg_id=user_id,
+                    money=amount,
+                    amount_type=amount_type,
+                    pay_type='OKPAY',
+                )
+
+                # 创建支付链接
+                pay_link_response = okpay.payLink(
+                    unique_id=str(recharge.recharge_id),
+                    name='充值',  # 显示信息
+                    amount=float(amount),  # 充值金额
+                    coin='USDT'  # 货币类型
+                )
+
+                if 'data' in pay_link_response and 'pay_url' in pay_link_response['data']:
+                    pay_url = pay_link_response['data']['pay_url']
+                else:
+                    bot.reply_to(message, "创建支付失败，请稍后再试。")
+                    return
+
+        elif recharge_type == 1:  # USDT
+            amount_type = 'USDT'
+            recharge = TgRecharge.objects.create(
+                tg_id=user_id,
+                money=amount,
+                amount_type=amount_type,
+                pay_type='OKPAY',
+            )
+
+        # 创建支付按钮
         markup = types.InlineKeyboardMarkup()
-        markup.add(types.InlineKeyboardButton("🏧去支付",
-                                              url=f"https://t.me/OkayPayBot?start=shop_deposit--{recharge.recharge_id}"))
-        bot.send_message(user_id, f"➕存款:{amount}CNY", reply_markup=markup)
+        markup.add(types.InlineKeyboardButton("🏧去支付", url=pay_url))  # 使用创建的支付链接
+
+        bot.send_message(user_id, f"➕存款:{amount:.2f} USDT", reply_markup=markup)
+
     except (InvalidOperation, ValueError) as e:
         bot.send_message(user_id, "金额格式错误")
 
@@ -262,10 +300,12 @@ def recharge_type(call):
         # okpay 人民币
         bot.send_message(call.message.chat.id, "请输入您要充值的金额(<b>CNY</b>)", parse_mode="HTML",
                          reply_markup=markup)
-        bot.register_next_step_handler(call.message, recharge_cny)
+        bot.register_next_step_handler(call.message, recharge_okpay, recharge_type)
     if recharge_type == 1:
         # okpay USDT
-        pass
+        bot.send_message(call.message.chat.id, "请输入您要充值的金额(<b>USDT</b>)", parse_mode="HTML",
+                         reply_markup=markup)
+        bot.register_next_step_handler(call.message, recharge_okpay, recharge_type)
     if recharge_type == 2:
         # USDT
         text = "请选择充值的金额"
@@ -483,7 +523,6 @@ def user_withdrawal_history(call):
         bot.answer_callback_query(call.id, f"处理提现历史时发生错误: {e}")
 
 
-
 @bot.callback_query_handler(func=lambda call: call.data.startswith("admin_query_recharge:"))
 def user_history_bill(call):
     page = int(call.data[len("admin_query_recharge:"):])  # 获取当前页码
@@ -530,18 +569,6 @@ def user_is_notify(call):
         bot.answer_callback_query(call.id, "🔕奖励通知已关闭", show_alert=True)
     bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=text,
                           reply_markup=get_recharge_withdrawal_reply_markup(user.is_notify, user.is_admin))
-
-
-''''
-    # text = "请点击按钮选择您的取款方式"
-    # markup = types.InlineKeyboardMarkup()
-    # markup.add(types.InlineKeyboardButton("🔥Okpay人民币(最小5)", callback_data="withdraw_type:0"))
-    # markup.add(types.InlineKeyboardButton("USDT-OkPay(最小10)", callback_data="withdraw_type:1"))
-    # markup.add(types.InlineKeyboardButton("USDT-TRC20(最小100)", callback_data="withdraw_type:2"))
-    # markup.add(types.InlineKeyboardButton("↩️返回", callback_data="recharge_withdrawal"))
-    # bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=text,
-    #                       reply_markup=markup)
-'''
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "user_withdraw")
@@ -915,8 +942,30 @@ def invite_user(call):
         user_id = call.from_user.id
         user = TgUser.objects.get(tg_id=user_id)
         count = TgUser.objects.filter(invite_tg_id=user_id).count()
+
+        # 获取被邀请用户的列表
+        invited_users = TgUser.objects.filter(invite_tg_id=user_id)
+        invited_users_text = []
+
+        for invited_user in invited_users:
+            try:
+                # 使用 get_chat 获取用户信息
+                user_info = bot.get_chat(invited_user.tg_id)
+                full_name = f"{user_info.first_name} {user_info.last_name if user_info.last_name else ''}".strip()
+                # 创建可点击的链接
+                invited_users_text.append(f"<a href='tg://user?id={invited_user.tg_id}'>@{full_name}</a>\t")
+            except Exception as e:
+                print(f"获取用户 {invited_user.tg_id} 的信息失败: {e}")
+
+        invited_users_text = "\n".join(invited_users_text) if invited_users_text else "没有邀请任何用户"
+
         url = f"https://t.me/{bot.get_me().username}?start={user.tg_id}"
-        text = f"👬 推荐计划\n邀请你的朋友，赚取所有赌注的0.2%，无论他们是赢还是输!\n💡拉好友进群，自动绑定代理哦\n\n👥 已邀请人数 : {count}\n🔗 推荐链接 : \n{url}"
+        text = (f"👬 推荐计划\n邀请你的朋友，赚取所有赌注的0.2%，无论他们是赢还是输!\n"
+                f"💡拉好友进群，自动绑定代理哦\n\n"
+                f"👥 已邀请人数 : {count}\n"
+                f"👥 已邀请用户 : \n{invited_users_text}\n" 
+                f"🔗 推荐链接 : \n{url}")
+
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("🏠主菜单", callback_data="return_start"))
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=text,
