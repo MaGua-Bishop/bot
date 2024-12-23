@@ -247,12 +247,11 @@ def recharge_okpay(message, recharge_type):
             if okex_rate is not None:
                 usdt_amount = amount / okex_rate
                 usdt_amount = usdt_amount.quantize(Decimal('0.00'), rounding=ROUND_DOWN)
-                amount = usdt_amount
                 amount_type = 'CNY'
                 # 创建充值记录
                 recharge = TgRecharge.objects.create(
                     tg_id=user_id,
-                    money=amount,
+                    money=usdt_amount,
                     amount_type=amount_type,
                     pay_type='OKPAY',
                 )
@@ -262,7 +261,7 @@ def recharge_okpay(message, recharge_type):
                     unique_id=str(recharge.recharge_id),
                     name='充值',  # 显示信息
                     amount=float(amount),  # 充值金额
-                    coin='USDT'  # 货币类型
+                    coin='CNY'  # 货币类型
                 )
 
                 if 'data' in pay_link_response and 'pay_url' in pay_link_response['data']:
@@ -279,6 +278,18 @@ def recharge_okpay(message, recharge_type):
                 amount_type=amount_type,
                 pay_type='OKPAY',
             )
+            pay_link_response = okpay.payLink(
+                unique_id=str(recharge.recharge_id),
+                name='充值',
+                amount=float(amount),
+                coin='USDT'
+            )
+
+            if 'data' in pay_link_response and 'pay_url' in pay_link_response['data']:
+                pay_url = pay_link_response['data']['pay_url']
+            else:
+                bot.reply_to(message, "创建支付失败，请稍后再试。")
+                return
 
         # 创建支付按钮
         markup = types.InlineKeyboardMarkup()
@@ -963,7 +974,7 @@ def invite_user(call):
         text = (f"👬 推荐计划\n邀请你的朋友，赚取所有赌注的0.2%，无论他们是赢还是输!\n"
                 f"💡拉好友进群，自动绑定代理哦\n\n"
                 f"👥 已邀请人数 : {count}\n"
-                f"👥 已邀请用户 : \n{invited_users_text}\n" 
+                f"👥 已邀请用户 : \n{invited_users_text}\n"
                 f"🔗 推荐链接 : \n{url}")
 
         markup = types.InlineKeyboardMarkup()

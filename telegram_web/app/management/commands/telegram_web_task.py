@@ -70,19 +70,30 @@ def process_user(user):
         print(f"处理用户 {user.username} 时发生错误: {e}")
 
 
-async def process_inactive_user(user):
+def process_inactive_user(user):
     """处理状态为 False 的用户"""
+    # 获取所有未被复制的白号用户
     white_users = models.CopyTelegramUser.objects.filter(copyObj_id=None)
+
     img_file = user.image.name if user.image else None
+
+    # 初始化尝试次数和成功标志
     attempts = 0
     success = False
 
+    # 循环直到找到合适的白号替换或达到最大尝试次数
     while white_users.exists() and attempts < 3:
+        # 从未被替换的白号中随机选择一个
         copy_user = random.choice(white_users)
+
         try:
-            await asyncio.sleep(60 * (attempts + 1))
+            # 等待一段时间再尝试
+            # asyncio.sleep()  # 等待时间随尝试次数递增
+            time.sleep(60 * (attempts + 1))
             print(f"白号 {copy_user.phone} 替换中... 尝试次数: {attempts + 1}")
-            message = await utils.copy_user_info(
+
+            # 调用 utils.copy_user_info 函数进行信息替换
+            message = asyncio.run(utils.copy_user_info(
                 user=copy_user,
                 username=user.username,
                 img_file=img_file,
@@ -90,34 +101,50 @@ async def process_inactive_user(user):
                 name=user.name,
                 first_name=user.first_name,
                 last_name=user.last_name,
-                msg=f"【用户名<{user.username}>不存在】",
-            )
+                msg=f"【用户名<{user.username}>不存在】",  # 替换失败时附带的消息
+            ))
+
+            # 替换成功
             if message:
+                # 更新用户状态为 False
                 user.status = False
                 user.save()
+
+                # 更新白号用户的 copyObj 关联为当前用户
                 copy_user.copyObj = user
                 copy_user.save()
+
+                # 标记替换成功并退出循环
                 success = True
-                break  # 成功后退出循环
+                break
             else:
+                # 替换失败，增加尝试次数并发送邮件通知管理员
                 attempts += 1
                 asyncio.run(utils.send_mail_to_admin_async(
                     "白号替换失败",
                     f"白号 {copy_user.phone} 替换失败，尝试次数: {attempts}，尝试下一个白号替换。"
                 ))
                 print(f"用户名 {user.username} 被占用，尝试下一个白号。")
+
         except Exception as e:
             print(f"白号 {copy_user.phone} 替换失败: {str(e)}")
+
+        # 增加尝试次数
         attempts += 1
+
+        # 重新查询未被复制的白号
         white_users = models.CopyTelegramUser.objects.filter(copyObj_id=None)
 
     if success:
         pass
     else:
+        # 如果前面三次尝试都失败，则进行额外的重试
         for i in range(3):
-            await asyncio.sleep(60 * (45 + i))
+            # 等待一段时间后重试
+            # asyncio.sleep(60 * (45 + i))
+            time.sleep(60 * (45 + i))
             print(f"白号 {copy_user.phone} 再次尝试替换中... 尝试次数: {i + 1}")
-            message = await utils.copy_user_info(
+            message = asyncio.run(utils.copy_user_info(
                 user=copy_user,
                 username=user.username,
                 img_file=img_file,
@@ -126,22 +153,34 @@ async def process_inactive_user(user):
                 first_name=user.first_name,
                 last_name=user.last_name,
                 msg=f"【用户名<{user.username}>不存在】",
-            )
+            ))
+
+            # 替换成功
             if message:
+                # 更新用户状态为 False
                 user.status = False
                 user.save()
+
+                # 更新白号用户的 copyObj 关联为当前用户
                 copy_user.copyObj = user
                 copy_user.save()
+
+                # 标记替换成功并退出重试循环
                 success = True
                 break
             else:
+                # 如果重试失败，发送邮件通知管理员
                 asyncio.run(utils.send_mail_to_admin_async(
                     "白号替换失败",
-                    f"白号 {copy_user.phone} 替换失败，尝试次数: {i+ 3}，尝试下一个白号替换。"
+                    f"白号 {copy_user.phone} 替换失败，尝试次数: {i + 3}，尝试下一个白号替换。"
                 ))
+
+        # 如果所有重试均失败，通知管理员
         if not success:
-            await utils.send_mail_to_admin_async(f"用户名【{user.username}】替换失败",
-                                                 f"用户 {user.username} 的信息替换失败，所有尝试均未成功。")
+            asyncio.run(utils.send_mail_to_admin_async(
+                f"用户名【{user.username}】替换失败",
+                f"用户 {user.username} 的信息替换失败，所有尝试均未成功。"
+            ))
 
 
 class Command(BaseCommand):
@@ -152,7 +191,8 @@ class Command(BaseCommand):
 
     def start(self):
         while True:
-            users = models.TelegramUserName.objects.filter(status=True)
+            # , username="testtest666888"
+            users = models.TelegramUserName.objects.filter(status=True, username="testtest666888")
             with ThreadPoolExecutor(max_workers=10) as executor:
                 executor.map(process_user, users)
             time.sleep(0.1)

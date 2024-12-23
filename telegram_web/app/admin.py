@@ -30,9 +30,6 @@ class TelegramUserName(admin.ModelAdmin):
     def username_link(self, obj):
         div = f"<a href='https://t.me/{obj.username}' target='_blank'>{obj.username}</a>"
         return mark_safe(div)
-        # 添加一个额外的 URL 路由
-
-        # 自定义序号
 
     @admin.display(description='编号', ordering='id')
     def custom_id(self, obj):
