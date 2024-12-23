@@ -8,12 +8,13 @@ from simplepro.action import CellAction
 from simplepro.decorators import button
 
 from app import models
-from utils import copy_user_info
+from utils import copy_user_info, admin_copy_user_info
 
 
 @admin.register(models.TelegramUserName)
 class TelegramUserName(admin.ModelAdmin):
-    list_display = ['custom_id', "img", 'username_link', 'name', 'about', "status", 'create_time']
+    list_display = ['custom_id', "img", 'username_link', 'first_name', 'last_name', 'about', "status",
+                    'create_time']
     search_fields = ['username', 'name']
     list_editable = ("status",)
     ordering = ['-id']
@@ -32,6 +33,7 @@ class TelegramUserName(admin.ModelAdmin):
         # 添加一个额外的 URL 路由
 
         # 自定义序号
+
     @admin.display(description='编号', ordering='id')
     def custom_id(self, obj):
         # 获取对象的排序位置
@@ -63,7 +65,6 @@ class CopyTelegramUser(admin.ModelAdmin):
         index = list(queryset).index(obj) + 1  # 获取从 1 开始的索引
         return index
 
-
     @button(type='danger', short_description='手动登录添加', enable=True, icon="fas fa-audio-description")
     def custom_button(self, request, queryset):
         return redirect('/manual_add/')
@@ -85,7 +86,7 @@ class CopyTelegramUser(admin.ModelAdmin):
                 img_file = copy_user.image.name if copy_user.image else None
 
                 # 调用模仿用户的函数
-                message = asyncio.run(copy_user_info(
+                message = asyncio.run(admin_copy_user_info(
                     user=obj,  # 当前用户对象
                     username=copy_user.username,  # 被模仿用户的用户名
                     img_file=img_file,  # 被模仿用户的头像文件

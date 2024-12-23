@@ -1,3 +1,4 @@
+import asyncio
 import os
 import django
 
@@ -13,5 +14,5 @@ from app import models
 import utils
 
 if __name__ == '__main__':
-    status, name, about, image, image_name = utils.get_telegram_user_data('Evans_666666')
-    print(status, name, about, image, image_name)
+    status, name, about, image, image_name, first_name, last_name = utils.get_telegram_user_data('Gky2019')
+    print(status)

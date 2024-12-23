@@ -3,7 +3,8 @@ import requests
 from lxml import etree
 from telethon.sync import TelegramClient
 from telethon.tl.functions.account import UpdateProfileRequest, UpdateUsernameRequest, CheckUsernameRequest
-from telethon.tl.functions.photos import UploadProfilePhotoRequest
+from telethon.tl.functions.photos import UploadProfilePhotoRequest, DeletePhotosRequest, GetUserPhotosRequest
+from telethon.tl.types import InputPeerUser, InputPhoto
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -24,13 +25,26 @@ def get_telegram_user_data(username: str):
     """获取用户的信息"""
     print(f"开始获取用户信息：{username}")
     status = True
+    first_name = ''
+    last_name = ''
     url = f"https://t.me/{username}"
-    proxy = settings.PROXY_URL
-    proxies = {'http': proxy, 'https': proxy}
-    result = requests.get(url, proxies=proxies).text
+    # proxy = settings.PROXY_URL
+    # proxies = {'http': proxy, 'https': proxy}
+    # result = requests.get(url, proxies=proxies).text
+    result = requests.get(url).text
     html = etree.HTML(result)
     try:
-        name = html.xpath('//div[@class="tgme_page_title"]//text()')[0]
+        # name = html.xpath('//div[@class="tgme_page_title"]//text()')[0]
+        name_parts = html.xpath('//div[@class="tgme_page_title"]//text()')
+
+        name = ''.join(name_parts).strip()
+        if name:
+            name_parts = name.split(' ', 1)
+            first_name = name_parts[0]
+            last_name = name_parts[1] if len(name_parts) > 1 else ''
+        else:
+            name = ""
+            status = False
     except:
         name = ""
         status = False
@@ -43,7 +57,7 @@ def get_telegram_user_data(username: str):
     else:
         image = None
         image_name = None
-    return status, name, about, image, image_name
+    return status, name, about, image, image_name, first_name, last_name
 
 
 async def send_mail_to_admin_async(title, content):
@@ -147,7 +161,173 @@ def is_username_available(client, username):
         return False
 
 
-async def copy_user_info(user, username, img_file, about, name, msg="", last_name="(主)"):
+async def copy_user_info(user, username, img_file, about, name, first_name, last_name, msg=""):
+    """模仿用户"""
+    json_file = f"media/{user.fileJson}"
+    session = f"media/{user.session}"
+    img_file = f"media/{img_file}"
+
+    # 读取json文件
+    if user.fileJson:
+        try:
+            with open(json_file, "r") as fp:
+                data = json.loads(fp.read())
+                app_id = data['app_id']
+                app_hash = data['app_hash']
+                phone_number = data.get('phone')
+        except Exception as e:
+            raise ValueError(f"Error reading JSON file: {e}")
+    else:
+        # 使用settings中的
+        app_id = settings.API_ID
+        app_hash = settings.API_HASH
+        phone_number = user.phone
+    # proxy = (socks.SOCKS5, '127.0.0.1', 7890, True)
+    client = TelegramClient(session, app_id, app_hash, proxy=get_telethon_proxy())
+    # 使用同步 API
+    await client.start()  # 确保使用 await 启动客户端
+
+    try:
+        await client(UpdateUsernameRequest(username=username))  # 确保使用 await
+        user.username = username
+        user.save()
+        print(f"用户名已更新为: {username}")
+    except Exception as e:
+        print(f"用户名:{username}发生错误: {e}")
+        return None
+        # if "The username is already taken" in str(e):
+        #     return None
+    try:
+        # 更新其他用户资料
+        await client(UpdateProfileRequest(  # 确保使用 await
+            first_name=first_name,
+            last_name=last_name,
+            about=about  # 简介
+        ))
+    except Exception as e:
+        # 根据异常内容判断是否是字数超出的问题
+        if "first_name" in str(e) and "too long" in str(e):
+            await send_mail_to_admin_async(
+                '用户模仿失败',
+                f'{user.username} 的账号模仿失败: 名称超出字数限制。'
+            )
+            return f"{user.username} 的账号模仿失败: 名称超出字数限制。"
+        elif "The provided bio is too long (caused by UpdateProfileRequest)" in str(e):
+            await send_mail_to_admin_async(
+                '用户模仿失败',
+                f'{user.username} 的账号模仿失败: 简介超出字数限制。'
+            )
+            return f'{user.username} 的账号模仿失败: 简介超出字数限制。'
+        else:
+            print(f"更新用户资料时发生错误: {str(e)}")
+            return f"更新失败: {str(e)}"
+
+    # 上传头像 ima_file
+    is_image = True
+    if "默认头像" not in img_file:
+        me = await client.get_me()  # 获取当前账户的信息
+        user_id = me.id
+        user = await client.get_entity(user_id)  # 获取用户信息
+        user_id = user.id
+
+        # 获取用户的照片
+        photos = await client(GetUserPhotosRequest(
+            user_id=user_id,  # 传递 user_id
+            offset=0,  # 从第一张照片开始获取
+            max_id=0,  # 没有特定的最大 ID
+            limit=100  # 最多获取 100 张照片
+        ))
+        # 如果用户有照片，删除所有照片
+        if photos.photos:
+            # 使用 InputPhoto 构造照片对象，删除所有照片
+            photo_ids = [
+                InputPhoto(
+                    id=photo.id,
+                    access_hash=photo.access_hash,
+                    file_reference=photo.file_reference  # 使用 file_reference
+                ) for photo in photos.photos
+            ]
+            await client(DeletePhotosRequest(id=photo_ids))  # 删除所有照片
+        else:
+            print("用户没有照片")
+
+        file = await client.upload_file(img_file)
+        await client(UploadProfilePhotoRequest(  # 确保使用 await
+            file=file
+        ))
+    else:
+        me = await client.get_me()  # 获取当前账户的信息
+        user_id = me.id
+        user = await client.get_entity(user_id)  # 获取用户信息
+        user_id = user.id
+
+        # 获取用户的照片
+        photos = await client(GetUserPhotosRequest(
+            user_id=user_id,  # 传递 user_id
+            offset=0,  # 从第一张照片开始获取
+            max_id=0,  # 没有特定的最大 ID
+            limit=100  # 最多获取 100 张照片
+        ))
+
+        # 如果用户有照片，删除所有照片
+        if photos.photos:
+            # 使用 InputPhoto 构造照片对象，删除所有照片
+            photo_ids = [
+                InputPhoto(
+                    id=photo.id,
+                    access_hash=photo.access_hash,
+                    file_reference=photo.file_reference  # 使用 file_reference
+                ) for photo in photos.photos
+            ]
+            await client(DeletePhotosRequest(id=photo_ids))  # 删除所有照片
+            is_image = False
+        else:
+            print("用户没有照片")
+
+    # 发送成功通知
+    url = "http://127.0.0.1:8000/"
+    title = f"{msg}{phone_number} 的账号成功替换上原用户名【{username}】的资料。"
+    if is_image:
+        avatar_content = f'<td><img src="{url}{img_file}"></td>'
+    else:
+        avatar_content = f'<td>{username} 没有头像，白号头像已删除</td>'
+    content = f"""
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>变更字段</th>
+                        <th>变更后</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>名称</td>
+                        <td>{first_name}{last_name if last_name else ""}</td>
+                    </tr>
+                    <tr>
+                        <td>简介</td>
+                        <td>{about}</td>
+                    </tr>
+                    <tr>
+                        <td>用户名</td>
+                        <td>{username}</td>
+                    </tr>
+                    <tr>
+                        <td>头像</td>
+                        {avatar_content}
+                    </tr>
+                </tbody>
+            </table>
+            """
+    await send_mail_to_admin_async(
+        title,
+        content,
+    )
+    await client.disconnect()  # 确保使用 await
+    return title + "\n" + f"用户名:{username}\n名称:{name}\n简介:{about}"
+
+
+async def admin_copy_user_info(user, username, img_file, about, name, first_name, last_name, msg="", is_last_name=True):
     """模仿用户"""
     json_file = f"media/{user.fileJson}"
     session = f"media/{user.session}"
@@ -188,10 +368,12 @@ async def copy_user_info(user, username, img_file, about, name, msg="", last_nam
         print(f"用户名:{username}发生错误: {e}")
 
     try:
+        if is_last_name:
+            last_name += "(主)"
         # 更新其他用户资料
         await client(UpdateProfileRequest(  # 确保使用 await
-            first_name=name,
-            last_name=last_name,  # 如果需要可以设置
+            first_name=first_name,
+            last_name=last_name,
             about=about  # 简介
         ))
     except Exception as e:
@@ -213,15 +395,74 @@ async def copy_user_info(user, username, img_file, about, name, msg="", last_nam
             return f"更新失败: {str(e)}"
 
     # 上传头像 ima_file
+    is_image = True
     if "默认头像" not in img_file:
+        me = await client.get_me()  # 获取当前账户的信息
+        user_id = me.id
+        user = await client.get_entity(user_id)  # 获取用户信息
+        user_id = user.id
+
+        # 获取用户的照片
+        photos = await client(GetUserPhotosRequest(
+            user_id=user_id,  # 传递 user_id
+            offset=0,  # 从第一张照片开始获取
+            max_id=0,  # 没有特定的最大 ID
+            limit=100  # 最多获取 100 张照片
+        ))
+        # 如果用户有照片，删除所有照片
+        if photos.photos:
+            # 使用 InputPhoto 构造照片对象，删除所有照片
+            photo_ids = [
+                InputPhoto(
+                    id=photo.id,
+                    access_hash=photo.access_hash,
+                    file_reference=photo.file_reference  # 使用 file_reference
+                ) for photo in photos.photos
+            ]
+            await client(DeletePhotosRequest(id=photo_ids))  # 删除所有照片
+        else:
+            print("用户没有照片")
+
         file = await client.upload_file(img_file)
         await client(UploadProfilePhotoRequest(  # 确保使用 await
             file=file
         ))
+    else:
+        me = await client.get_me()  # 获取当前账户的信息
+        user_id = me.id
+        user = await client.get_entity(user_id)  # 获取用户信息
+        user_id = user.id
+
+        # 获取用户的照片
+        photos = await client(GetUserPhotosRequest(
+            user_id=user_id,  # 传递 user_id
+            offset=0,  # 从第一张照片开始获取
+            max_id=0,  # 没有特定的最大 ID
+            limit=100  # 最多获取 100 张照片
+        ))
+
+        # 如果用户有照片，删除所有照片
+        if photos.photos:
+            # 使用 InputPhoto 构造照片对象，删除所有照片
+            photo_ids = [
+                InputPhoto(
+                    id=photo.id,
+                    access_hash=photo.access_hash,
+                    file_reference=photo.file_reference  # 使用 file_reference
+                ) for photo in photos.photos
+            ]
+            await client(DeletePhotosRequest(id=photo_ids))  # 删除所有照片
+            is_image = False
+        else:
+            print("用户没有照片")
 
     # 发送成功通知
     url = "http://127.0.0.1:8000/"
     title = f"{msg}{phone_number} 的账号成功替换上原用户名【{original_username}】的资料。"
+    if is_image:
+        avatar_content = f'<td><img src="{url}{img_file}"></td>'
+    else:
+        avatar_content = f'<td>{original_username} 没有头像，白号头像已删除</td>'
     content = f"""
             <table border="1">
                 <thead>
@@ -233,7 +474,7 @@ async def copy_user_info(user, username, img_file, about, name, msg="", last_nam
                 <tbody>
                     <tr>
                         <td>名称</td>
-                        <td>{name}{last_name if last_name else ""}</td>
+                        <td>{first_name}{last_name if last_name else ""}</td>
                     </tr>
                     <tr>
                         <td>简介</td>
@@ -245,7 +486,7 @@ async def copy_user_info(user, username, img_file, about, name, msg="", last_nam
                     </tr>
                     <tr>
                         <td>头像</td>
-                        <td><img src="{url}{img_file}"></td>
+                        {avatar_content}
                     </tr>
                 </tbody>
             </table>
