@@ -49,7 +49,13 @@ public class PersonalCenterServiceMenuImpl implements IBotMenu {
 
         User from = message.getFrom();
         Long id = from.getId();
-        String username = from.getUserName().isEmpty() ? from.getFirstName() + (from.getLastName() != null ? from.getLastName() : "") : from.getUserName();
+        String username= "";
+        if(from.getUserName() == null){
+            username = from.getFirstName() + (from.getLastName() != null ? from.getLastName() : "");
+        }else {
+            username = from.getUserName();
+        }
+//        String username = from.getUserName() ==null ? from.getFirstName() + (from.getLastName() != null ? from.getLastName() : "") : from.getUserName();
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId());
         com.li.bot.entity.database.User user = userMapper.selectOne(new LambdaQueryWrapper<com.li.bot.entity.database.User>().eq(com.li.bot.entity.database.User::getTgId, id));
