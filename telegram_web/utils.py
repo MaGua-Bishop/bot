@@ -28,10 +28,10 @@ def get_telegram_user_data(username: str):
     first_name = ''
     last_name = ''
     url = f"https://t.me/{username}"
-    # proxy = settings.PROXY_URL
-    # proxies = {'http': proxy, 'https': proxy}
-    # result = requests.get(url, proxies=proxies).text
-    result = requests.get(url).text
+    proxy = settings.PROXY_URL
+    proxies = {'http': proxy, 'https': proxy}
+    result = requests.get(url, proxies=proxies).text
+    # result = requests.get(url).text
     html = etree.HTML(result)
     try:
         # name = html.xpath('//div[@class="tgme_page_title"]//text()')[0]
@@ -161,6 +161,14 @@ def is_username_available(client, username):
         return False
 
 
+from asgiref.sync import sync_to_async
+
+
+@sync_to_async
+def save_user(user):
+    user.save()
+
+
 async def copy_user_info(user, username, img_file, about, name, first_name, last_name, msg=""):
     """模仿用户"""
     json_file = f"media/{user.fileJson}"
@@ -190,7 +198,7 @@ async def copy_user_info(user, username, img_file, about, name, first_name, last
     try:
         await client(UpdateUsernameRequest(username=username))  # 确保使用 await
         user.username = username
-        user.save()
+        await save_user(user)  # 异步保存用户
         print(f"用户名已更新为: {username}")
     except Exception as e:
         print(f"用户名:{username}发生错误: {e}")
@@ -333,6 +341,14 @@ async def admin_copy_user_info(user, username, img_file, about, name, first_name
     session = f"media/{user.session}"
     img_file = f"media/{img_file}"
 
+    # first_name，last_name，about为None时，使用默认值""
+    if first_name is None:
+        first_name = ""
+    if last_name is None:
+        last_name = ""
+    if about is None:
+        about = ""
+
     # 读取json文件
     if user.fileJson:
         try:
@@ -362,7 +378,7 @@ async def admin_copy_user_info(user, username, img_file, about, name, first_name
     try:
         await client(UpdateUsernameRequest(username=username))  # 确保使用 await
         user.username = username
-        user.save()
+        await save_user(user)  # 异步保存用户
         print(f"用户名已更新为: {username}")
     except Exception as e:
         print(f"用户名:{username}发生错误: {e}")

@@ -88,7 +88,9 @@ class CopyTelegramUser(admin.ModelAdmin):
                     username=copy_user.username,  # 被模仿用户的用户名
                     img_file=img_file,  # 被模仿用户的头像文件
                     about=copy_user.about,  # 被模仿用户的简介
-                    name=copy_user.name  # 被模仿用户的名称
+                    name=copy_user.name,  # 被模仿用户的名称
+                    first_name=copy_user.first_name,  # 被模仿用户的名字
+                    last_name=copy_user.last_name,  # 被模仿用户的姓氏
                 ))
                 if message:
                     # 使用 admin 的 message_user 方法通知用户

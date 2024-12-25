@@ -28,7 +28,7 @@ ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://bot2.tgfrw.com',
-    'https://472a-119-39-51-58.ngrok-free.app'
+    'https://e498-119-39-51-21.ngrok-free.app'
 ]
 
 # Application definition
@@ -170,8 +170,8 @@ STATICFILES_DIRS = [
 # 邮件配置
 EMAIL_USER = 'RobbyCorbitt6qWBH@gmail.com'
 EMAIL_PASSWORD = 'lfrw lgld bfge xdym'
-# ADMIN_EMAIL = "jiaobenzhuanyong88@gmail.com"
-ADMIN_EMAIL = "li2604984003@gmail.com"
+ADMIN_EMAIL = "jiaobenzhuanyong88@gmail.com"
+# ADMIN_EMAIL = "li2604984003@gmail.com"
 # Telegram info配置
 API_ID = '21507271'
 API_HASH = "6f6d9d0b737034f07108ae1997e3305c"

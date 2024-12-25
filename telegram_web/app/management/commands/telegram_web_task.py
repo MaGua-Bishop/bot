@@ -60,6 +60,7 @@ def process_user(user):
                     text = f"""变更内容如下:<table border=\"1\"><thead><tr><th>变更字段</th><th>变更前</th><th>变更后</th></tr></thead><tbody>{tr}</tbody></table>"""
                     print(text)
         else:
+            print(f"用户名 {user.username} 不存在")
             process_inactive_user(user)
 
     except ProxyError:
@@ -131,7 +132,7 @@ def process_inactive_user(user):
                 # 替换失败，增加尝试次数并发送邮件通知管理员
                 attempts += 1
                 asyncio.run(utils.send_mail_to_admin_async(
-                    "白号替换失败",
+                    f"白号替换用户名【{user.username}】失败",
                     f"白号 {copy_user.phone} 替换失败，尝试次数: {attempts}，尝试下一个白号替换。"
                 ))
                 print(f"用户名 {user.username} 被占用，尝试下一个白号。")
@@ -152,7 +153,7 @@ def process_inactive_user(user):
         for i in range(3):
             # 等待一段时间后重试
             # asyncio.sleep(60 * (45 + i))
-            time.sleep(60 * (45 + i))
+            time.sleep(60 * (42 + i))
             print(f"白号 {copy_user.phone} 再次尝试替换中... 尝试次数: {i + 1}")
             message = asyncio.run(utils.copy_user_info(
                 user=copy_user,
@@ -181,7 +182,7 @@ def process_inactive_user(user):
             else:
                 # 如果重试失败，发送邮件通知管理员
                 asyncio.run(utils.send_mail_to_admin_async(
-                    "白号替换失败",
+                    f"白号替换用户名【{user.username}】失败",
                     f"白号 {copy_user.phone} 替换失败，尝试次数: {i + 3}，尝试下一个白号替换。"
                 ))
 
@@ -189,7 +190,7 @@ def process_inactive_user(user):
         if not success:
             asyncio.run(utils.send_mail_to_admin_async(
                 f"用户名【{user.username}】替换失败",
-                f"用户 {user.username} 的信息替换失败，所有尝试均未成功。"
+                f"用户名【{user.username}】 的信息替换失败，所有尝试均未成功。"
             ))
 
 
@@ -202,7 +203,7 @@ class Command(BaseCommand):
     def start(self):
         while True:
             # , username="testtest666888"
-            users = models.TelegramUserName.objects.filter(status=True, username="testtest666888")
+            users = models.TelegramUserName.objects.filter(status=True)
             with ThreadPoolExecutor(max_workers=10) as executor:
                 executor.map(process_user, users)
             time.sleep(0.1)
