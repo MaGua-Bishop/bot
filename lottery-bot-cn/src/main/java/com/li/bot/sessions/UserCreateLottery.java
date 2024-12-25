@@ -92,33 +92,33 @@ public class UserCreateLottery {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         buttonList.add(InlineKeyboardButton.builder().text(name).url(link).build());
         buttonList.add(InlineKeyboardButton.builder().text("点击抽奖").url("https://" + botConfig.getBotname() + "?start=" + uid.toString()).build());
-        buttonList.add(InlineKeyboardButton.builder().text("茶社大群").url("https://t.me/chashe666666").build());
-        buttonList.add(InlineKeyboardButton.builder().text("供需发布").url("https://t.me/chashe1_Bot").build());
-        buttonList.add(InlineKeyboardButton.builder().text("供需频道").url("https://t.me/chashe0").build());
-        buttonList.add(InlineKeyboardButton.builder().text("TRX兑换").url("https://t.me/AutoTronTRXbot").build());
-
-        // 创建行列表
-        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
-
-        // 将第一个按钮放在第一行
-        List<InlineKeyboardButton> firstRow = new ArrayList<>();
-        firstRow.add(buttonList.get(0));
-        rowList.add(firstRow);
-
-        // 将第二个按钮放在第二行
-        List<InlineKeyboardButton> secondRow = new ArrayList<>();
-        secondRow.add(buttonList.get(1));
-        rowList.add(secondRow);
-
-        // 将剩余的按钮按每两个一组分组
-        for (int i = 2; i < buttonList.size(); i += 2) {
-            List<InlineKeyboardButton> row = new ArrayList<>();
-            row.add(buttonList.get(i));
-            if (i + 1 < buttonList.size()) {
-                row.add(buttonList.get(i + 1));
-            }
-            rowList.add(row);
-        }
+//        buttonList.add(InlineKeyboardButton.builder().text("茶社大群").url("https://t.me/chashe666666").build());
+//        buttonList.add(InlineKeyboardButton.builder().text("供需发布").url("https://t.me/chashe1_Bot").build());
+//        buttonList.add(InlineKeyboardButton.builder().text("供需频道").url("https://t.me/chashe0").build());
+//        buttonList.add(InlineKeyboardButton.builder().text("TRX兑换").url("https://t.me/AutoTronTRXbot").build());
+//
+//        // 创建行列表
+        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList,1);
+//
+//        // 将第一个按钮放在第一行
+//        List<InlineKeyboardButton> firstRow = new ArrayList<>();
+//        firstRow.add(buttonList.get(0));
+//        rowList.add(firstRow);
+//
+//        // 将第二个按钮放在第二行
+//        List<InlineKeyboardButton> secondRow = new ArrayList<>();
+//        secondRow.add(buttonList.get(1));
+//        rowList.add(secondRow);
+//
+//        // 将剩余的按钮按每两个一组分组
+//        for (int i = 2; i < buttonList.size(); i += 2) {
+//            List<InlineKeyboardButton> row = new ArrayList<>();
+//            row.add(buttonList.get(i));
+//            if (i + 1 < buttonList.size()) {
+//                row.add(buttonList.get(i + 1));
+//            }
+//            rowList.add(row);
+//        }
 
         // 构建并返回InlineKeyboardMarkup对象
         return InlineKeyboardMarkup.builder().keyboard(rowList).build();

@@ -1,6 +1,7 @@
 package com.li.bot.handle.callback;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.google.common.collect.Lists;
 import com.li.bot.config.BotConfig;
 import com.li.bot.entity.database.Lottery;
 import com.li.bot.entity.database.User;
@@ -58,25 +59,26 @@ public class AdminSetLotteryConditionCallbackImpl implements ICallback {
     private InlineKeyboardMarkup createInlineKeyboardButton(String uid) {
         List<InlineKeyboardButton> buttonList = new ArrayList<>();
         buttonList.add(InlineKeyboardButton.builder().text("点击抽奖").url("https://" + botConfig.getBotname() + "?start=" + uid.toString()).build());
-        buttonList.add(InlineKeyboardButton.builder().text("茶社大群").url("https://t.me/chashe666666").build());
-        buttonList.add(InlineKeyboardButton.builder().text("供需发布").url("https://t.me/chashe1_Bot").build());
-        buttonList.add(InlineKeyboardButton.builder().text("供需频道").url("https://t.me/chashe0").build());
-        buttonList.add(InlineKeyboardButton.builder().text("TRX兑换").url("https://t.me/AutoTronTRXbot").build());
-        // 创建行列表
-        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
-        // 将前两个按钮放在第一行
-        List<InlineKeyboardButton> firstRow = new ArrayList<>();
-        firstRow.add(buttonList.get(0));
-        rowList.add(firstRow);
-        // 将剩余的按钮按每两个一组分组
-        for (int i = 1; i < buttonList.size(); i += 2) {
-            List<InlineKeyboardButton> row = new ArrayList<>();
-            row.add(buttonList.get(i));
-            if (i + 1 < buttonList.size()) {
-                row.add(buttonList.get(i + 1));
-            }
-            rowList.add(row);
-        }
+//        buttonList.add(InlineKeyboardButton.builder().text("茶社大群").url("https://t.me/chashe666666").build());
+//        buttonList.add(InlineKeyboardButton.builder().text("供需发布").url("https://t.me/chashe1_Bot").build());
+//        buttonList.add(InlineKeyboardButton.builder().text("供需频道").url("https://t.me/chashe0").build());
+//        buttonList.add(InlineKeyboardButton.builder().text("TRX兑换").url("https://t.me/AutoTronTRXbot").build());
+//        // 创建行列表
+//        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+//        // 将前两个按钮放在第一行
+//        List<InlineKeyboardButton> firstRow = new ArrayList<>();
+//        firstRow.add(buttonList.get(0));
+//        rowList.add(firstRow);
+//        // 将剩余的按钮按每两个一组分组
+//        for (int i = 1; i < buttonList.size(); i += 2) {
+//            List<InlineKeyboardButton> row = new ArrayList<>();
+//            row.add(buttonList.get(i));
+//            if (i + 1 < buttonList.size()) {
+//                row.add(buttonList.get(i + 1));
+//            }
+//            rowList.add(row);
+//        }
+        List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
         // 构建并返回InlineKeyboardMarkup对象
         return InlineKeyboardMarkup.builder().keyboard(rowList).build();
     }
@@ -112,11 +114,11 @@ public class AdminSetLotteryConditionCallbackImpl implements ICallback {
             } else if (type == 1) {
                 SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("请输入群聊邀请链接\n⚠\uFE0F注意: \n1.群聊必须是<b>公开群聊</b>\n2.需要把机器人添加<b>到群聊</b>并<b>给管理员权限</b>,否则抽奖无效").parseMode("html").build();
                 bot.execute(sendMessage);
-                userCreateLotterySessionList.updateUserSession(callbackQuery.getFrom().getId(), UserCreateLotterySessionState.WAITING_FOR_USER_MESSAGE,1,true);
+                userCreateLotterySessionList.updateUserSession(callbackQuery.getFrom().getId(), UserCreateLotterySessionState.WAITING_FOR_USER_MESSAGE, 1, true);
             } else if (type == 2) {
                 SendMessage sendMessage = SendMessage.builder().chatId(callbackQuery.getMessage().getChatId()).text("请输入频道邀请链接\n⚠\uFE0F注意: 需要把机器人添加<b>到频道</b>并<b>给管理员权限</b>,否则抽奖无效").parseMode("html").build();
                 bot.execute(sendMessage);
-                userCreateLotterySessionList.updateUserSession(callbackQuery.getFrom().getId(), UserCreateLotterySessionState.WAITING_FOR_USER_MESSAGE,2,true);
+                userCreateLotterySessionList.updateUserSession(callbackQuery.getFrom().getId(), UserCreateLotterySessionState.WAITING_FOR_USER_MESSAGE, 2, true);
             }
         }
     }
