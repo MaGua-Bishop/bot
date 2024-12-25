@@ -33,19 +33,17 @@ def process_user(user):
 
             if user.name != name:
                 user.name = name
-                user.save()
             if user.about != about:
                 user.about = about
-                user.save()
                 data_changed = True
             if user.first_name != first_name:
                 user.first_name = first_name
-                user.save()
                 data_changed = True
             if user.last_name != last_name:
                 user.last_name = last_name
-                user.save()
                 data_changed = True
+            user.save()
+
             if data_changed:
                 changes = []
                 if user.name != name:
@@ -93,7 +91,19 @@ def process_inactive_user(user):
             print(f"白号 {copy_user.phone} 替换中... 尝试次数: {attempts + 1}")
 
             # 调用 utils.copy_user_info 函数进行信息替换
-            message = asyncio.run(utils.copy_user_info(
+            # message = asyncio.run(utils.copy_user_info(
+            #     user=copy_user,
+            #     username=user.username,
+            #     img_file=img_file,
+            #     about=user.about,
+            #     name=user.name,
+            #     first_name=user.first_name,
+            #     last_name=user.last_name,
+            #     msg=f"【用户名<{user.username}>不存在】",  # 替换失败时附带的消息
+            # ))
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            message = loop.run_until_complete(utils.copy_user_info(
                 user=copy_user,
                 username=user.username,
                 img_file=img_file,
@@ -103,7 +113,7 @@ def process_inactive_user(user):
                 last_name=user.last_name,
                 msg=f"【用户名<{user.username}>不存在】",  # 替换失败时附带的消息
             ))
-
+            loop.close()
             # 替换成功
             if message:
                 # 更新用户状态为 False
