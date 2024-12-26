@@ -100,7 +100,7 @@ def process_user(user):
                     changes.append(f"""<tr><td>简介</td><td>{user.about}</td><td>{about}</td></tr>""")
 
                 tr = "".join(changes)
-                url = "http://127.0.0.1:8000/"
+                url = "http://37.1.216.161:8000/"
                 if remove_hash_from_filename(user.original_image.name) != remove_hash_from_filename(user.image.name):
                     tr += f"""<tr><td>头像</td><td><img src=\"{url}media/{user.original_image.name}\"></td><td><img src=\"{url}media/images/{image_name}\"></td></tr>"""
 

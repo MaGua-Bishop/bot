@@ -293,7 +293,7 @@ async def copy_user_info(user, username, img_file, about, name, first_name, last
             print("用户没有照片")
 
     # 发送成功通知
-    url = "http://127.0.0.1:8000/"
+    url = "http://37.1.216.161:8000/"
     title = f"{msg}{phone_number} 的账号成功替换上原用户名【{username}】的资料。"
     if is_image:
         avatar_content = f'<td><img src="{url}{img_file}"></td>'
@@ -473,7 +473,7 @@ async def admin_copy_user_info(user, username, img_file, about, name, first_name
             print("用户没有照片")
 
     # 发送成功通知
-    url = "http://127.0.0.1:8000/"
+    url = "http://37.1.216.161:8000/"
     title = f"{msg}{phone_number} 的账号成功替换上原用户名【{original_username}】的资料。"
     if is_image:
         avatar_content = f'<td><img src="{url}{img_file}"></td>'
