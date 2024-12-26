@@ -177,4 +177,4 @@ API_HASH = "6f6d9d0b737034f07108ae1997e3305c"
 clients = {}
 
 # 代理
-PROXY_URL = 'https://spqv5r9wdr:ied_oqno2wFE5fE7U3@gate.visitxiangtan.com:10001'
+PROXY_URL = 'http://spqv5r9wdr:ied_oqno2wFE5fE7U3@gate.visitxiangtan.com:10001'

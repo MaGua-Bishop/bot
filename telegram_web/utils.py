@@ -30,7 +30,7 @@ def get_telegram_user_data(username: str):
     url = f"https://t.me/{username}"
     proxy = settings.PROXY_URL
     proxies = {'http': proxy, 'https': proxy}
-    result = requests.get(url, proxies=proxies).text
+    result = requests.get(url, proxies=proxies, verify=False).text
     # result = requests.get(url).text
     html = etree.HTML(result)
     try:

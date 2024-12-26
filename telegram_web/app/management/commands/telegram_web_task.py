@@ -171,4 +171,4 @@ class Command(BaseCommand):
             users = models.TelegramUserName.objects.filter(status=True)
             with ThreadPoolExecutor(max_workers=10) as executor:
                 executor.map(process_user, users)
-            time.sleep(0.1)
+            time.sleep(1)
