@@ -15,4 +15,8 @@ from app import models
 import utils
 
 if __name__ == '__main__':
-    call_command('telegram_web_task')
+    # call_command('telegram_web_task')
+    asyncio.run(utils.send_mail_to_admin_async(
+        "邮件测试",
+        f"邮件测试"
+    ))

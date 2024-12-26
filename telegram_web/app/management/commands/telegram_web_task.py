@@ -7,6 +7,8 @@ from requests.exceptions import ProxyError
 import utils
 from app import models
 import os
+from django.utils import timezone
+from datetime import timedelta, datetime
 
 
 def remove_hash_from_filename(filename):
@@ -17,6 +19,52 @@ def remove_hash_from_filename(filename):
 
 
 def process_user(user):
+    now = timezone.now().replace(second=0, microsecond=0)
+    auto_user = models.AutoReplaceUser.objects.filter(
+        create_time__in=[now],
+        status=False,
+        execution=False,
+    ).first()
+
+    if auto_user:
+        auto_user.execution = True
+        auto_user.save()
+        user = auto_user.user
+        copy_user = auto_user.copy_user
+        img_file = user.image.name if user.image else None
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f"时间:{current_time}白号 {copy_user.phone} 替换中用户名:{user.username}")
+        # 调用 utils.copy_user_info 函数进行信息替换
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        message = loop.run_until_complete(utils.copy_user_info(
+            user=copy_user,
+            username=user.username,
+            img_file=img_file,
+            about=user.about,
+            name=user.name,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            msg=f"【用户名<{user.username}>不存在】",
+        ))
+        loop.close()
+        if message:
+            # 所有的关于 AutoReplaceUser 的 user 的状态改成 True
+            auto_replace_users = models.AutoReplaceUser.objects.filter(user=user)
+            auto_replace_users.update(status=True)
+            user.status = False
+            user.save()
+            copy_user.copyObj = user
+            copy_user.save()
+        else:
+            attempts = models.AutoReplaceUser.objects.filter(user=user, execution=True).count()
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(utils.send_mail_to_admin_async(
+                "白号替换失败",
+                f"白号 {copy_user.phone} 替换用户名:【{user.username}】失败，尝试次数: {attempts}"
+            ))
+            loop.close()
     try:
         # 尝试获取 Telegram 用户数据
         status, name, about, image, image_name, first_name, last_name = utils.get_telegram_user_data(user.username)
@@ -61,137 +109,54 @@ def process_user(user):
                     print(text)
         else:
             print(f"用户名 {user.username} 不存在")
-            process_inactive_user(user)
-
+            # 调用随机获取三个白号
+            random_copy_user(user)
     except ProxyError:
-        pass  # 跳过当前用户
+        pass
     except Exception as e:
         print(f"处理用户 {user.username} 时发生错误: {e}")
 
 
-def process_inactive_user(user):
-    """处理状态为 False 的用户"""
-    # 获取所有未被复制的白号用户
-    white_users = models.CopyTelegramUser.objects.filter(copyObj_id=None)
-
-    img_file = user.image.name if user.image else None
-
-    # 初始化尝试次数和成功标志
-    attempts = 0
-    success = False
-
-    # 循环直到找到合适的白号替换或达到最大尝试次数
-    while white_users.exists() and attempts < 3:
-        # 从未被替换的白号中随机选择一个
-        copy_user = random.choice(white_users)
-
-        try:
-            # 等待一段时间再尝试
-            # asyncio.sleep()  # 等待时间随尝试次数递增
-            time.sleep(60 * (attempts + 1))
-            print(f"白号 {copy_user.phone} 替换中... 尝试次数: {attempts + 1}")
-
-            # 调用 utils.copy_user_info 函数进行信息替换
-            # message = asyncio.run(utils.copy_user_info(
-            #     user=copy_user,
-            #     username=user.username,
-            #     img_file=img_file,
-            #     about=user.about,
-            #     name=user.name,
-            #     first_name=user.first_name,
-            #     last_name=user.last_name,
-            #     msg=f"【用户名<{user.username}>不存在】",  # 替换失败时附带的消息
-            # ))
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            message = loop.run_until_complete(utils.copy_user_info(
-                user=copy_user,
-                username=user.username,
-                img_file=img_file,
-                about=user.about,
-                name=user.name,
-                first_name=user.first_name,
-                last_name=user.last_name,
-                msg=f"【用户名<{user.username}>不存在】",  # 替换失败时附带的消息
-            ))
-            loop.close()
-            # 替换成功
-            if message:
-                # 更新用户状态为 False
-                user.status = False
-                user.save()
-
-                # 更新白号用户的 copyObj 关联为当前用户
-                copy_user.copyObj = user
-                copy_user.save()
-
-                # 标记替换成功并退出循环
-                success = True
-                break
-            else:
-                # 替换失败，增加尝试次数并发送邮件通知管理员
-                attempts += 1
-                asyncio.run(utils.send_mail_to_admin_async(
-                    f"白号替换用户名【{user.username}】失败",
-                    f"白号 {copy_user.phone} 替换失败，尝试次数: {attempts}，尝试下一个白号替换。"
-                ))
-                print(f"用户名 {user.username} 被占用，尝试下一个白号。")
-
-        except Exception as e:
-            print(f"白号 {copy_user.phone} 替换失败: {str(e)}")
-
-        # 增加尝试次数
-        attempts += 1
-
-        # 重新查询未被复制的白号
+# def random_copy_user(user):
+#     if not models.AutoReplaceUser.objects.filter(user=user).exists():
+#         white_users = models.CopyTelegramUser.objects.filter(copyObj_id=None)
+#         random_users = random.sample(list(white_users), 3)
+#
+#         for index, copy_user in enumerate(random_users):
+#             # 第一条记录，创建时间为当前时间加上1分钟
+#             create_time_1 = timezone.now().replace(second=0, microsecond=0) + timedelta(minutes=index + 1)
+#             models.AutoReplaceUser.objects.create(user=user, copy_user=copy_user, create_time=create_time_1)
+#             # 第二条记录，创建时间为当前时间加上45、46、47分钟
+#             create_time_2 = timezone.now().replace(second=0, microsecond=0) + timedelta(minutes=index + 45 + 1)
+#             models.AutoReplaceUser.objects.create(user=user, copy_user=copy_user, create_time=create_time_2)
+def random_copy_user(user):
+    # 首先判断是否已存在与该 user 相关的记录
+    if not models.AutoReplaceUser.objects.filter(user=user).exists():
+        # 获取未被复制的白名单用户
         white_users = models.CopyTelegramUser.objects.filter(copyObj_id=None)
 
-    if success:
-        pass
-    else:
-        # 如果前面三次尝试都失败，则进行额外的重试
-        for i in range(3):
-            # 等待一段时间后重试
-            # asyncio.sleep(60 * (45 + i))
-            time.sleep(60 * (42 + i))
-            print(f"白号 {copy_user.phone} 再次尝试替换中... 尝试次数: {i + 1}")
-            message = asyncio.run(utils.copy_user_info(
-                user=copy_user,
-                username=user.username,
-                img_file=img_file,
-                about=user.about,
-                name=user.name,
-                first_name=user.first_name,
-                last_name=user.last_name,
-                msg=f"【用户名<{user.username}>不存在】",
+        # 检查 white_users 中是否至少有 3 个用户
+        if len(white_users) < 3:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(utils.send_mail_to_admin_async(
+                "没有多余的白号了",
+                f"请及时添加白号，至少需要3个以上的白号"
             ))
+            loop.close()
+            return
 
-            # 替换成功
-            if message:
-                # 更新用户状态为 False
-                user.status = False
-                user.save()
+        # 随机选择 3 个用户
+        random_users = random.sample(list(white_users), 3)
 
-                # 更新白号用户的 copyObj 关联为当前用户
-                copy_user.copyObj = user
-                copy_user.save()
+        for index, copy_user in enumerate(random_users):
+            # 第一条记录，创建时间为当前时间加上1分钟
+            create_time_1 = timezone.now().replace(second=0, microsecond=0) + timedelta(minutes=index + 1)
+            models.AutoReplaceUser.objects.create(user=user, copy_user=copy_user, create_time=create_time_1)
 
-                # 标记替换成功并退出重试循环
-                success = True
-                break
-            else:
-                # 如果重试失败，发送邮件通知管理员
-                asyncio.run(utils.send_mail_to_admin_async(
-                    f"白号替换用户名【{user.username}】失败",
-                    f"白号 {copy_user.phone} 替换失败，尝试次数: {i + 3}，尝试下一个白号替换。"
-                ))
-
-        # 如果所有重试均失败，通知管理员
-        if not success:
-            asyncio.run(utils.send_mail_to_admin_async(
-                f"用户名【{user.username}】替换失败",
-                f"用户名【{user.username}】 的信息替换失败，所有尝试均未成功。"
-            ))
+            # 第二条记录，创建时间为当前时间加上45、46、47分钟
+            create_time_2 = timezone.now().replace(second=0, microsecond=0) + timedelta(minutes=index + 45 + 1)
+            models.AutoReplaceUser.objects.create(user=user, copy_user=copy_user, create_time=create_time_2)
 
 
 class Command(BaseCommand):

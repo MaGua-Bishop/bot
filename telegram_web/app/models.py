@@ -63,10 +63,11 @@ class CopyTelegramUser(models.Model):
         return self.username + f"({self.phone})"
 
 
-class AutoUser(models.Model):
-    copy_user = ForeignKey(TelegramUserName, verbose_name="用户", on_delete=models.SET_NULL, null=True, blank=True)
-    user = ForeignKey(CopyTelegramUser, verbose_name="复制用户", on_delete=models.SET_NULL, null=True, blank=True)
-    status = models.BooleanField(default=False, verbose_name='监控状态')
+class AutoReplaceUser(models.Model):
+    user = ForeignKey(TelegramUserName, verbose_name="用户", on_delete=models.SET_NULL, null=True, blank=True)
+    copy_user = ForeignKey(CopyTelegramUser, verbose_name="复制用户", on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.BooleanField(default=False, verbose_name='状态')
+    execution = models.BooleanField(default=False, verbose_name='是否执行')
     create_time = models.DateTimeField(null=True, blank=True, verbose_name='添加时间')
 
     def __str__(self):

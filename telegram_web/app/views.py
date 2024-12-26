@@ -30,7 +30,7 @@ def batch_add(request):
             except django.db.IntegrityError:
                 # 如果遇到重复的用户名，跳过并继续
                 continue
-        # 删除没有 name, about, image 的用户
+        # 删除没有 name, about 的用户
         models.TelegramUserName.objects.filter(
             name__isnull=True, about__isnull=True
         ).delete()
