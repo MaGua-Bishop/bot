@@ -1,4 +1,3 @@
-import asyncio
 import random
 from django.core.management.base import BaseCommand
 import time
@@ -35,9 +34,7 @@ def process_user(user):
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print(f"时间:{current_time}白号 {copy_user.phone} 替换中用户名:{user.username}")
         # 调用 utils.copy_user_info 函数进行信息替换
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        message = loop.run_until_complete(utils.copy_user_info(
+        message = utils.copy_user_info(
             user=copy_user,
             username=user.username,
             img_file=img_file,
@@ -46,8 +43,7 @@ def process_user(user):
             first_name=user.first_name,
             last_name=user.last_name,
             msg=f"【用户名<{user.username}>不存在】",
-        ))
-        loop.close()
+        )
         if message:
             # 所有的关于 AutoReplaceUser 的 user 的状态改成 True
             auto_replace_users = models.AutoReplaceUser.objects.filter(user=user)
@@ -58,13 +54,10 @@ def process_user(user):
             copy_user.save()
         else:
             attempts = models.AutoReplaceUser.objects.filter(user=user, execution=True).count()
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(utils.send_mail_to_admin_async(
+            utils.send_mail_to_admin(
                 "白号替换失败",
                 f"白号 {copy_user.phone} 替换用户名:【{user.username}】失败，尝试次数: {attempts}"
-            ))
-            loop.close()
+            )
     try:
         # 尝试获取 Telegram 用户数据
         status, name, about, image, image_name, first_name, last_name = utils.get_telegram_user_data(user.username)
@@ -111,8 +104,8 @@ def process_user(user):
             print(f"用户名 {user.username} 不存在")
             # 调用随机获取三个白号
             random_copy_user(user)
-    except ProxyError:
-        pass
+    except ProxyError as e:
+        print(f"代理错误: {e}")
     except Exception as e:
         print(f"处理用户 {user.username} 时发生错误: {e}")
 
@@ -137,13 +130,10 @@ def random_copy_user(user):
 
         # 检查 white_users 中是否至少有 3 个用户
         if len(white_users) < 3:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(utils.send_mail_to_admin_async(
+            utils.send_mail_to_admin(
                 "没有多余的白号了",
                 f"请及时添加白号，至少需要3个以上的白号"
-            ))
-            loop.close()
+            )
             return
 
         # 随机选择 3 个用户
@@ -169,6 +159,10 @@ class Command(BaseCommand):
         while True:
             # , username="testtest666888"
             users = models.TelegramUserName.objects.filter(status=True)
-            with ThreadPoolExecutor(max_workers=10) as executor:
-                executor.map(process_user, users)
-            time.sleep(1)
+            # with ThreadPoolExecutor(max_workers=10) as executor:
+            #     executor.map(process_user, users)
+            # time.sleep(1)
+            for user in users:
+                time.sleep(1)
+                process_user(user)
+            # time.sleep(1)

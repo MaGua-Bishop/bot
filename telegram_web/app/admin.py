@@ -8,7 +8,7 @@ from simplepro.action import CellAction
 from simplepro.decorators import button
 
 from app import models
-from utils import copy_user_info, admin_copy_user_info
+from utils import admin_copy_user_info
 
 
 @admin.register(models.TelegramUserName)
