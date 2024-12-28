@@ -38,6 +38,7 @@ public class PersonalCenterServiceMenuImpl implements IBotMenu {
         buttonList.add(InlineKeyboardButton.builder().text("提现记录").callbackData("selectTakeoutMoney").build());
 //        buttonList.add(InlineKeyboardButton.builder().text("发布红包记录").callbackData("selectCreateLottery").build());
         buttonList.add(InlineKeyboardButton.builder().text("领取红包记录").callbackData("selectReceiveLottery").build());
+        buttonList.add(InlineKeyboardButton.builder().text("抽奖记录").callbackData("selectUserluckydrawInfo").build());
         List<List<InlineKeyboardButton>> rowList = Lists.partition(buttonList, 2);
         InlineKeyboardMarkup inlineKeyboardMarkup = InlineKeyboardMarkup.builder().keyboard(rowList).build();
         return inlineKeyboardMarkup;
@@ -49,10 +50,10 @@ public class PersonalCenterServiceMenuImpl implements IBotMenu {
 
         User from = message.getFrom();
         Long id = from.getId();
-        String username= "";
-        if(from.getUserName() == null){
+        String username = "";
+        if (from.getUserName() == null) {
             username = from.getFirstName() + (from.getLastName() != null ? from.getLastName() : "");
-        }else {
+        } else {
             username = from.getUserName();
         }
 //        String username = from.getUserName() ==null ? from.getFirstName() + (from.getLastName() != null ? from.getLastName() : "") : from.getUserName();

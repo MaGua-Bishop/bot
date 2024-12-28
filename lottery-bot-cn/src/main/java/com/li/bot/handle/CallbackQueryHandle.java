@@ -25,10 +25,12 @@ public class CallbackQueryHandle {
     private CallbackFactory callbackFactory;
 
 
-    public CallbackQueryHandle(BotServiceImpl bot , CallbackQuery callbackQuery, CallbackFactory callbackFactory){
+    public CallbackQueryHandle(BotServiceImpl bot, CallbackQuery callbackQuery, CallbackFactory callbackFactory) {
         this.callbackQuery = callbackQuery;
         this.bot = bot;
         this.callbackFactory = callbackFactory;
+        //每日抽奖
+        callbackMap.put("userDailyDraw", callbackFactory.getCallback("userDailyDraw"));
         //充值
         callbackMap.put("user:recharge:", callbackFactory.getCallback("userRecharge"));
         //用户提现
@@ -51,11 +53,11 @@ public class CallbackQueryHandle {
 
     public void executeCallbackQuery() throws TelegramApiException {
         String data = callbackQuery.getData();
-        System.out.println("按钮参数："+data);
+        System.out.println("按钮参数：" + data);
         ICallback callback = callbackFactory.getCallback(data);
-        if(Objects.nonNull(callback)){
-            callback.execute(bot,callbackQuery);
-            return ;
+        if (Objects.nonNull(callback)) {
+            callback.execute(bot, callbackQuery);
+            return;
         }
         for (Map.Entry<String, ICallback> entry : callbackMap.entrySet()) {
             if (data.startsWith(entry.getKey())) {
