@@ -277,7 +277,8 @@ def handle_recharge_record(message):
         return
 
 
-@bot.message_handler(func=lambda message: message.text == "流水" and message.chat.type == "private")
+@bot.message_handler(func=lambda message: message.text == "流水" and (
+        message.chat.type == "private" or message.chat.id == -1002288238505))
 def user_query_history(message):
     user_id = message.from_user.id
     full_name = message.from_user.full_name
@@ -286,7 +287,7 @@ def user_query_history(message):
     try:
         user = TgUser.objects.get(tg_id=user_id)
     except TgUser.DoesNotExist:
-        bot.send_message(user_id, "用户信息未找到，请确保您已注册。")
+        bot.reply_to(message, "用户信息未找到，请确保您已注册。")
         return
     except Exception as e:
         return
@@ -323,9 +324,13 @@ def user_query_history(message):
             f"🔸今日输赢：{total_settled_amount_today}\n"
             f"🔹注册时间：{localtime(user.create_time).strftime('%Y-%m-%d %H:%M:%S')}"
         )
-        bot.send_message(user_id, text, parse_mode="HTML")
+        markup = types.InlineKeyboardMarkup()
+        url = f"https://t.me/{bot.get_me().username}?start"
+        markup.add(types.InlineKeyboardButton("🎰立即开玩", url=url))
+        markup.add(types.InlineKeyboardButton("分享给好友获得Ta的下注奖励", switch_inline_query="Invite"))
+        bot.reply_to(message, text, parse_mode="HTML", reply_markup=markup)
     except Exception as e:
-        bot.send_message(user_id, f"发生错误: {str(e)}")
+        bot.reply_to(message, f"查询失败，请重试")
 
 
 @bot.message_handler(

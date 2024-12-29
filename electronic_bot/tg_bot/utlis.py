@@ -10,6 +10,7 @@ from telebot.types import WebAppInfo
 import time
 from datetime import datetime, timedelta
 from .models import GameHistory
+from .bot_config import bot
 
 
 def get_start_reply_markup() -> types.ReplyKeyboardMarkup:
@@ -237,6 +238,61 @@ from datetime import datetime
 from .models import GameHistory
 
 
+def get_winning_type_reply_markup(type) -> types.ReplyKeyboardMarkup:
+    markup = types.InlineKeyboardMarkup()
+    url = f"https://t.me/{bot.get_me().username}?start"
+    if type == 'pg':
+        markup.add(types.InlineKeyboardButton("🎰我也要玩PG电子", url=url))
+    else:
+        markup.add(types.InlineKeyboardButton("🎰我也要玩JDB电子", url=url))
+    return markup
+
+
+from pathlib import Path
+from io import BytesIO
+
+
+def read_image(name):
+    current_directory = Path(__file__).resolve().parent
+    image_path = current_directory / 'images' / name
+    try:
+        with open(image_path, 'rb') as photo_file:
+            # 将文件内容读取到内存中的 BytesIO 对象
+            return BytesIO(photo_file.read())
+    except Exception as e:
+        print(f"Error reading image: {e}")
+        return None
+
+
+def send_winning_message(game_type, amount):
+    # 获取图片
+    if game_type == "pg":
+        photo_file = read_image('majianghule.jpg')
+        message_text = (
+            f"👏 恭喜在【匿名大佬】爆彩啦!\n\n"
+            f"👤 匿名大佬 在PG电子游戏中赢得{amount}¥💵。"
+        )
+    else:
+        image_list = ['1.jpg', '2.jpg', '3.jpg']
+        image_name = random.choice(image_list)
+        photo_file = read_image(image_name)
+        message_text = (
+            f"👏 恭喜在【匿名大佬】爆彩啦!\n\n"
+            f"👤 匿名大佬 在JDB电子游戏中赢得{amount}¥💵。"
+        )
+
+    if photo_file:
+        try:
+            # 发送图片和文本
+            bot.send_photo(-1002288238505, photo_file, parse_mode="HTML",
+                           reply_markup=get_winning_type_reply_markup(game_type),
+                           caption=message_text)
+        except Exception as e:
+            print(f"发送消息失败: {e}")
+    else:
+        print("图片读取失败，无法发送消息")
+
+
 def fetch_all_game_history():
     while True:  # 添加一个无限循环
         print("开始执行 fetch_all_game_history")
@@ -282,6 +338,7 @@ def fetch_all_game_history():
                         if not GameHistory.objects.filter(game_order_id=game_order_id).exists():
                             # 如果不存在，则添加记录
                             try:
+                                settled_amount = record['settledAmount']  # 获取已结算金额
                                 GameHistory.objects.create(
                                     game_order_id=game_order_id,
                                     player_id=record['playerId'],
@@ -294,13 +351,18 @@ def fetch_all_game_history():
                                     seat_number=record['seat'],
                                     bet_amount=record['betAmount'],
                                     valid_amount=record['validAmount'],
-                                    settled_amount=record['settledAmount'],
+                                    settled_amount=settled_amount,
                                     bet_content=record['betContent'],
                                     status=record['status'],
                                     bet_time=datetime.strptime(record['betTime'], "%Y-%m-%d %H:%M:%S"),
                                     last_update_time=datetime.strptime(record['lastUpdateTime'], "%Y-%m-%d %H:%M:%S"),
                                     is_status=False  # 默认状态为 False
                                 )
+
+                                # 判断 settledAmount 是否大于 500
+                                if settled_amount > 500:
+                                    plat_type = record['platType']
+                                    send_winning_message(plat_type, settled_amount)
                             except Exception as e:
                                 print(f"插入记录失败: {e}")
 
