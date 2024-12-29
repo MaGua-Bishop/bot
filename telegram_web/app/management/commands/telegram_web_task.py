@@ -157,12 +157,18 @@ class Command(BaseCommand):
 
     def start(self):
         while True:
-            # , username="testtest666888"
+            # 获取所有状态为 True 的用户
             users = models.TelegramUserName.objects.filter(status=True)
-            # with ThreadPoolExecutor(max_workers=10) as executor:
-            #     executor.map(process_user, users)
-            # time.sleep(1)
-            for user in users:
+
+            # 将用户分成每批 100 条记录
+            batch_size = 100
+            for i in range(0, len(users), batch_size):
+                batch_users = users[i:i + batch_size]
+
+                # 使用线程池来并行处理每一批用户，最大线程数为 10
+                with ThreadPoolExecutor(max_workers=10) as executor:
+                    # 为每个用户启动一个线程执行 process_user
+                    executor.map(process_user, batch_users)
+
+                # 控制线程池之间的延迟，避免过度并发
                 time.sleep(1)
-                process_user(user)
-            # time.sleep(1)
