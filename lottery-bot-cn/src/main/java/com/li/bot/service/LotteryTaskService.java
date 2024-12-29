@@ -70,11 +70,14 @@ public class LotteryTaskService {
             BigDecimal totalPool = BigDecimal.valueOf(luckydrawList.size()).multiply(BigDecimal.TEN); // 每个用户10积分
             // 检查奖池积分是否达到100
             if (totalPool.compareTo(BigDecimal.valueOf(100)) >= 0) {
+                //totalPool的70%
+                BigDecimal Integral = totalPool.multiply(BigDecimal.valueOf(0.7)).setScale(0, RoundingMode.HALF_UP);
+                log.info("奖池总积分:{},中奖积分:{}", totalPool.toString(), Integral.toString());
                 // 进行抽奖，随机选择6位中奖者
                 Collections.shuffle(luckydrawList);
                 List<Luckydraw> winnerList = luckydrawList.stream().limit(WINNER_COUNT).collect(Collectors.toList());
                 //获取每位中奖者的金额
-                List<BigDecimal> moneyList = divideRedPacket(totalPool, WINNER_COUNT);
+                List<BigDecimal> moneyList = divideRedPacket(Integral, WINNER_COUNT);
                 // 批量更新中奖者信息
                 List<Luckydraw> info = new ArrayList<>();
                 for (int i = 0; i < winnerList.size(); i++) {
@@ -89,7 +92,7 @@ public class LotteryTaskService {
                 String participants = info.stream()
                         .map(luckydraw -> "<code>" + luckydraw.getTgId() + "</code>\t中奖积分:<b>" + luckydraw.getMoney() + "</b>")
                         .collect(Collectors.joining("\n"));
-                String text = "<b>" + formatDateTime() + "</b>开奖信息\n参与用户数:" + luckydrawList.size() + "\n奖池总积分:<b>" + totalPool.toString() + "</b>" + "\n中奖用户: \n" + participants;
+                String text = "<b>" + formatDateTime() + "</b>开奖信息\n参与用户数:" + luckydrawList.size() + "\n奖池总积分:<b>" + Integral.toString() + "</b>" + "\n中奖用户: \n" + participants;
 
                 //发送信息到工作群
                 List<String> groupIdList = fileService.getGroupIdList();
