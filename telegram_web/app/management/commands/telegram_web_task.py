@@ -159,6 +159,4 @@ class Command(BaseCommand):
         while True:
             users = models.TelegramUserName.objects.filter(status=True)
             for user in users:
-                # time.sleep(0.5)
                 process_user(user)
-
