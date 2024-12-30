@@ -42,7 +42,7 @@ public class LotteryTaskService {
     private UserMapper userMapper;
 
 
-    private static final int WINNER_COUNT = 6;
+    private static final int WINNER_COUNT = 1;
 
     public static String formatDateTime() {
         LocalDateTime localDateTime = LocalDateTime.now().withHour(22).withMinute(0);
