@@ -83,7 +83,7 @@ class CopyTelegramUser(admin.ModelAdmin):
                 img_file = copy_user.image.name if copy_user.image else None
 
                 # 调用模仿用户的函数
-                message = asyncio.run(admin_copy_user_info(
+                message = admin_copy_user_info(
                     user=obj,  # 当前用户对象
                     username=copy_user.username,  # 被模仿用户的用户名
                     img_file=img_file,  # 被模仿用户的头像文件
@@ -91,7 +91,7 @@ class CopyTelegramUser(admin.ModelAdmin):
                     name=copy_user.name,  # 被模仿用户的名称
                     first_name=copy_user.first_name,  # 被模仿用户的名字
                     last_name=copy_user.last_name,  # 被模仿用户的姓氏
-                ))
+                )
                 if message:
                     # 使用 admin 的 message_user 方法通知用户
                     self.message_user(request, message, level=messages.SUCCESS)

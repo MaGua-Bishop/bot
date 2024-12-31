@@ -63,58 +63,22 @@ def get_telegram_user_data(username: str):
     return status, name, about, image, image_name, first_name, last_name
 
 
-async def send_mail_to_admin_async(title, content):
-    print(title, content)
-    """发送信息给系统管理员"""
-    sender_email = settings.EMAIL_USER
-    sender_password = settings.EMAIL_PASSWORD
-    admin_email = settings.ADMIN_EMAIL
-    # admin_email = "y17373081487@gmail.com"
-    # 创建邮件内容
-    msg = MIMEMultipart()
-    msg['From'] = sender_email
-    msg['To'] = admin_email
-    msg['Subject'] = title
-
-    # 添加邮件正文
-    msg.attach(MIMEText(content, 'html'))
-
-    try:
-        # 连接到 Gmail SMTP 服务器并发送邮件
-        with smtplib.SMTP('smtp.gmail.com', 587) as server:
-            server.starttls()  # 启用 TLS
-            server.login(sender_email, sender_password)  # 登录
-            server.send_message(msg)  # 发送邮件
-            print("邮件发送成功")
-    except Exception as e:
-        print(f"邮件发送失败: {e}")
-
-
 def send_mail_to_admin(title, content):
     print(title, content)
     """发送信息给系统管理员"""
-    sender_email = settings.EMAIL_USER
-    sender_password = settings.EMAIL_PASSWORD
-    admin_email = settings.ADMIN_EMAIL
-    # admin_email = "y17373081487@gmail.com"
-    # 创建邮件内容
-    msg = MIMEMultipart()
-    msg['From'] = sender_email
-    msg['To'] = admin_email
-    msg['Subject'] = title
-
-    # 添加邮件正文
-    msg.attach(MIMEText(content, 'html'))
-
+    url = settings.EMAIL_URL
+    data = {
+        'title': title,
+        'content': content,
+    }
     try:
-        # 连接到 Gmail SMTP 服务器并发送邮件
-        with smtplib.SMTP('smtp.gmail.com', 587) as server:
-            server.starttls()  # 启用 TLS
-            server.login(sender_email, sender_password)  # 登录
-            server.send_message(msg)  # 发送邮件
+        response = requests.post(url, json=data)
+        if response.status_code == 200:
             print("邮件发送成功")
+        else:
+            print(f"邮件发送失败, 错误信息: {response.text}")
     except Exception as e:
-        print(f"邮件发送失败: {e}")
+        print(f"邮件发送失败, 请求异常: {e}")
 
 
 def get_user_info(user):
@@ -165,11 +129,6 @@ def is_username_available(client, username):
 
 
 from asgiref.sync import sync_to_async
-
-
-@sync_to_async
-def save_user(user):
-    user.save()
 
 
 def copy_user_info(user, username, img_file, about, name, first_name, last_name, msg=""):
@@ -349,7 +308,7 @@ def copy_user_info(user, username, img_file, about, name, first_name, last_name,
     return title + "\n" + f"用户名:{username}\n名称:{name}\n简介:{about}"
 
 
-async def admin_copy_user_info(user, username, img_file, about, name, first_name, last_name, msg="", is_last_name=True):
+def admin_copy_user_info(user, username, img_file, about, name, first_name, last_name, msg="", is_last_name=True):
     """模仿用户"""
     json_file = f"media/{user.fileJson}"
     session = f"media/{user.session}"
@@ -381,18 +340,18 @@ async def admin_copy_user_info(user, username, img_file, about, name, first_name
     # proxy = (socks.SOCKS5, '127.0.0.1', 7890, True)
     client = TelegramClient(session, app_id, app_hash, proxy=get_telethon_proxy())
     # 使用同步 API
-    await client.start()  # 确保使用 await 启动客户端
+    client.start()  # 确保使用 await 启动客户端
 
     original_username = username
     last_word = original_username[-1]
     username = f"{original_username}{last_word}"
-    while not await is_username_available(client, username):  # 确保使用 await
+    while not is_username_available(client, username):  # 确保使用 await
         username += last_word
 
     try:
-        await client(UpdateUsernameRequest(username=username))  # 确保使用 await
+        client(UpdateUsernameRequest(username=username))  # 确保使用 await
         user.username = username
-        await save_user(user)  # 异步保存用户
+        user.save()
         print(f"用户名已更新为: {username}")
     except Exception as e:
         print(f"用户名:{username}发生错误: {e}")
@@ -401,7 +360,7 @@ async def admin_copy_user_info(user, username, img_file, about, name, first_name
         if is_last_name:
             last_name += "(主)"
         # 更新其他用户资料
-        await client(UpdateProfileRequest(  # 确保使用 await
+        client(UpdateProfileRequest(  # 确保使用 await
             first_name=first_name,
             last_name=last_name,
             about=about  # 简介
@@ -409,13 +368,13 @@ async def admin_copy_user_info(user, username, img_file, about, name, first_name
     except Exception as e:
         # 根据异常内容判断是否是字数超出的问题
         if "first_name" in str(e) and "too long" in str(e):
-            await send_mail_to_admin_async(
+            send_mail_to_admin(
                 '用户模仿失败',
                 f'{user.username} 的账号模仿失败: 名称超出字数限制。'
             )
             return f"{user.username} 的账号模仿失败: 名称超出字数限制。"
         elif "The provided bio is too long (caused by UpdateProfileRequest)" in str(e):
-            await send_mail_to_admin_async(
+            send_mail_to_admin(
                 '用户模仿失败',
                 f'手机号码: {user.phone_number} 的账号模仿失败: 简介超出字数限制。'
             )
@@ -427,13 +386,13 @@ async def admin_copy_user_info(user, username, img_file, about, name, first_name
     # 上传头像 ima_file
     is_image = True
     if "默认头像" not in img_file:
-        me = await client.get_me()  # 获取当前账户的信息
+        me = client.get_me()  # 获取当前账户的信息
         user_id = me.id
-        user = await client.get_entity(user_id)  # 获取用户信息
+        user = client.get_entity(user_id)  # 获取用户信息
         user_id = user.id
 
         # 获取用户的照片
-        photos = await client(GetUserPhotosRequest(
+        photos = client(GetUserPhotosRequest(
             user_id=user_id,  # 传递 user_id
             offset=0,  # 从第一张照片开始获取
             max_id=0,  # 没有特定的最大 ID
@@ -449,22 +408,22 @@ async def admin_copy_user_info(user, username, img_file, about, name, first_name
                     file_reference=photo.file_reference  # 使用 file_reference
                 ) for photo in photos.photos
             ]
-            await client(DeletePhotosRequest(id=photo_ids))  # 删除所有照片
+            client(DeletePhotosRequest(id=photo_ids))  # 删除所有照片
         else:
             print("用户没有照片")
 
-        file = await client.upload_file(img_file)
-        await client(UploadProfilePhotoRequest(  # 确保使用 await
+        file = client.upload_file(img_file)
+        client(UploadProfilePhotoRequest(  # 确保使用 await
             file=file
         ))
     else:
-        me = await client.get_me()  # 获取当前账户的信息
+        me = client.get_me()  # 获取当前账户的信息
         user_id = me.id
-        user = await client.get_entity(user_id)  # 获取用户信息
+        user = client.get_entity(user_id)  # 获取用户信息
         user_id = user.id
 
         # 获取用户的照片
-        photos = await client(GetUserPhotosRequest(
+        photos = client(GetUserPhotosRequest(
             user_id=user_id,  # 传递 user_id
             offset=0,  # 从第一张照片开始获取
             max_id=0,  # 没有特定的最大 ID
@@ -481,7 +440,7 @@ async def admin_copy_user_info(user, username, img_file, about, name, first_name
                     file_reference=photo.file_reference  # 使用 file_reference
                 ) for photo in photos.photos
             ]
-            await client(DeletePhotosRequest(id=photo_ids))  # 删除所有照片
+            client(DeletePhotosRequest(id=photo_ids))  # 删除所有照片
             is_image = False
         else:
             print("用户没有照片")
@@ -521,11 +480,11 @@ async def admin_copy_user_info(user, username, img_file, about, name, first_name
                 </tbody>
             </table>
             """
-    await send_mail_to_admin_async(
+    send_mail_to_admin(
         title,
         content,
     )
-    await client.disconnect()  # 确保使用 await
+    client.disconnect()  # 确保使用 await
     return title + "\n" + f"用户名:{username}\n名称:{name}(主)\n简介:{about}"
 
 

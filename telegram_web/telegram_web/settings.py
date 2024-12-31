@@ -178,3 +178,6 @@ clients = {}
 
 # 代理
 PROXY_URL = 'http://spjc2yu6kq:7yw4eLfHyPfe9~a8qU@gate.visitxiangtan.com:10001'
+
+#邮箱url
+EMAIL_URL = 'http://38.180.158.135:8009/send-mail/'
