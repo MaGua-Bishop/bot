@@ -14,6 +14,7 @@ from telethon.errors import UsernameOccupiedError, UsernameInvalidError, FloodWa
 import socks
 from urllib.parse import urlparse
 import time
+from requests.exceptions import RequestException, ProxyError
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -33,13 +34,10 @@ def get_telegram_user_data(username: str):
     url = f"https://t.me/{username}"
     proxy = settings.PROXY_URL
     proxies = {'http': proxy, 'https': proxy}
-    result = requests.get(url, proxies=proxies, verify=False).text
-    # result = requests.get(url).text
-    html = etree.HTML(result)
     try:
-        # name = html.xpath('//div[@class="tgme_page_title"]//text()')[0]
+        result = requests.get(url, proxies=proxies, verify=False).text
+        html = etree.HTML(result)
         name_parts = html.xpath('//div[@class="tgme_page_title"]//text()')
-
         name = ''.join(name_parts).strip()
         if name:
             name_parts = name.split(' ', 1)
@@ -48,9 +46,12 @@ def get_telegram_user_data(username: str):
         else:
             name = ""
             status = False
-    except:
+    except ProxyError as e:
         name = ""
-        status = False
+        status = True
+    except RequestException as e:
+        name = ""
+        status = True
 
     about = " ".join(html.xpath('//div[@class="tgme_page_description "]//text()'))
     img_url = "".join(html.xpath('//img[@class="tgme_page_photo_image"]/@src'))

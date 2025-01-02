@@ -16,7 +16,8 @@ import utils
 
 if __name__ == '__main__':
     # call_command('telegram_web_task')
-    utils.send_mail_to_admin(
-        "邮件测试",
-        f"邮件测试"
-    )
+    # utils.send_mail_to_admin(
+    #     "邮件测试",
+    #     f"邮件测试"
+    # )
+    utils.get_telegram_user_data("aaabcoocccc")

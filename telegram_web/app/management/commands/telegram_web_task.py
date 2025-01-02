@@ -63,7 +63,6 @@ def process_user(user):
                     "白号替换失败",
                     f"白号 {copy_user.phone} 替换用户名:【{user.username}】失败，尝试次数: {attempts}"
                 )
-
         try:
             # 尝试获取 Telegram 用户数据
             status, name, about, image, image_name, first_name, last_name = utils.get_telegram_user_data(user.username)
