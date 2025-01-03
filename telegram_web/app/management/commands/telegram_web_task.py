@@ -8,6 +8,7 @@ from app import models
 import os
 from django.utils import timezone
 from datetime import timedelta, datetime
+import sqlite3
 
 
 def remove_hash_from_filename(filename):
@@ -18,6 +19,7 @@ def remove_hash_from_filename(filename):
 
 
 from django.db import transaction
+
 
 def process_user(user):
     # 使用 transaction.atomic() 确保整个函数内的操作为原子操作
@@ -101,7 +103,8 @@ def process_user(user):
 
                     tr = "".join(changes)
                     url = "http://37.1.216.161:8000/"
-                    if remove_hash_from_filename(user.original_image.name) != remove_hash_from_filename(user.image.name):
+                    if remove_hash_from_filename(user.original_image.name) != remove_hash_from_filename(
+                            user.image.name):
                         tr += f"""<tr><td>头像</td><td><img src=\"{url}media/{user.original_image.name}\"></td><td><img src=\"{url}media/images/{image_name}\"></td></tr>"""
 
                     if tr:
@@ -111,10 +114,15 @@ def process_user(user):
                 print(f"用户名 {user.username} 不存在")
                 # 调用随机获取三个白号
                 random_copy_user(user)
+        except sqlite3.OperationalError:
+            print("数据库被锁定")
+            # time.sleep(10)  # 等待一段时间后重试
+            # process_user(user)  # 递归调用重试
         except ProxyError as e:
             print(f"代理错误: {e}")
         except Exception as e:
             print(f"处理用户 {user.username} 时发生错误: {e}")
+
 
 def random_copy_user(user):
     # 首先判断是否已存在与该 user 相关的记录

@@ -34,10 +34,13 @@ def get_telegram_user_data(username: str):
     url = f"https://t.me/{username}"
     proxy = settings.PROXY_URL
     proxies = {'http': proxy, 'https': proxy}
+    result = requests.get(url, proxies=proxies, verify=False).text
+    # result = requests.get(url).text
+    html = etree.HTML(result)
     try:
-        result = requests.get(url, proxies=proxies, verify=False).text
-        html = etree.HTML(result)
+        # name = html.xpath('//div[@class="tgme_page_title"]//text()')[0]
         name_parts = html.xpath('//div[@class="tgme_page_title"]//text()')
+
         name = ''.join(name_parts).strip()
         if name:
             name_parts = name.split(' ', 1)
@@ -46,12 +49,9 @@ def get_telegram_user_data(username: str):
         else:
             name = ""
             status = False
-    except ProxyError as e:
+    except:
         name = ""
-        status = True
-    except RequestException as e:
-        name = ""
-        status = True
+        status = False
 
     about = " ".join(html.xpath('//div[@class="tgme_page_description "]//text()'))
     img_url = "".join(html.xpath('//img[@class="tgme_page_photo_image"]/@src'))
