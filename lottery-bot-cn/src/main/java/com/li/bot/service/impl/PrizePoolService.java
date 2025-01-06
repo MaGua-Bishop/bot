@@ -53,9 +53,6 @@ public class PrizePoolService {
         List<BigDecimal> moneyList = divideRedPacket(money, number);
         List<PrizePool> prizePoolList = new ArrayList<>();
         moneyList.forEach(amount -> {
-            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-                return;
-            }
             PrizePool prizePool = new PrizePool();
             prizePool.setPrizePoolId(IdUtil.randomUUID());
             prizePool.setLotteryId(lotteryId);
@@ -107,49 +104,48 @@ public class PrizePoolService {
         return prizePoolIds.get(index);
     }
 
-    private BigDecimal getPositiveRandomAmount(NormalDistribution normalDist, BigDecimal max) {
-        double randomValue;
-        do {
-            randomValue = normalDist.sample(); // 使用正态分布生成随机值
-        } while (randomValue <= 0 || randomValue > max.doubleValue()); // 确保随机值合法
-
-        return BigDecimal.valueOf(randomValue).setScale(2, RoundingMode.HALF_UP);
-    }
-
     public List<BigDecimal> divideRedPacket(BigDecimal totalAmount, int count) {
-        if (totalAmount.compareTo(BigDecimal.ZERO) <= 0 || count <= 0) {
-            throw new IllegalArgumentException("Total amount and count must be positive.");
+        if (count <= 0) {
+            throw new IllegalArgumentException("红包个数必须大于 0");
+        }
+        if (totalAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("总金额必须大于 0");
         }
 
-        // 根据总金额和份数计算正态分布的均值和标准差
-        double mean = totalAmount.divide(BigDecimal.valueOf(count), 2, RoundingMode.DOWN).doubleValue();
-        double stdDev = mean / 2; // 标准差设置为均值的一半，可调整
-
-        NormalDistribution normalDist = new NormalDistribution(mean, stdDev);
-
-        List<BigDecimal> amounts = new ArrayList<>();
-        BigDecimal remainingAmount = totalAmount;
-
-        for (int i = 0; i < count - 1; i++) {
-            // 如果剩余金额不足，则分配为0.0
-            if (remainingAmount.compareTo(BigDecimal.ZERO) <= 0) {
-                amounts.add(BigDecimal.ZERO.setScale(2, RoundingMode.DOWN));
-                continue;
-            }
-
-            BigDecimal randomAmount = getPositiveRandomAmount(normalDist, remainingAmount);
-            amounts.add(randomAmount);
-            remainingAmount = remainingAmount.subtract(randomAmount).setScale(2, RoundingMode.DOWN);
+        // 转换为分，避免精度问题
+        int totalCents = totalAmount.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.DOWN).intValue();
+        if (count > totalCents) {
+            throw new IllegalArgumentException("红包个数不能大于总金额的分单位数");
         }
 
-        // 最后一个红包，若剩余金额不足，则为0.0
-        if (remainingAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            amounts.add(BigDecimal.ZERO.setScale(2, RoundingMode.DOWN));
-        } else {
-            amounts.add(remainingAmount.setScale(2, RoundingMode.DOWN));
+        // 初始化红包列表
+        List<Integer> redPacketsInCents = new ArrayList<>();
+        Random random = new Random();
+
+        for (int i = 0; i < count; i++) {
+            // 确保每个红包金额在合理范围内，例如 0.5x 到 1.5x 的平均值
+            int avgCents = totalCents / (count - i);
+            int minCents = Math.max(1, (int) (0.5 * avgCents));
+            int maxCents = Math.min(totalCents - (count - i - 1), (int) (1.5 * avgCents));
+            int amount = random.nextInt(maxCents - minCents + 1) + minCents;
+
+            redPacketsInCents.add(amount);
+            totalCents -= amount;
         }
 
-        return amounts;
+        // 转换为 BigDecimal 并确保总金额一致
+        List<BigDecimal> redPackets = new ArrayList<>();
+        for (int cents : redPacketsInCents) {
+            redPackets.add(BigDecimal.valueOf(cents).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
+        }
+
+        // 调整误差
+        BigDecimal total = redPackets.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal difference = totalAmount.subtract(total);
+        if (difference.compareTo(BigDecimal.ZERO) != 0) {
+            redPackets.set(0, redPackets.get(0).add(difference));
+        }
+
+        return redPackets;
     }
-
 }
