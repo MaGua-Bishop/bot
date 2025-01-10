@@ -22,8 +22,8 @@ from django.db import transaction
 
 
 def process_user(user):
-    # 使用 transaction.atomic() 确保整个函数内的操作为原子操作
-    with transaction.atomic():
+    try:
+        # 使用 transaction.atomic() 确保整个函数内的操作为原子操作
         now = timezone.now().replace(second=0, microsecond=0)
         auto_user = models.AutoReplaceUser.objects.filter(
             create_time__in=[now],
@@ -65,63 +65,67 @@ def process_user(user):
                     "白号替换失败",
                     f"白号 {copy_user.phone} 替换用户名:【{user.username}】失败，尝试次数: {attempts}"
                 )
-        try:
-            # 尝试获取 Telegram 用户数据
-            status, name, about, image, image_name, first_name, last_name = utils.get_telegram_user_data(user.username)
-            if status:
-                data_changed = False  # 用于标记数据是否发生变化
+            return
+        # 尝试获取 Telegram 用户数据
+        status, name, about, image, image_name, first_name, last_name = utils.get_telegram_user_data(user.username)
+        if status:
+            data_changed = False  # 用于标记数据是否发生变化
 
-                if image and image_name:  # 确保 image 和 image_name 都不为 None
-                    new_image_path = "images/" + image_name
-                    if remove_hash_from_filename(user.original_image.name) != remove_hash_from_filename(new_image_path):
-                        data_changed = True
-                        from django.core.files.base import ContentFile
-                        user.image = ContentFile(image, name=image_name)  # 更新头像
-                        user.original_image = user.image
+            if image and image_name:  # 确保 image 和 image_name 都不为 None
+                new_image_path = "images/" + image_name
+                if remove_hash_from_filename(user.original_image.name) != remove_hash_from_filename(new_image_path):
+                    data_changed = True
+                    from django.core.files.base import ContentFile
+                    user.image = ContentFile(image, name=image_name)  # 更新头像
+                    user.original_image = user.image
 
+            if user.name != name:
+                user.name = name
+            if user.about != about:
+                user.about = about
+                data_changed = True
+            if user.first_name != first_name:
+                user.first_name = first_name
+                data_changed = True
+            if user.last_name != last_name:
+                user.last_name = last_name
+                data_changed = True
+
+            # 更新用户数据并提交事务
+            user.save()
+
+            if data_changed:
+                changes = []
                 if user.name != name:
-                    user.name = name
+                    changes.append(f"""<tr><td>名称</td><td>{user.name}</td><td>{name}</td></tr>""")
                 if user.about != about:
-                    user.about = about
-                    data_changed = True
-                if user.first_name != first_name:
-                    user.first_name = first_name
-                    data_changed = True
-                if user.last_name != last_name:
-                    user.last_name = last_name
-                    data_changed = True
+                    changes.append(f"""<tr><td>简介</td><td>{user.about}</td><td>{about}</td></tr>""")
 
-                # 更新用户数据并提交事务
-                user.save()
+                tr = "".join(changes)
+                url = "http://37.1.216.161:8000/"
+                if remove_hash_from_filename(user.original_image.name) != remove_hash_from_filename(
+                        user.image.name):
+                    tr += f"""<tr><td>头像</td><td><img src=\"{url}media/{user.original_image.name}\"></td><td><img src=\"{url}media/images/{image_name}\"></td></tr>"""
 
-                if data_changed:
-                    changes = []
-                    if user.name != name:
-                        changes.append(f"""<tr><td>名称</td><td>{user.name}</td><td>{name}</td></tr>""")
-                    if user.about != about:
-                        changes.append(f"""<tr><td>简介</td><td>{user.about}</td><td>{about}</td></tr>""")
-
-                    tr = "".join(changes)
-                    url = "http://37.1.216.161:8000/"
-                    if remove_hash_from_filename(user.original_image.name) != remove_hash_from_filename(
-                            user.image.name):
-                        tr += f"""<tr><td>头像</td><td><img src=\"{url}media/{user.original_image.name}\"></td><td><img src=\"{url}media/images/{image_name}\"></td></tr>"""
-
-                    if tr:
-                        text = f"""变更内容如下:<table border=\"1\"><thead><tr><th>变更字段</th><th>变更前</th><th>变更后</th></tr></thead><tbody>{tr}</tbody></table>"""
-                        print(text)
-            else:
-                print(f"用户名 {user.username} 不存在")
-                # 调用随机获取三个白号
-                random_copy_user(user)
-        except sqlite3.OperationalError:
-            print("数据库被锁定")
-            # time.sleep(10)  # 等待一段时间后重试
-            # process_user(user)  # 递归调用重试
-        except ProxyError as e:
-            print(f"代理错误: {e}")
-        except Exception as e:
-            print(f"处理用户 {user.username} 时发生错误: {e}")
+                if tr:
+                    text = f"""变更内容如下:<table border=\"1\"><thead><tr><th>变更字段</th><th>变更前</th><th>变更后</th></tr></thead><tbody>{tr}</tbody></table>"""
+                    print(text)
+        else:
+            s, name, about, image, image_name, first_name, last_name = utils.get_telegram_user_data(
+                user.username)
+            print(f"用户名 {user.username} 不存在,第一次获取状态:{s}")
+            if not s:
+                s, name, about, image, image_name, first_name, last_name = utils.get_telegram_user_data(
+                    user.username)
+                print(f"用户名 {user.username} 不存在,第二次获取状态:{s}")
+                if not s:
+                    random_copy_user(user)
+    except sqlite3.OperationalError:
+        print("数据库被锁定")
+    except ProxyError as e:
+        print(f"代理错误: {e}")
+    except Exception as e:
+        print(f"处理用户 {user.username} 时发生错误: {e}")
 
 
 def random_copy_user(user):
